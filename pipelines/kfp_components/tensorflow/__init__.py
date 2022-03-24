@@ -1,0 +1,2 @@
+from pipelines.kfp_components.tensorflow.train import train_tensorflow_model
+from pipelines.kfp_components.tensorflow.predict import predict_tensorflow_model

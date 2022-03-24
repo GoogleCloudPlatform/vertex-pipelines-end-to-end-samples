@@ -1,0 +1,16 @@
+---
+
+steps:
+
+  # Terraform plan
+  - name: hashicorp/terraform:1.1.3
+    dir: /workspace/${_ENV_DIRECTORY}
+    entrypoint: /bin/sh
+    args:
+      - -c
+      - |
+        terraform init -input=false &&
+        terraform plan -input=false
+
+substitutions:
+  _ENV_DIRECTORY: envs/test  # envs/test or envs/prod
