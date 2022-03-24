@@ -1,0 +1,56 @@
+---
+steps:
+
+  # Install pipenv, install deps, compile pipelines
+  - name: python:3.7
+    entrypoint: /bin/sh
+    args:
+      - -c
+      - |
+        pip install pipenv && \
+        pipenv install && \
+        make compile pipeline=training && \
+        make compile pipeline=prediction
+    env:
+      - PIPELINE_TEMPLATE=${_PIPELINE_TEMPLATE}
+
+  # Copy pipelines and files to a new directory in GCS
+  # (via a new local directory)
+  # Directory name = git tag
+  - name: gcr.io/cloud-builders/gsutil
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        mkdir -p ${TAG_NAME}/training/assets && \
+        mkdir -p ${TAG_NAME}/prediction/assets && \
+        cp training.json ${TAG_NAME}/training/training.json && \
+        cp prediction.json ${TAG_NAME}/prediction/prediction.json && \
+        cp -r pipelines/${_PIPELINE_TEMPLATE}/training/assets ${TAG_NAME}/training/ && \
+        cp -r pipelines/${_PIPELINE_TEMPLATE}/prediction/assets ${TAG_NAME}/prediction/ && \
+        gsutil cp -r ${TAG_NAME} ${_PIPELINE_PUBLISH_GCS_PATH}
+
+  # Install Python deps
+  # Run end-to-end (E2E) pipeline tests on both pipelines
+  - name: python:3.7
+    entrypoint: /bin/sh
+    args:
+      - -c
+      - |
+        pip install pipenv && \
+        pipenv install --dev && \
+        make e2e-tests pipeline=training && \
+        make e2e-tests pipeline=prediction
+    env:
+      - VERTEX_LOCATION=${_TEST_VERTEX_LOCATION}
+      - VERTEX_PROJECT_ID=${_TEST_VERTEX_PROJECT_ID}
+      - VERTEX_SA_EMAIL=${_TEST_VERTEX_SA_EMAIL}
+      - VERTEX_CMEK_IDENTIFIER=${_TEST_VERTEX_CMEK_IDENTIFIER}
+      - VERTEX_NETWORK=${_TEST_VERTEX_NETWORK}
+      - PIPELINE_TEMPLATE=${_PIPELINE_TEMPLATE}
+      - PAYLOAD=${_TEST_PAYLOAD}
+      - VERTEX_PIPELINE_ROOT=${_TEST_VERTEX_PIPELINE_ROOT}
+      - PIPELINE_FILES_GCS_PATH=${_PIPELINE_PUBLISH_GCS_PATH}/${TAG_NAME}
+
+# Increase timeout to allow end-to-end (E2E) pipeline tests to run
+timeout: 18000s  # 5 hours
