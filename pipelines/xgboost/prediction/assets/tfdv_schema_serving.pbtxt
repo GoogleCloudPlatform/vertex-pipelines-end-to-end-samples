@@ -1,0 +1,288 @@
+feature {
+  name: "dayofweek"
+  type: INT
+  presence {
+    min_fraction: 1.0
+    min_count: 1
+  }
+  shape {
+    dim {
+      size: 1
+    }
+  }
+}
+feature {
+  name: "hourofday"
+  type: INT
+  presence {
+    min_fraction: 1.0
+    min_count: 1
+  }
+  skew_comparator {
+    infinity_norm {
+      threshold: 0.01
+    }
+  }
+  shape {
+    dim {
+      size: 1
+    }
+  }
+}
+feature {
+  name: "trip_distance"
+  type: FLOAT
+  presence {
+    min_fraction: 1.0
+    min_count: 1
+  }
+  skew_comparator {
+    infinity_norm {
+      threshold: 0.01
+    }
+  }
+  shape {
+    dim {
+      size: 1
+    }
+  }
+}
+feature {
+  name: "trip_miles"
+  type: FLOAT
+  presence {
+    min_fraction: 1.0
+    min_count: 1
+  }
+  shape {
+    dim {
+      size: 1
+    }
+  }
+}
+feature {
+  name: "trip_seconds"
+  type: INT
+  presence {
+    min_fraction: 1.0
+    min_count: 1
+  }
+  shape {
+    dim {
+      size: 1
+    }
+  }
+}
+feature {
+  name: "payment_type"
+  type: BYTES
+  domain: "payment_type"
+  presence {
+    min_fraction: 1.0
+    min_count: 1
+  }
+  shape {
+    dim {
+      size: 1
+    }
+  }
+}
+feature {
+  name: "company"
+  type: BYTES
+  domain: "company"
+  presence {
+    min_fraction: 1.0
+    min_count: 1
+  }
+  shape {
+    dim {
+      size: 1
+    }
+  }
+}
+feature {
+  name: "total_fare"
+  value_count {
+    min: 1
+    max: 1
+  }
+  type: FLOAT
+  presence {
+    min_count: 1
+  }
+  not_in_environment: "SERVING"
+}
+string_domain {
+  name: "payment_type"
+  value: "Cash"
+  value: "Credit Card"
+  value: "Dispute"
+  value: "Mobile"
+  value: "No Charge"
+  value: "Pcard"
+  value: "Prcard"
+  value: "Prepaid"
+  value: "Split"
+  value: "Unknown"
+  value: "Way2ride"
+}
+string_domain {
+  name: "company"
+  value: "0118 - 42111 Godfrey S.Awir"
+  value: "0118 - Godfray S.Awir"
+  value: "0118 - Godfrey S.Awir"
+  value: "0694 - 59280 Chinesco Trans Inc"
+  value: "0694 - Chinesco Trans Inc"
+  value: "1085 - 72312 N and W Cab Co"
+  value: "1085 - N and W Cab Co"
+  value: "1247 - 72807 Daniel Ayertey"
+  value: "1408 - 89599 Donald Barnes"
+  value: "1408 - Donald Barnes"
+  value: "1469 - 64126 Omar Jada"
+  value: "2092 - 61288 Sbeih company"
+  value: "2092 - Sbeih company"
+  value: "2192 - 73487 Zeymane Corp"
+  value: "2192 - Zeymane Corp"
+  value: "2241 - 44667 - Felman Corp, Manuel Alonso"
+  value: "2241 - 44667 Manuel Alonso"
+  value: "2241 - Manuel Alonso"
+  value: "24 Seven Taxi"
+  value: "2733 - 74600 Benny Jona"
+  value: "2733 - Benny Jona"
+  value: "2767 - Sayed M Badri"
+  value: "2809 - 95474 C & D Cab Co Inc."
+  value: "2809 - 95474 C&D Cab Co Inc."
+  value: "2823 - 73307 Lee Express Inc"
+  value: "2823 - 73307 Seung Lee"
+  value: "2823 - Seung Lee"
+  value: "3011 - 66308 JBL Cab Inc."
+  value: "3011 - JBL Cab Inc."
+  value: "303 Taxi"
+  value: "3094 - 24059 G.L.B. Cab Co"
+  value: "3094 - G.L.B. Cab Co"
+  value: "312 Medallion Management Corp"
+  value: "3141 - 87803 Zip Cab"
+  value: "3141 - Zip Cab"
+  value: "3152 - 97284 Crystal Abernathy"
+  value: "3152 - Crystal Abernathy"
+  value: "3201 - C & D Cab Co Inc"
+  value: "3201 - C&D Cab Co Inc"
+  value: "3201 - CD Cab Co Inc"
+  value: "3201 - CID Cab Co Inc"
+  value: "3253 - 91138 Gaither Cab Co."
+  value: "3253 - Gaither Cab Co."
+  value: "3319 - C&D Cab Company"
+  value: "3319 - CD Cab Co"
+  value: "3385 -  Eman Cab"
+  value: "3385 - 23210  Eman Cab"
+  value: "3385 - 23210 Eman Cab"
+  value: "3385 - Eman Cab"
+  value: "3556 - 36214 RC Andrews Cab"
+  value: "3591 - 63480 Chuk's Cab"
+  value: "3591 - 63480 Chuks Cab"
+  value: "3591- 63480 Chuk's Cab"
+  value: "3591- Chuk's Cab"
+  value: "3620 - 52292 David K. Cab Corp."
+  value: "3620 - David K. Cab Corp."
+  value: "3623 - 72222 Arrington Enterprises"
+  value: "3623-Arrington Enterprises"
+  value: "3669 - 85800 Jordan Taxi Inc"
+  value: "3669 - Jordan Taxi Inc"
+  value: "3721 - Santamaria Express, Alvaro Santamaria"
+  value: "3897 - 57856 Ilie Malec"
+  value: "3897 - Ilie Malec"
+  value: "4053 - 40193 Adwar H. Nikola"
+  value: "4053 - Adwar H. Nikola"
+  value: "4197 - 41842 Royal Star"
+  value: "4197 - Royal Star"
+  value: "4523 - 79481 Hazel Transit Inc"
+  value: "4615 - 83503 Tyrone Henderson"
+  value: "4615 - Tyrone Henderson"
+  value: "4623 - 27290 Jay Kim"
+  value: "4623 - Jay Kim"
+  value: "4732 - Maude Lamy"
+  value: "4787 - 56058 Reny Cab Co"
+  value: "4787 - Reny Cab Co"
+  value: "5 Star Taxi"
+  value: "5006 - 39261 Salifu Bawa"
+  value: "5006 - Salifu Bawa"
+  value: "5062 - 34841 Sam Mestas"
+  value: "5062 - Sam Mestas"
+  value: "5074 - 54002 Ahzmi Inc"
+  value: "5074 - Ahzmi Inc"
+  value: "5129 - 87128"
+  value: "5129 - 98755 Mengisti Taxi"
+  value: "5129 - Mengisti Taxi"
+  value: "5437 - Great American Cab Co"
+  value: "5724 - 72965 KYVI Cab Inc"
+  value: "5724 - 75306 KYVI Cab Inc"
+  value: "5724 - KYVI Cab Inc"
+  value: "5776 - Mekonen Cab Company"
+  value: "585 - 88805 Valley Cab Co"
+  value: "585 - Valley Cab Co"
+  value: "5864 - 73614 Thomas Owusu"
+  value: "5864 - Thomas Owusu"
+  value: "5874 - 73628 Sergey Cab Corp."
+  value: "5874 - Sergey Cab Corp."
+  value: "5997 - 65283 AW Services Inc."
+  value: "5997 - AW Services Inc."
+  value: "6057 - 24657 Richard Addo"
+  value: "6488 - 83287 Zuha Taxi"
+  value: "6488 - Zuha Taxi"
+  value: "6574 - Babylon Express Inc."
+  value: "6742 - 83735 Tasha ride inc"
+  value: "6743 - 78771 Luhak Corp"
+  value: "6743 - Luhak Corp"
+  value: "6747 - Mueen Abdalla"
+  value: "American United"
+  value: "American United Taxi Affiliation"
+  value: "Blue Diamond"
+  value: "Blue Ribbon Taxi Association Inc."
+  value: "C & D Cab Co Inc"
+  value: "Checker Taxi"
+  value: "Checker Taxi Affiliation"
+  value: "Chicago Carriage Cab Corp"
+  value: "Chicago Independents"
+  value: "Chicago Medallion Leasing INC"
+  value: "Chicago Medallion Management"
+  value: "Chicago Star Taxicab"
+  value: "Chicago Taxicab"
+  value: "Choice Taxi Association"
+  value: "City Service"
+  value: "Dispatch Taxi Affiliation"
+  value: "Dispatch Taxi Affiliation (credit hold)"
+  value: "Flash Cab"
+  value: "Globe Taxi"
+  value: "Gold Coast Taxi"
+  value: "KOAM Taxi Association"
+  value: "Leonard Cab Co"
+  value: "Medallion Leasin"
+  value: "Metro Group"
+  value: "Metro Jet Cab Association Inc."
+  value: "Metro Jet Taxi A"
+  value: "Metro Jet Taxi A."
+  value: "Metro Jet Taxi Ass"
+  value: "Norshore Cab"
+  value: "Northwest Management LLC"
+  value: "Northwest Management LLC (Credit Hold)"
+  value: "Nova Taxi Affiliation Llc"
+  value: "Patriot Taxi Dba Peace Taxi Associat"
+  value: "Patriot Trans Inc"
+  value: "Peace Taxi Assoc"
+  value: "Petani Cab Corp"
+  value: "Service Taxi Association"
+  value: "Setare Inc"
+  value: "Star North Management LLC"
+  value: "Sun Taxi"
+  value: "Taxi Affiliation Service Yellow"
+  value: "Taxi Affiliation Services"
+  value: "Taxicab Insurance Agency, LLC"
+  value: "Top Cab - 312 MM Corp"
+  value: "Top Cab Affiliation"
+  value: "Top Cab Affiliation - credit hold"
+  value: "U Taxicab"
+  value: "Yellow Cab"
+}
+default_environment: "TRAINING"
+default_environment: "SERVING"
