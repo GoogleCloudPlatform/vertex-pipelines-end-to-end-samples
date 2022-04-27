@@ -1,0 +1,20 @@
+{
+    "attributes": { 
+        "enable_caching": "False",
+        "template_path": "gs://<GCS path where files are published - matches _PIPELINE_PUBLISH_GCS_PATH >/<Git tag>/training/training.json"
+    },
+    "data": {
+        "project_id": "my-test-gcp-project",
+        "project_location": "europe-west4",
+        "pipeline_files_gcs_path": "gs://<GCS path where files are published - matches _PIPELINE_PUBLISH_GCS_PATH >/<Git tag>/training/files",
+        "ingestion_project_id": "my-test-gcp-project",
+        "model_name": "xgboost-with-preprocessing",
+        "model_label": "label_name",
+        "tfdv_schema_filename": "tfdv_schema_training.pbtxt",
+        "tfdv_train_stats_path": "gs://my-test-bucket/train_stats/train.stats", 
+        "dataset_id": "preprocessing",
+        "dataset_location": "EU",
+        "ingestion_dataset_id": "chicago_taxi_trips",
+        "timestamp": "2021-08-01 00:00:00"
+    }
+}

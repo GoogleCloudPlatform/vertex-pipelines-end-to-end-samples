@@ -1,0 +1,38 @@
+---
+repos:
+  - repo: https://github.com/gruntwork-io/pre-commit
+    rev: v0.0.9
+    hooks:
+      - id: terraform-fmt
+      # - id: shellcheck
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v1.2.3
+    hooks:
+      - id: check-added-large-files
+      - id: check-merge-conflict
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: no-commit-to-branch
+        args: [--branch, main]
+
+  - repo: https://github.com/jumanjihouse/pre-commit-hooks
+    rev: 1.11.0
+    hooks:
+      - id: git-dirty
+
+  - repo: https://github.com/adrienverge/yamllint.git
+    rev: v1.26.3
+    hooks:
+      - id: yamllint
+        args: [--format, parsable, --strict]
+
+  - repo: https://github.com/psf/black
+    rev: 22.3.0
+    hooks:
+      - id: black
+
+  - repo: https://github.com/PyCQA/flake8
+    rev: 3.7.9
+    hooks:
+      - id: flake8
