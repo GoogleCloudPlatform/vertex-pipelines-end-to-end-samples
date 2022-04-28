@@ -1,0 +1,27 @@
+[tool.poetry]
+name = "pipelines"
+version = "0.0.1"
+description = ""
+authors = ["Felix Schaumann <felix.schaumann@datatonic.com>"]
+license = "MIT"
+readme = "README.md"
+homepage = ""
+repository = ""
+keywords = []
+classifiers = []
+packages = [
+    { include = "src" }
+]
+
+[tool.poetry.dependencies]
+python = "^3.7.1"
+kfp = "1.8.9"
+shared_pipeline_components = { path = "../shared-pipeline-components/", develop = false }
+my_use_case = { path = "../my-use-case/", develop = false }
+
+[tool.poetry.dev-dependencies]
+pytest="6.2.5"
+
+[build-system]
+requires = ["poetry>=0.12"]
+build-backend = "poetry.masonry.api"
