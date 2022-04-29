@@ -100,7 +100,7 @@ def generate_statistics(
     logging.getLogger().setLevel(logging.INFO)
 
     def write_setup_py_file():
-        """Writes the required xxx.py file to disk, ready for use by TFDV"""
+        """Writes the required setup.py file to disk, ready for use by TFDV"""
 
         setup_file_contents = inspect.cleandoc(
             f"""
