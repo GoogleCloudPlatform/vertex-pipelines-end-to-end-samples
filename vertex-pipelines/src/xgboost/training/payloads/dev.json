@@ -1,0 +1,20 @@
+{
+    "attributes": { 
+        "enable_caching": "False",
+        "template_path": "training.json"
+    },
+    "data": {
+        "project_id": "datatonic-uk-ml-sandbox",
+        "project_location": "europe-west2",
+        "pipeline_files_gcs_path": "gs://felix-hackday/pipelines/felix",
+        "ingestion_project_id": "datatonic-uk-ml-sandbox",
+        "model_name": "felix-xgboost",
+        "model_label": "label_name",
+        "tfdv_schema_filename": "tfdv_schema_training.pbtxt",
+        "tfdv_train_stats_path": "gs://felix-hackday/train_stats/felix/train.stats",
+        "dataset_id": "felix_preprocessing",
+        "dataset_location": "EU",
+        "ingestion_dataset_id": "chicago_taxi_trips",
+        "timestamp": "2021-08-01 00:00:00"
+    }
+}
