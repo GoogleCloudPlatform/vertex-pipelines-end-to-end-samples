@@ -1,4 +1,4 @@
-FROM python:3.8.13-alpine3.15
+FROM python:3.8.13-slim
 
 WORKDIR /root
 RUN pip3 -U install poetry
