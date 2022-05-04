@@ -1,0 +1,17 @@
+{
+    "attributes": { 
+        "enable_caching": "False",
+        "template_path": "training.json"
+    },
+    "data": {
+        "project_id": "datatonic-vertex-pipeline-dev",
+        "project_location": "europe-west4",
+        "ingestion_project_id": "datatonic-vertex-pipeline-dev",
+        "model_name": "xgboost-demo",
+        "model_label": "label_name",
+        "dataset_id": "preprocessing",
+        "dataset_location": "EU",
+        "ingestion_dataset_id": "chicago_taxi_trips",
+        "timestamp": "2021-08-01 00:00:00"
+    }
+}

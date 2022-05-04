@@ -154,4 +154,4 @@ pytest.ini
 terraform/*.zip
 
 # env.sh (only example file should be committed)
-env.sh
+# env.sh
