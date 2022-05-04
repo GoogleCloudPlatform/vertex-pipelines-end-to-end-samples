@@ -50,6 +50,23 @@ a one-time manual copy of this dataset to your project location using the [BigQu
 1. Run `bash transfer_dataset.sh <project_id> <dataset> <location>`
 </p></details>
 
+### Hands-on Tutorials
+
+Click "Open in Cloud Shell" for a tutorial on how to get started with Vertex Pipeline Templates for
+1. Building a **Training pipeline**
+
+[![Open in Cloud Shell](https://gstatic.com/cloudssh/images/open-btn.svg)](https://ssh.cloud.google.com/cloudshell/editor?cloudshell_git_repo=https://github.com/teamdatatonic/kfp-template-0&cloudshell_git_branch=tutorial/structure&cloudshell_working_dir=pipelines/xgboost/training/&open_in_editor=./pipeline.py&tutorial=docs/TUTORIAL_TRAINING.md)
+
+**OR**
+
+2. Building a **Prediction pipeline**
+
+[![Open in Cloud Shell](https://gstatic.com/cloudssh/images/open-btn.svg)](https://ssh.cloud.google.com/cloudshell/editor?cloudshell_git_repo=https://github.com/teamdatatonic/kfp-template-0&cloudshell_git_branch=tutorial/structure&cloudshell_working_dir=pipelines/xgboost/prediction/&open_in_editor=./pipeline.py&tutorial=docs/TUTORIAL_PREDICTION.md)
+
+*PS - A new model needs to be deployed to Vertex via the training pipeline before running a prediction pipeline*
+
+Once in the cloud shell, run the command: `teachme tutorial.md` if it doesn't automatically open. 
+
 ### Local setup
 
 In the repository, execute:
