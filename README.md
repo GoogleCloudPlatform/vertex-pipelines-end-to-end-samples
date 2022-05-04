@@ -58,13 +58,13 @@ TODO: Update cloudshell_git_branch to main X 2
 Click "Open in Cloud Shell" for a tutorial on how to get started with Vertex Pipeline Templates for
 1. Building a **Training pipeline**
 
-[![Open in Cloud Shell](https://gstatic.com/cloudssh/images/open-btn.svg)](https://ssh.cloud.google.com/cloudshell/editor?cloudshell_git_repo=https://github.com/rahulchowath-dt/vertex-pipelines-end-to-end-samples&cloudshell_git_branch=tutorial/cloud-shell-pipeline-tutorials&cloudshell_working_dir=pipelines/xgboost/training/&open_in_editor=./pipeline.py&tutorial=docs/TUTORIAL_TRAINING.md)
+[![Open in Cloud Shell](https://gstatic.com/cloudssh/images/open-btn.svg)](https://ssh.cloud.google.com/cloudshell/editor?cloudshell_git_repo=https://github.com/rahulchowath-dt/vertex-pipelines-end-to-end-samples&cloudshell_git_branch=tutorial/cloud-shell-pipeline-tutorials&cloudshell_working_dir=.&open_in_editor=pipelines/xgboost/training/pipeline.py&tutorial=docs/TUTORIAL_TRAINING.md)
 
 **OR**
 
 2. Building a **Prediction pipeline**
 
-[![Open in Cloud Shell](https://gstatic.com/cloudssh/images/open-btn.svg)](https://ssh.cloud.google.com/cloudshell/editor?cloudshell_git_repo=https://github.com/rahulchowath-dt/vertex-pipelines-end-to-end-samples&cloudshell_git_branch=tutorial/cloud-shell-pipeline-tutorials&cloudshell_working_dir=pipelines/xgboost/prediction/&open_in_editor=./pipeline.py&tutorial=docs/TUTORIAL_PREDICTION.md)
+[![Open in Cloud Shell](https://gstatic.com/cloudssh/images/open-btn.svg)](https://ssh.cloud.google.com/cloudshell/editor?cloudshell_git_repo=https://github.com/rahulchowath-dt/vertex-pipelines-end-to-end-samples&cloudshell_git_branch=tutorial/cloud-shell-pipeline-tutorials&cloudshell_working_dir=.&open_in_editor=pipelines/xgboost/prediction/pipeline.py&tutorial=docs/TUTORIAL_PREDICTION.md)
 
 *PS - A new model needs to be deployed to Vertex via the training pipeline before running a prediction pipeline*
 
