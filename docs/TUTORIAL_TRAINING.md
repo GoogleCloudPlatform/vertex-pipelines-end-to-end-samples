@@ -103,7 +103,7 @@ Now that we understand how BigQuery is used in the training pipeline, click on *
 
 ## SQL Queries in BigQuery - Pipeline Configuration
 
-SQL Queries can be components in the pipeline in 3 steps:
+SQL Queries are added to components in the pipeline in 3 steps:
 
 1. **Create templated SQL Queries**
 
@@ -206,7 +206,7 @@ Some cool things included in this interactive view are:
 ## Tensorflow Data Validation - Show Anomalies
 
 Now, the most important aspect of using TFDV is to use the previously generated statistics & flag any data anomalies.
-This aspect is captured in the following  2 pipeline components:
+This aspect is captured in the following 2 pipeline components:
 
 **Validate Schema**
 ```py
@@ -525,7 +525,7 @@ export VERTEX_SA_EMAIL=Your Vertex Service account email ID
 
 Now that the pipeline + configuration is all set up for execution, you can run the training pipeline on Vertex with a single command:
 ```
-make run PIPELINE_TEMPLATE=xgboost pipeline=training
+make run pipeline=training
 ```
 
 
