@@ -141,6 +141,7 @@ def xgboost_pipeline(
         bq_client_project_id=project_id,
         destination_project_id=project_id,
         dataset_id=dataset_id,
+        dataset_location=dataset_location,
         query_job_config=json.dumps(dict(write_disposition="WRITE_TRUNCATE")),
     )
     ingest = bq_query_to_table(
