@@ -19,7 +19,7 @@ limitations under the License.
 
 This repository provides a reference implementation of [Vertex Pipelines](https://cloud.google.com/vertex-ai/docs/pipelines/) for creating a production-ready MLOps solution on Google Cloud.
 
-### Why does this matter?
+### Why does this matter? :)
 
 It is hard to productionalize data science use cases, especially because the journey from experimentation is lacking standardisation. 
 Thus, this project aims at boosting, scalability, productivity and standardisation of data science use cases amongst data science teams.
