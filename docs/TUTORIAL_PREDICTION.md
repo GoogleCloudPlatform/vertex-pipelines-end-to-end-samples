@@ -5,7 +5,7 @@
 
 It is hard to productionize data science use cases, especially because the journey from experimentation lacks standardisation. 
 
-This GitHub repository bundles reusable code and provides the creation of a MLOps platform via an template-driven approach allowing to:
+This GitHub repository bundles reusable code and provides the creation of a MLOps platform via a template-driven approach allowing to:
 
 - **Create a new use case from a template**: Create a new ML training pipeline and batch prediction pipeline based on a template (XGBoost/ Tensorflow).
 - **Deploy a pipeline to a production environment**: Deploy a new or updated pipeline to a production environment allowing for orchestration, schedules and triggers.
@@ -44,21 +44,19 @@ gcloud config set project <walkthrough-project-name/>
 
 ## Package Installation
 
-TODO: Resolve python versioning + package installation in cloud-shell (default is 2.7, python3 is 3.9, we need 3.7.12)
-
 The template requires certain python packages which can be installed with the following commands:
 
 1. Install pipenv for package dependency management:
 ```sh
-pip3 install pipenv
+pip install pipenv
 ```
-2. Add pipenv to your PATH variable
+2. Add `pipenv` to your `PATH` variable
 ```sh
 export PATH="$HOME/.local/bin:$PATH"
 ```
 3. Install python dependencies:
 ```sh
-pipenv install --dev
+pipenv install --skip-lock
 ```
 
 
@@ -311,7 +309,7 @@ export PIPELINE_TEMPLATE=xgboost
 
 export VERTEX_LOCATION=Region where you want to run the Vertex pipeline
 export VERTEX_PROJECT_ID=Your GCP project name
-export VERTEX_SA_EMAIL=Your Vertex Service account email ID
+export VERTEX_SA_EMAIL=Your Vertex Service account email ID (can use the default Compute Engine SA if required)
 ```
 
 <walkthrough-footnote>Customize Prediction Config 3/3</walkthrough-footnote>
@@ -320,7 +318,7 @@ export VERTEX_SA_EMAIL=Your Vertex Service account email ID
 ## Run Prediction pipeline on Vertex
 
 Now that the pipeline + configuration is all set up for execution, you can run the prediction pipeline on Vertex with a single command:
-```
+```sh
 make run pipeline=prediction
 ```
 
@@ -331,4 +329,4 @@ make run pipeline=prediction
 
 You’re all set!
 
-You can now track your ML Prediction pipeline from the Vertex Pipelines UI!
+You can now click on the **Pipeline Job** link shown on your terminal & track your **ML Prediction pipeline** from the **Vertex Pipelines UI**!
