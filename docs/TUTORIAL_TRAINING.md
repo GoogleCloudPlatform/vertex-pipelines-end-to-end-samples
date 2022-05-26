@@ -52,9 +52,9 @@ pip install pipenv
 ```sh
 export PATH="$HOME/.local/bin:$PATH"
 ```
-3. Install python dependencies:
+3. Install python dependencies (*Cloud Shell default - Python 3.9*):
 ```sh
-pipenv install --skip-lock
+pipenv --python /usr/bin/python3.9 install --skip-lock
 ```
 
 
