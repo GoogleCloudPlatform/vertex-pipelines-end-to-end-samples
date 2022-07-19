@@ -25,7 +25,7 @@ module "api_services" {
 module "service_accounts" {
   for_each      = var.service_accounts
   source        = "terraform-google-modules/service-accounts/google"
-  version       = "~> 3.0"
+  version       = "~> 4.1"
   project_id    = var.project_id
   display_name  = each.value.display_name
   names         = [each.value.name]
@@ -37,7 +37,7 @@ module "service_accounts" {
 module "gcs_buckets" {
   for_each   = var.gcs_buckets_names
   source     = "terraform-google-modules/cloud-storage/google"
-  version    = "~> 2.1"
+  version    = "~> 3.2"
   prefix     = ""
   project_id = var.project_id
   names      = [each.value]
@@ -47,7 +47,7 @@ module "gcs_buckets" {
 # Pub/Sub topic (for triggering pipelines)
 module "pubsub" {
   source     = "terraform-google-modules/pubsub/google"
-  version    = "~> 2.0"
+  version    = "~> 3.2"
   project_id = var.project_id
   topic      = var.pubsub_topic_name
   depends_on = [module.api_services]
