@@ -13,10 +13,10 @@
 # limitations under the License.
 
 from kfp.v2.dsl import Input, Artifact, component
-from pipelines.kfp_components.dependencies import PYTHON37, TENSORFLOW_DATA_VALIDATION
+from pipelines.kfp_components.dependencies import PYTHON37
 
 
-@component(base_image=PYTHON37, packages_to_install=[TENSORFLOW_DATA_VALIDATION])
+@component(base_image=PYTHON37)
 def compare_models(
     metrics: Input[Artifact],
     other_metrics: Input[Artifact],
