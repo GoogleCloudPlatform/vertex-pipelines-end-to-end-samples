@@ -190,7 +190,7 @@ def test_convert_payload(env_vars, test_input, expected):
         (
             {
                 "VERTEX_PROJECT_ID": "my-project-id",
-                "VERTEX_LOCATION": "europe-west4",
+                "VERTEX_REGION": "europe-west4",
                 "VERTEX_PIPELINE_ROOT": "gs://my-pipeline-root/folder",
                 "VERTEX_SA_EMAIL": "my-sa@my-project-id.iam.gserviceaccount.com",
                 "VERTEX_CMEK_IDENTIFIER": "my-cmek",
@@ -209,7 +209,7 @@ def test_convert_payload(env_vars, test_input, expected):
         (
             {
                 "VERTEX_PROJECT_ID": "my-project-id",
-                "VERTEX_LOCATION": "europe-west4",
+                "VERTEX_REGION": "europe-west4",
                 "VERTEX_PIPELINE_ROOT": "gs://my-pipeline-root/folder",
                 "VERTEX_SA_EMAIL": "my-sa@my-project-id.iam.gserviceaccount.com",
                 "VERTEX_CMEK_IDENTIFIER": "",
@@ -228,7 +228,7 @@ def test_convert_payload(env_vars, test_input, expected):
         (
             {
                 "VERTEX_PROJECT_ID": "my-project-id",
-                "VERTEX_LOCATION": "europe-west4",
+                "VERTEX_REGION": "europe-west4",
                 "VERTEX_PIPELINE_ROOT": "gs://my-pipeline-root/folder",
                 "VERTEX_SA_EMAIL": "my-sa@my-project-id.iam.gserviceaccount.com",
             },

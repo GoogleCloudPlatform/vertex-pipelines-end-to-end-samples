@@ -174,7 +174,7 @@ def get_env() -> dict:
     """
 
     project_id = os.environ["VERTEX_PROJECT_ID"]
-    location = os.environ["VERTEX_LOCATION"]
+    location = os.environ["VERTEX_REGION"]
     pipeline_root = os.environ["VERTEX_PIPELINE_ROOT"]
     service_account = os.environ["VERTEX_SA_EMAIL"]
     # For CMEK and network, we want an empty string to become None, so we add "or None"

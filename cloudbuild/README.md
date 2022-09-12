@@ -41,7 +41,7 @@ Below is a table detailing the variable substitutions you will need to set up in
 | _PIPELINE_TEMPLATE            | The set of pipelines in the repo that you would like to use - i.e. the subfolder under `pipelines` where you pipelines live. Currently, can be either `xgboost` or `tensorflow`.                                            | xgboost                                                                  |
 | _TEST_PAYLOAD                 | The file name of the JSON payload that you want to use for the ML pipeline runs in the E2E tests.                                                                                                                    | test.json                                                                |
 | _TEST_VERTEX_CMEK_IDENTIFIER  | Optional. ID of the CMEK (Customer Managed Encryption Key) that you want to use for the ML pipeline runs in the E2E tests as part of the CI/CD pipeline.                                                             | projects/my-project/locations/my-region/keyRings/my-kr/cryptoKeys/my-key |
-| _TEST_VERTEX_LOCATION         | The GCP region where you want to run the ML pipelines in the E2E tests as part of the CI/CD pipeline.                                                                                                                | europe-west4                                                             |
+| _TEST_VERTEX_REGION         | The GCP region where you want to run the ML pipelines in the E2E tests as part of the CI/CD pipeline.                                                                                                                | europe-west4                                                             |
 | _TEST_VERTEX_NETWORK          | Optional. The full name of the Compute Engine network to which the ML pipelines should be peered during the E2E tests as part of the CI/CD pipeline.                                                                 | projects/12345/global/networks/myVPC                                     |
 | _TEST_VERTEX_PIPELINE_ROOT    | The GCS folder (i.e. path prefix) that you want to use for the pipeline artifacts and for passing data between stages in the pipeline. Used during the pipeline runs in the E2E tests as part of the CI/CD pipeline. | gs://my_pipeline_root_bucket/pipeline_root                               |
 | _TEST_VERTEX_PROJECT_ID       | GCP Project ID in which you want to run the ML pipelines in the E2E tests as part of the CI/CD pipeline.                                                                                                             | my-first-gcp-project                                                     |
@@ -66,7 +66,7 @@ Set up a trigger for the `release.yaml` pipeline, and provide substitution value
 - `_PIPELINE_TEMPLATE`
 - `_TEST_PAYLOAD`
 - `_TEST_VERTEX_CMEK_IDENTIFIER` (optional)
-- `_TEST_VERTEX_LOCATION`
+- `_TEST_VERTEX_REGION`
 - `_TEST_VERTEX_NETWORK` (optional)
 - `_TEST_VERTEX_PIPELINE_ROOT`
 - `_TEST_VERTEX_PROJECT_ID`

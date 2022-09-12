@@ -55,7 +55,7 @@ steps:
         make e2e-tests pipeline=training && \
         make e2e-tests pipeline=prediction
     env:
-      - VERTEX_LOCATION=${_TEST_VERTEX_LOCATION}
+      - VERTEX_REGION=${_TEST_VERTEX_REGION}
       - VERTEX_PROJECT_ID=${_TEST_VERTEX_PROJECT_ID}
       - VERTEX_SA_EMAIL=${_TEST_VERTEX_SA_EMAIL}
       - VERTEX_CMEK_IDENTIFIER=${_TEST_VERTEX_CMEK_IDENTIFIER}

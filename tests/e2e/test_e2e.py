@@ -20,7 +20,7 @@ import os
 from google.cloud import storage
 
 project_id = os.environ["VERTEX_PROJECT_ID"]
-project_location = os.environ["VERTEX_LOCATION"]
+project_location = os.environ["VERTEX_REGION"]
 
 
 def split_output_uri(output_uri: str):
