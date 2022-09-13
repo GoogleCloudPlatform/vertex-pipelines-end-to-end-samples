@@ -22,7 +22,7 @@ remote_state {
 inputs = {
   vertex_region     = local.region
   project_id        = local.project_id
-  app_engine_region = "europe-west4"
+  app_engine_region = "europe-west2"  # There are no cloud functions in europe-west4
   bigquery_location = "EU"
   pubsub_topic_name = "vertex-pipelines-trigger"
 
@@ -58,13 +58,13 @@ inputs = {
   }
   gcs_buckets_names = {
     pipeline_root_bucket      = get_env("PIPELINE_ROOT_BUCKET_NAME")
-    cf_staging_bucket         = "my-cf-staging-bucket"
-    compiled_pipelines_bucket = "my-compiled-pipelines-bucket"
+    cf_staging_bucket         = "${local.project_id}-cf-staging-bucket"
+    compiled_pipelines_bucket = "${local.project_id}-compiled-pipelines-bucket"
     assets_bucket             = get_env("PIPELINE_FILES_BUCKET_NAME")
   }
   cloud_function_config = {
     name          = "vertex-pipelines-trigger",
-    region        = "europe-west4",
+    region        = "europe-west2",  # There are no cloud functions in europe-west4
     description   = "Vertex Pipeline trigger function",
     vpc_connector = null,
   }
@@ -72,11 +72,11 @@ inputs = {
   cloud_schedulers_config = {
     training = {
       name         = "training-pipeline-trigger",
-      region       = "europe-west4",
+      region       = "europe-west2",  # There are no cloud functions in europe-west4
       description  = "Trigger my training pipeline in Vertex",
       schedule     = "0 0 * * 0",
       time_zone    = "UTC",
-      payload_file = "../pipelines/xgboost/training/payloads/dev.json",
+      payload_file = "../pipelines/xgboost/training/payloads/dev.json",  # TODO: Think about this, the attributes.template_path references local file and not gcs location
     },
   }
 }
