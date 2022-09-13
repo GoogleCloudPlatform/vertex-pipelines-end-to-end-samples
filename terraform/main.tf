@@ -105,7 +105,7 @@ resource "google_app_engine_application" "app" {
 }
 
 resource "google_bigquery_dataset" "training_dataset" {
-  dataset_id = "preprocessing_jan"
+  dataset_id = "preprocessing"
   location   = var.bigquery_location
   project    = var.project_id
   depends_on = [module.api_services]
