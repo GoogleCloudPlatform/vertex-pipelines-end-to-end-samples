@@ -21,8 +21,7 @@ module "pipeline_root_bucket_iam" {
   bucket_name = module.gcs_buckets["pipeline_root_bucket"].name
   member      = "serviceAccount:${module.service_accounts["pipelines_sa"].email}"
   roles = [
-    "roles/storage.objectViewer",
-    "roles/storage.objectCreator",
+    "roles/storage.admin" # Added by JAN, this trumps the reason above by giving even higher privileges as because get mysterious AttributeError. See post https://www.mail-archive.com/issues@beam.apache.org/msg183103.html. Example Pipeline: https://console.cloud.google.com/vertex-ai/locations/europe-west4/pipelines/runs/xgboost-train-pipeline-20220912123450?project=dt-jan-sandbox-dev
   ]
 }
 
@@ -37,21 +36,21 @@ module "assets_bucket_iam" {
 }
 
 # Give cloud functions SA access to read compiled pipelines from bucket
-module "compiled_pipelines_bucket_iam" {
-  source      = "./modules/bucket_iam"
-  bucket_name = module.gcs_buckets["compiled_pipelines_bucket"].name
-  member      = "serviceAccount:${module.service_accounts["cloudfunction_sa"].email}"
-  roles = [
-    "roles/storage.objectViewer",
-  ]
-}
+# module "compiled_pipelines_bucket_iam" {
+#   source      = "./modules/bucket_iam"
+#   bucket_name = module.gcs_buckets["compiled_pipelines_bucket"].name
+#   member      = "serviceAccount:${module.service_accounts["cloudfunction_sa"].email}"
+#   roles = [
+#     "roles/storage.objectViewer",
+#   ]
+# }
 
-# Give cloud functions SA access to use the pipelines SA for triggering pipelines
-module "pipelines_sa_iam" {
-  source          = "./modules/sa_iam"
-  service_account = module.service_accounts["pipelines_sa"].service_account.id
-  member          = "serviceAccount:${module.service_accounts["cloudfunction_sa"].email}"
-  roles = [
-    "roles/iam.serviceAccountUser",
-  ]
-}
+# # Give cloud functions SA access to use the pipelines SA for triggering pipelines
+# module "pipelines_sa_iam" {
+#   source          = "./modules/sa_iam"
+#   service_account = module.service_accounts["pipelines_sa"].service_account.id
+#   member          = "serviceAccount:${module.service_accounts["cloudfunction_sa"].email}"
+#   roles = [
+#     "roles/iam.serviceAccountUser",
+#   ]
+# }

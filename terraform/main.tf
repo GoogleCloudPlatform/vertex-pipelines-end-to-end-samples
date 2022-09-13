@@ -40,65 +40,71 @@ module "gcs_buckets" {
   version    = "~> 3.2"
   prefix     = ""
   project_id = var.project_id
+  location   = var.vertex_region # Added by JAN - This is missing my sandbox in comparison to the mlops playgrounds pipeline runner SA. I am hoping it will solve the issue with the model training job restarting because of error: https://console.cloud.google.com/logs/query;cursorTimestamp=2022-09-07T08:51:07.281723787Z;pinnedLogId=2022-09-07T08:40:56.206185934Z%2F1fweneyc9ca;query=severity%3DERROR%0Atimestamp%3D%222022-09-07T08:51:07.281723787Z%22%0AinsertId%3D%22pt460hc3cb%22;timeRange=2022-09-07T08:04:58.023Z%2F2022-09-07T11:04:58.023596Z?project=dt-jan-sandbox-dev
   names      = [each.value]
   depends_on = [module.api_services]
 }
 
 # Pub/Sub topic (for triggering pipelines)
-module "pubsub" {
-  source     = "terraform-google-modules/pubsub/google"
-  version    = "~> 3.2"
-  project_id = var.project_id
-  topic      = var.pubsub_topic_name
-  depends_on = [module.api_services]
-}
+# module "pubsub" {
+#   source     = "terraform-google-modules/pubsub/google"
+#   version    = "~> 3.2"
+#   project_id = var.project_id
+#   topic      = var.pubsub_topic_name
+#   depends_on = [module.api_services]
+# }
 
-# Cloud function (for triggering pipelines)
-module "function" {
-  source                  = "./modules/function"
-  project_id              = var.project_id
-  region                  = var.cloud_function_config.region
-  function_name           = var.cloud_function_config.name
-  description             = lookup(var.cloud_function_config, "description", null)
-  source_dir              = "../pipelines/trigger"
-  source_code_bucket_name = module.gcs_buckets["cf_staging_bucket"].name
-  runtime                 = "python39"
-  entry_point             = "cf_handler"
-  cf_service_account      = module.service_accounts["cloudfunction_sa"].email
-  vpc_connector           = lookup(var.cloud_function_config, "vpc_connector", null)
-  event_trigger = {
-    event_type           = "google.pubsub.topic.publish",
-    resource             = module.pubsub.id
-    retry_policy_enabled = false
-  }
-  environment_variables = {
-    VERTEX_LOCATION      = var.vertex_region
-    VERTEX_PIPELINE_ROOT = "gs://${module.gcs_buckets["pipeline_root_bucket"].name}"
-    VERTEX_PROJECT_ID    = var.project_id
-    VERTEX_SA_EMAIL      = module.service_accounts["pipelines_sa"].email
-  }
-  depends_on = [module.api_services]
-}
+# # Cloud function (for triggering pipelines)
+# module "function" {
+#   source                  = "./modules/function"
+#   project_id              = var.project_id
+#   region                  = var.cloud_function_config.region
+#   function_name           = var.cloud_function_config.name
+#   description             = lookup(var.cloud_function_config, "description", null)
+#   source_dir              = "../pipelines/trigger"
+#   source_code_bucket_name = module.gcs_buckets["cf_staging_bucket"].name
+#   runtime                 = "python39"
+#   entry_point             = "cf_handler"
+#   cf_service_account      = module.service_accounts["cloudfunction_sa"].email
+#   vpc_connector           = lookup(var.cloud_function_config, "vpc_connector", null)
+#   event_trigger = {
+#     event_type           = "google.pubsub.topic.publish",
+#     resource             = module.pubsub.id
+#     retry_policy_enabled = false
+#   }
+#   environment_variables = {
+#     VERTEX_REGION        = var.vertex_region
+#     VERTEX_PIPELINE_ROOT = "gs://${module.gcs_buckets["pipeline_root_bucket"].name}"
+#     VERTEX_PROJECT_ID    = var.project_id
+#     VERTEX_SA_EMAIL      = module.service_accounts["pipelines_sa"].email
+#   }
+#   depends_on = [module.api_services]
+# }
 
-# Cloud Scheduler jobs (for triggering pipelines)
-module "scheduler" {
-  for_each       = var.cloud_schedulers_config
-  source         = "./modules/pubsub_scheduler"
-  project_id     = var.project_id
-  region         = each.value.region
-  scheduler_name = each.value.name
-  description    = lookup(each.value, "description", null)
-  schedule       = each.value.schedule
-  time_zone      = lookup(each.value, "time_zone", "UTC")
-  topic_id       = module.pubsub.id
-  attributes     = jsondecode(file(each.value.payload_file)).attributes
-  data           = base64encode(jsonencode(jsondecode(file(each.value.payload_file)).data))
-  depends_on     = [module.api_services, google_app_engine_application.app]
-}
+# # Cloud Scheduler jobs (for triggering pipelines)
+# module "scheduler" {
+#   for_each       = var.cloud_schedulers_config
+#   source         = "./modules/pubsub_scheduler"
+#   project_id     = var.project_id
+#   region         = each.value.region
+#   scheduler_name = each.value.name
+#   description    = lookup(each.value, "description", null)
+#   schedule       = each.value.schedule
+#   time_zone      = lookup(each.value, "time_zone", "UTC")
+#   topic_id       = module.pubsub.id
+#   attributes     = jsondecode(file(each.value.payload_file)).attributes
+#   data           = base64encode(jsonencode(jsondecode(file(each.value.payload_file)).data))
+#   depends_on     = [module.api_services, google_app_engine_application.app]
+# }
 
-# App Engine application is required for Cloud Scheduler jobs
-resource "google_app_engine_application" "app" {
-  project     = var.project_id
-  location_id = var.app_engine_region
-  depends_on  = [module.api_services]
+# # App Engine application is required for Cloud Scheduler jobs
+# resource "google_app_engine_application" "app" {
+#   project     = var.project_id
+#   location_id = var.app_engine_region
+#   depends_on  = [module.api_services]# }
+
+resource "google_bigquery_dataset" "dataset" {
+  dataset_id = "preprocessing_jan"
+  location   = var.bigquery_location
+  project    = var.project_id
 }

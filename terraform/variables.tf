@@ -35,6 +35,11 @@ variable "vertex_region" {
   type        = string
 }
 
+variable "bigquery_location" {
+  description = "Location for BigQuery datasets"
+  type        = string
+}
+
 variable "service_accounts" {
   description = "Map of service accounts to create."
   type = map(object({

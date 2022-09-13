@@ -13,46 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-project_id = "my-project-id"
-
 api_list = [
-  "storage-api",
+  # "storage-api",
   "aiplatform",
-  "cloudscheduler",
-  "cloudfunctions",
-  "pubsub",
-  "iam",
-  "appengine",
-  "cloudbuild",
+  "bigquery",
+  # "cloudscheduler",
+  # "cloudfunctions",
+  # "pubsub",
+  # "iam",
+  # "appengine",
+  # "cloudbuild",
 ]
 
 app_engine_region = "europe-west4"
-vertex_region     = "europe-west4"
-
-service_accounts = {
-  pipelines_sa = {
-    name         = "vertex-pipelines",
-    display_name = "Vertex Pipelines SA",
-    project_roles = [
-      "roles/aiplatform.user"
-    ],
-  },
-  cloudfunction_sa = {
-    name         = "pipeline-cf-trigger",
-    display_name = "Vertex Cloud Function trigger SA",
-    project_roles = [
-      "roles/aiplatform.user"
-    ],
-  },
-}
-
-gcs_buckets_names = {
-  pipeline_root_bucket      = "my-pipeline-root-bucket"
-  cf_staging_bucket         = "my-cf-staging-bucket"
-  compiled_pipelines_bucket = "my-compiled-pipelines-bucket"
-  assets_bucket             = "my-assets-bucket"
-}
+bigquery_location = "EU"
 
 pubsub_topic_name = "vertex-pipelines-trigger"
 
