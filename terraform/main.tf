@@ -103,8 +103,14 @@ module "gcs_buckets" {
 #   location_id = var.app_engine_region
 #   depends_on  = [module.api_services]# }
 
-resource "google_bigquery_dataset" "dataset" {
+resource "google_bigquery_dataset" "training_dataset" {
   dataset_id = "preprocessing_jan"
+  location   = var.bigquery_location
+  project    = var.project_id
+}
+
+resource "google_bigquery_dataset" "prediction_dataset" {
+  dataset_id = "preprocessing_prediction"
   location   = var.bigquery_location
   project    = var.project_id
 }
