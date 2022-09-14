@@ -7,7 +7,7 @@ remote_state {
   backend = "gcs"
 
   config = {
-    bucket   = "tf-state-bucket-${local.project_id}" # TODO: change to tf-state suffix
+    bucket   = "${local.project_id}-tfstate-store"
     prefix   = "module/${path_relative_to_include()}"
     project  = local.project_id
     location = local.region
