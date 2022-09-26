@@ -40,7 +40,7 @@ module "gcs_buckets" {
   version    = "~> 3.2"
   prefix     = ""
   project_id = var.project_id
-  location   = var.vertex_region # Added by JAN - This is missing my sandbox in comparison to the mlops playgrounds pipeline runner SA. I am hoping it will solve the issue with the model training job restarting because of error: https://console.cloud.google.com/logs/query;cursorTimestamp=2022-09-07T08:51:07.281723787Z;pinnedLogId=2022-09-07T08:40:56.206185934Z%2F1fweneyc9ca;query=severity%3DERROR%0Atimestamp%3D%222022-09-07T08:51:07.281723787Z%22%0AinsertId%3D%22pt460hc3cb%22;timeRange=2022-09-07T08:04:58.023Z%2F2022-09-07T11:04:58.023596Z?project=dt-jan-sandbox-dev
+  location   = var.vertex_region
   names      = [each.value]
   depends_on = [module.api_services]
 }
@@ -104,6 +104,7 @@ resource "google_app_engine_application" "app" {
   depends_on  = [module.api_services]
 }
 
+# Empty BigQuery Dataset that gets populated during the data ingestion phase of the model training pipeline
 resource "google_bigquery_dataset" "training_dataset" {
   dataset_id = "preprocessing"
   location   = var.bigquery_location
@@ -111,6 +112,7 @@ resource "google_bigquery_dataset" "training_dataset" {
   depends_on = [module.api_services]
 }
 
+# Empty BigQuery Dataset that gets populated during the data ingestion phase of the model prediction pipeline
 resource "google_bigquery_dataset" "prediction_dataset" {
   dataset_id = "preprocessing_prediction"
   location   = var.bigquery_location

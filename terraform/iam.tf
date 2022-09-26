@@ -21,7 +21,7 @@ module "pipeline_root_bucket_iam" {
   bucket_name = module.gcs_buckets["pipeline_root_bucket"].name
   member      = "serviceAccount:${module.service_accounts["pipelines_sa"].email}"
   roles = [
-    "roles/storage.admin" # Added by JAN, this trumps the reason above by giving even higher privileges as because get mysterious AttributeError. See post https://www.mail-archive.com/issues@beam.apache.org/msg183103.html. Example Pipeline: https://console.cloud.google.com/vertex-ai/locations/europe-west4/pipelines/runs/xgboost-train-pipeline-20220912123450?project=dt-jan-sandbox-dev
+    "roles/storage.admin"
   ]
 }
 

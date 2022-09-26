@@ -45,7 +45,7 @@ inputs = {
       project_roles = [
         "roles/aiplatform.user",
         "roles/bigquery.jobUser",
-        "roles/bigquery.dataEditor", # Added by JAN - Getting 403 when trying to access taxi_trips table inside dataset: https://console.cloud.google.com/vertex-ai/locations/europe-west4/pipelines/runs/xgboost-train-pipeline-20220906174714?project=dt-jan-sandbox-dev AND https://stackoverflow.com/questions/52533796/unable-to-run-query-against-bigquery-permission-error-403
+        "roles/bigquery.dataEditor",
       ],
     },
     cloudfunction_sa = {
@@ -76,7 +76,7 @@ inputs = {
       description  = "Trigger my training pipeline in Vertex",
       schedule     = "0 0 * * 0",
       time_zone    = "UTC",
-      payload_file = "../pipelines/xgboost/training/payloads/dev.json",  # TODO: Think about this, the attributes.template_path references local file and not gcs location
+      payload_file = "${get_path_to_repo_root()}/pipelines/xgboost/training/payloads/dev.json",
     },
   }
 }
