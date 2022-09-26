@@ -33,3 +33,24 @@ Below is a list of the infrastructure that is created as part of this Terraform 
   - Vertex Pipelines to execute the pipelines
   - Cloud Function to trigger the pipeline execution
   - Cloud Scheduler to publish messages to the pub/sub topic
+
+## Deployment into blank Google Cloud Project
+
+The section below details how to deploy the infrastructure into a blank Google Cloud Project
+
+###  Prerequisites
+
+- [Terraform](https://www.terraform.io/docs)
+- [Terragrunt](https://terragrunt.gruntwork.io/docs/)
+
+###  Deployment
+
+Given the `env.sh` exists in the repository root and is populated with suitable values for the required variables, run `make deploy-infra` from the repository root to initialise terraform and deploy all the required infrastructure as defined in this folder.
+
+Once the deployment is completed, pipelines can be ran manually or automatically on a schedule as defined by the `cloud_schedulers_config` in the `terragrunt.hcl` file.
+
+The terragrunt configuration automatically creates a GCS bucket for storing the terraform state. For more information see terragrunt [remote_state](https://terragrunt.gruntwork.io/docs/reference/config-blocks-and-attributes/#remote_state).  
+
+###  Clean up
+
+To destroy the deployed infrastructure defined in this directory, run `make destroy-infra` from the repository root.
