@@ -35,7 +35,10 @@ service_accounts = {
     name         = "vertex-pipelines",
     display_name = "Vertex Pipelines SA",
     project_roles = [
-      "roles/aiplatform.user"
+      "roles/aiplatform.user",
+      "roles/bigquery.user",
+      "roles/bigquery.dataEditor",
+      "roles/storage.admin"
     ],
   },
   cloudfunction_sa = {
