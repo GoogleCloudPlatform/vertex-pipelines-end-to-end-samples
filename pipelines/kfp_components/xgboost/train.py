@@ -13,12 +13,18 @@
 # limitations under the License.
 
 from kfp.v2.dsl import Artifact, Input, Output, Dataset, Model, component
-from pipelines.kfp_components.dependencies import PYTHON37, XGBOOST, SKLEARN, PANDAS
+from pipelines.kfp_components.dependencies import (
+    PYTHON37,
+    XGBOOST,
+    SKLEARN,
+    PANDAS,
+    JOBLIB,
+)
 
 
 @component(
     base_image=PYTHON37,
-    packages_to_install=[XGBOOST, SKLEARN, PANDAS],
+    packages_to_install=[XGBOOST, SKLEARN, PANDAS, JOBLIB],
 )
 def train_xgboost_model(
     training_data: Input[Dataset],

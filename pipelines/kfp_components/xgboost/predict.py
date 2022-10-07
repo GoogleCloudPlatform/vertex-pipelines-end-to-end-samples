@@ -13,10 +13,16 @@
 # limitations under the License.
 
 from kfp.v2.dsl import Dataset, Input, Output, Model, component
-from pipelines.kfp_components.dependencies import PYTHON37, XGBOOST, SKLEARN, PANDAS
+from pipelines.kfp_components.dependencies import (
+    PYTHON37,
+    XGBOOST,
+    SKLEARN,
+    PANDAS,
+    JOBLIB,
+)
 
 
-@component(base_image=PYTHON37, packages_to_install=[XGBOOST, SKLEARN, PANDAS])
+@component(base_image=PYTHON37, packages_to_install=[XGBOOST, SKLEARN, PANDAS, JOBLIB])
 def predict_xgboost_model(
     input_data: Input[Dataset],
     model: Input[Model],
