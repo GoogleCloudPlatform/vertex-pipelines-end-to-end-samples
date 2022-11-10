@@ -40,6 +40,7 @@ module "gcs_buckets" {
   version    = "~> 3.2"
   prefix     = ""
   project_id = var.project_id
+  location   = var.vertex_region
   names      = [each.value]
   depends_on = [module.api_services]
 }
