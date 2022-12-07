@@ -225,14 +225,17 @@ Remember that this configuration must be different for the two environments.
 
 ### CI/CD
 
-There are four CI/CD pipelines located under the [cloudbuild](cloudbuild) directory:
+There are five CI/CD pipelines located under the [cloudbuild](cloudbuild) directory:
 
 1. `pr-checks.yaml` - runs pre-commit checks and unit tests on the custom KFP components, and checks that the ML pipelines (training and prediction) can compile.
-2. `release.yaml` - Compiles the training and prediction pipelines, and copies the compiled pipelines, along with their respective `assets` directories, to Google Cloud Storage in the build / CI/CD environment. The Google Cloud Storage destination is namespaced using the git tag (see below). Following this, the E2E tests are run on the new compiled pipelines. Below is a diagram of how the files are published in each environment:
+2. `e2e-test.yaml` - copies the "assets" folders to the chosen GCS destination (versioned by git commit hash - see below) and runs end-to-end tests of the training and prediction pipeline.
+3. `release.yaml` - Compiles the training and prediction pipelines, and copies the compiled pipelines, along with their respective `assets` directories, to Google Cloud Storage in the build / CI/CD environment. The Google Cloud Storage destination is namespaced using the git tag (see below). Following this, the E2E tests are run on the new compiled pipelines.
+
+Below is a diagram of how the files are published in each environment in the `e2e-test.yaml` and `release.yaml` pipelines:
 
 ```
 . <-- GCS directory set by _PIPELINE_PUBLISH_GCS_PATH
-└── TAG_NAME <-- Git tag used for the release
+└── TAG_NAME or GIT COMMIT HASH <-- Git tag used for the release (release.yaml) OR git commit hash (e2e-test.yaml)
     ├── prediction
     │   ├── assets
     │   │   └── tfdv_schema_prediction.pbtxt
@@ -243,9 +246,8 @@ There are four CI/CD pipelines located under the [cloudbuild](cloudbuild) direct
         └── training.json   <-- compiled training pipeline
 ```
 
-3. `terraform-plan.yaml` - Checks the Terraform configuration under `envs/<env>` (i.e. `envs/test` or `envs/prod`), and produces a summary of any proposed changes that will be applied on merge to the main branch. Out of the box, this just includes Cloud Scheduler jobs used to schedule your ML pipelines.
-4. `terraform-apply.yaml` - Applies the Terraform configuration under `envs/<env>` (i.e. `envs/test` or `envs/prod`). Out of the box, this just includes Cloud Scheduler jobs used to schedule your ML pipelines.
- 
+4. `terraform-plan.yaml` - Checks the Terraform configuration under `envs/<env>` (i.e. `envs/test` or `envs/prod`), and produces a summary of any proposed changes that will be applied on merge to the main branch. Out of the box, this just includes Cloud Scheduler jobs used to schedule your ML pipelines.
+5. `terraform-apply.yaml` - Applies the Terraform configuration under `envs/<env>` (i.e. `envs/test` or `envs/prod`). Out of the box, this just includes Cloud Scheduler jobs used to schedule your ML pipelines.
 
 For more details on setting up CI/CD, see the [separate README](cloudbuild/README.md).
 
