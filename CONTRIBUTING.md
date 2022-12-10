@@ -131,18 +131,22 @@ make e2e-tests pipeline=<training|prediction>
 ### How to adapt the end-to-end (E2E) pipeline tests for your own pipeline
 As described above, we provide our E2E tests with a dictionary of expected outputs for the pipeline components, and confirm that these outputs are stored in a GCS uri or generated successfully in Vertex AI.
  For information on how tasks and outputs are stored in your pipeline, we recommend looking at these [AI Platform documents](https://googleapis.dev/python/aiplatform/latest/aiplatform_v1beta1/types.html#google.cloud.aiplatform_v1beta1.types.PipelineJob). The following briefly describes how we created this dictionary, and you can use this to create your own dictionary of expected tasks:
-1. Trigger a pipeline with configurations in the corresponding `payload.json` file, and collect the pipeline tasks and their details. For example:
+1. Trigger a pipeline (using the default pipeline input parameters), and collect the pipeline tasks and their details. For example:
 ```
-from google.cloud.aiplatform.pipeline_jobs import PipelineJob
 from pipelines.trigger.main import trigger_pipeline_from_payload
 
-with open(payload_path, "r") as f:
-        payload = json.load(f)
+...
 
-        pl = trigger_pipeline_from_payload(payload)
-        pl.wait()
-        details = pl.to_dict()
-        tasks = details["jobDetail"]["taskDetails"]
+    payload = {
+        "attributes": {
+            "template_path": template_path,
+            "enable_caching": False
+        }
+    }
+    pl = trigger_pipeline_from_payload(payload)
+    pl.wait()
+    details = pl.to_dict()
+    tasks = details["jobDetail"]["taskDetails"]
 
 ```
 2. Check missing tasks by comparing the actual task produced in pipeline and the expected tasks defined in each pipeline test file ( e.g `../xgboost/training/test_e2e.py`))

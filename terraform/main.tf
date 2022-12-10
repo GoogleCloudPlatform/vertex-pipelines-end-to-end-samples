@@ -92,9 +92,12 @@ module "scheduler" {
   schedule       = each.value.schedule
   time_zone      = lookup(each.value, "time_zone", "UTC")
   topic_id       = module.pubsub.id
-  attributes     = jsondecode(file(each.value.payload_file)).attributes
-  data           = base64encode(jsonencode(jsondecode(file(each.value.payload_file)).data))
-  depends_on     = [module.api_services, google_app_engine_application.app]
+  attributes = {
+    template_path  = each.value.template_path,
+    enable_caching = lookup(each.value, "enable_caching", null)
+  }
+  data       = base64encode(jsonencode(each.value.pipeline_parameters))
+  depends_on = [module.api_services, google_app_engine_application.app]
 }
 
 # App Engine application is required for Cloud Scheduler jobs

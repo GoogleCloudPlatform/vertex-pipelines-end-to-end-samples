@@ -12,11 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
 from tests.e2e.test_e2e import pipeline_e2e_test
 
 
-def test_pipeline_run() -> None:
+def test_pipeline_run(enable_caching) -> None:
     """
     Tests if pipeline is run successfully
     Triggers pipeline synchronously.
@@ -31,8 +30,7 @@ def test_pipeline_run() -> None:
         None
     """
 
-    payload_file = os.environ["PAYLOAD"]
-    payload_path = f"pipelines/xgboost/prediction/payloads/{payload_file}"
+    pipeline_json = "prediction.json"
 
     # tasks (components) and outputs for tasks which occur unconditionally
     common_tasks = {
@@ -47,4 +45,8 @@ def test_pipeline_run() -> None:
         "model-batch-predict": ["batchpredictionjob"],
     }
 
-    pipeline_e2e_test(payload_path, common_tasks)
+    pipeline_e2e_test(
+        template_path=pipeline_json,
+        enable_caching=enable_caching,
+        common_tasks=common_tasks,
+    )

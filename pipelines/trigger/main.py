@@ -151,19 +151,14 @@ def convert_payload(payload: dict) -> dict:
     # if payload["data"] is missing, add it as empty dict
     payload["data"] = payload.get("data", {})
 
-    # if enable_caching value is in attributes, convert from str to bool
+    # if enable_caching value is present and not None, convert from str to bool
     # otherwise, it needs to be None
-    if "enable_caching" in payload["attributes"]:
+    if payload["attributes"].get("enable_caching") is not None:
         payload["attributes"]["enable_caching"] = bool(
             distutils.util.strtobool(payload["attributes"]["enable_caching"])
         )
     else:
         payload["attributes"]["enable_caching"] = None
-
-    # if "PIPELINE_FILES_GCS_PATH" env variable is defined, override this parameter
-    env_value = os.environ.get("PIPELINE_FILES_GCS_PATH")
-    if env_value:
-        payload["data"]["pipeline_files_gcs_path"] = env_value
 
     return payload
 
@@ -191,25 +186,34 @@ def get_env() -> dict:
     }
 
 
-def get_args(args: List[str] = None) -> argparse.Namespace:
-    """Get args from command line args
-    Args:
-        event (dict): Event payload.
-        context (google.cloud.functions.Context): Metadata for the event.
+def sandbox_run(args: List[str] = None) -> aiplatform.PipelineJob:
+    """Trigger a Vertex Pipeline run from a (local) compiled pipeline definition.
+    Returns the PipelineJob object of the triggered pipeline run.
+    Usage: python main.py --template_path=pipeline.json --enable_caching=true
     """
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--payload", help="Path to the payload JSON file", type=str)
-    return parser.parse_args(args)
-
-
-def sandbox_run() -> aiplatform.PipelineJob:
     logging.basicConfig(level=logging.DEBUG)
 
-    args = get_args()
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--template_path", help="Path to the payload JSON file", type=str
+    )
+    parser.add_argument("--enable_caching", type=str, default=None)
 
-    # Load JSON payload into a dictionary
-    with open(args.payload, "r") as f:
-        payload = json.load(f)
+    # Get commandline args
+    args = parser.parse_args(args)
+
+    # If empty value for enable_caching provided on commandline default to None
+    if args.enable_caching == "":
+        args.enable_caching = None
+
+    payload = {
+        "attributes": {
+            "template_path": args.template_path,
+            "enable_caching": args.enable_caching,
+        }
+        # "data" omitted as pipeline params are taken from the default args
+        # in compiled JSON pipeline
+    }
 
     return trigger_pipeline_from_payload(payload)
 

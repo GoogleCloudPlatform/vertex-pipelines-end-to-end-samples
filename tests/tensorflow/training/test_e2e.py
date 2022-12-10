@@ -12,11 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
 from tests.e2e.test_e2e import pipeline_e2e_test
 
 
-def test_pipeline_run() -> None:
+def test_pipeline_run(enable_caching) -> None:
     """
     Tests if pipeline is run successfully
     Triggers pipeline synchronously.
@@ -31,8 +30,7 @@ def test_pipeline_run() -> None:
         None
     """
 
-    payload_file = os.environ["PAYLOAD"]
-    payload_path = f"pipelines/tensorflow/training/payloads/{payload_file}"
+    pipeline_json = "training.json"
 
     # tasks (components) and outputs for tasks which occur unconditionally
     common_tasks = {
@@ -72,8 +70,9 @@ def test_pipeline_run() -> None:
     }
 
     pipeline_e2e_test(
-        payload_path=payload_path,
+        template_path=pipeline_json,
         common_tasks=common_tasks,
+        enable_caching=enable_caching,
         conditional_task_one=conditional_task_one,
         condtional_task_two=condtional_task_two,
         conditional_task_three=conditional_task_three,

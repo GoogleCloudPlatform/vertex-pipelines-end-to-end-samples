@@ -37,8 +37,10 @@ steps:
       - |
         pip install pipenv && \
         pipenv install --dev && \
-        make e2e-tests pipeline=training && \
-        make e2e-tests pipeline=prediction
+        make compile pipeline=training && \
+        make compile pipeline=prediction && \
+        pipenv run python -m pytest tests/${_PIPELINE_TEMPLATE}/training --enable_caching=${_TEST_ENABLE_PIPELINE_CACHING} && \
+        pipenv run python -m pytest tests/${_PIPELINE_TEMPLATE}/prediction --enable_caching=${_TEST_ENABLE_PIPELINE_CACHING}
     env:
       - VERTEX_LOCATION=${_TEST_VERTEX_LOCATION}
       - VERTEX_PROJECT_ID=${_TEST_VERTEX_PROJECT_ID}
@@ -46,9 +48,9 @@ steps:
       - VERTEX_CMEK_IDENTIFIER=${_TEST_VERTEX_CMEK_IDENTIFIER}
       - VERTEX_NETWORK=${_TEST_VERTEX_NETWORK}
       - PIPELINE_TEMPLATE=${_PIPELINE_TEMPLATE}
-      - PAYLOAD=${_TEST_PAYLOAD}
       - VERTEX_PIPELINE_ROOT=${_TEST_VERTEX_PIPELINE_ROOT}
       - PIPELINE_FILES_GCS_PATH=${_PIPELINE_PUBLISH_GCS_PATH}/${COMMIT_SHA}
+      - TRAIN_STATS_GCS_PATH=${_TEST_TRAIN_STATS_GCS_PATH}
 
 # Increase timeout to allow end-to-end (E2E) pipeline tests to run
 timeout: 18000s  # 5 hours

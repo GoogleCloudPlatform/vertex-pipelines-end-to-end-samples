@@ -13,12 +13,10 @@
 # limitations under the License.
 
 from unittest import mock
-import datetime
 import pytest
 import base64
 import json
 import os
-import argparse
 from pipelines.trigger.main import cf_handler, convert_payload, get_env
 
 
@@ -91,24 +89,6 @@ def test_trigger_pipeline():
         )
 
 
-@pytest.fixture
-def patch_datetime_now(monkeypatch):
-    """Fixture to patch datetime.now() to a fixed date.
-
-    Date used is 2021-10-21 00:00:00 (UTC).
-
-    """
-
-    FAKE_TIME = datetime.datetime(2021, 10, 21, 0, 0, 0)
-
-    class MyDatetime:
-        def now(self):
-            return FAKE_TIME
-
-    monkeypatch.setattr(datetime, "datetime", MyDatetime)
-
-
-@pytest.mark.usefixtures("patch_datetime_now")
 @pytest.mark.parametrize(
     "env_vars,test_input,expected",
     [
@@ -139,40 +119,6 @@ def patch_datetime_now(monkeypatch):
                     "enable_caching": True,
                 },
                 "data": {},
-            },
-        ),
-        # pipeline_files_gcs_path NOT overridden
-        (
-            {},
-            {
-                "attributes": {
-                    "template_path": "pipeline.json",
-                },
-                "data": {"pipeline_files_gcs_path": "gs://my-original-path"},
-            },
-            {
-                "attributes": {
-                    "template_path": "pipeline.json",
-                    "enable_caching": None,
-                },
-                "data": {"pipeline_files_gcs_path": "gs://my-original-path"},
-            },
-        ),
-        # pipeline_files_gcs_path overridden
-        (
-            {"PIPELINE_FILES_GCS_PATH": "gs://my-overridden-path"},
-            {
-                "attributes": {
-                    "template_path": "pipeline.json",
-                },
-                "data": {"pipeline_files_gcs_path": "gs://my-original-path"},
-            },
-            {
-                "attributes": {
-                    "template_path": "pipeline.json",
-                    "enable_caching": None,
-                },
-                "data": {"pipeline_files_gcs_path": "gs://my-overridden-path"},
             },
         ),
     ],
@@ -253,27 +199,45 @@ def test_get_env(env_vars, expected, monkeypatch):
     assert env == expected
 
 
-def test_sandbox_run():
+@pytest.mark.parametrize(
+    "cmdline_args,expected_payload",
+    [
+        (
+            [
+                "--template_path=pipeline.json",
+                "--enable_caching=True",
+            ],
+            {
+                "attributes": {
+                    "template_path": "pipeline.json",
+                    "enable_caching": "True",
+                },
+            },
+        ),
+        # enable_caching omitted on commandline
+        (
+            [
+                "--template_path=pipeline.json",
+                "--enable_caching=",
+            ],
+            {
+                "attributes": {
+                    "template_path": "pipeline.json",
+                    "enable_caching": None,
+                },
+            },
+        ),
+    ],
+)
+def test_sandbox_run(cmdline_args, expected_payload):
 
-    dummy_payload = {"attributes": {"template_path": "pipeline.json"}}
-    dummy_payload_str = json.dumps(dummy_payload)
-
-    # mock get_args(), open(), and trigger_pipeline_from_payload()
-    with mock.patch("pipelines.trigger.main.get_args") as mock_get_args, mock.patch(
-        "builtins.open", mock.mock_open(read_data=dummy_payload_str)
-    ) as mock_file, mock.patch(
+    # mock get_args(), and trigger_pipeline_from_payload()
+    with mock.patch(
         "pipelines.trigger.main.trigger_pipeline_from_payload"
     ) as mock_trigger_pipeline_from_payload:
 
-        # fix return value of get_args()
-        mock_get_args.return_value = argparse.Namespace(
-            payload="payload.json",
-        )
-
         from pipelines.trigger.main import sandbox_run
 
-        sandbox_run()
+        sandbox_run(cmdline_args)
 
-        mock_get_args.assert_called_once()
-        mock_file.assert_called_once_with("payload.json", "r")
-        mock_trigger_pipeline_from_payload.assert_called_once_with(dummy_payload)
+        mock_trigger_pipeline_from_payload.assert_called_once_with(expected_payload)

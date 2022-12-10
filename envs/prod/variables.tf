@@ -27,12 +27,14 @@ variable "pubsub_topic_name" {
 variable "cloud_schedulers_config" {
   description = "Map of configurations for cloud scheduler jobs (each a different pipeline schedule)."
   type = map(object({
-    name         = string
-    region       = string
-    description  = string
-    schedule     = string
-    time_zone    = string
-    payload_file = string
+    name                = string
+    region              = string
+    description         = string
+    schedule            = string
+    time_zone           = string
+    template_path       = string
+    enable_caching      = bool
+    pipeline_parameters = map(any)
   }))
   default = {}
 }

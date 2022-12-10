@@ -103,37 +103,12 @@ This will execute the pipeline using the chosen template on Vertex AI, namely it
 1. Compile the pipeline using the Kubeflow Pipelines SDK
 1. Copy the `assets` folders to Cloud Storage
 1. Trigger the pipeline with the help of `pipelines/trigger/main.py`
-    
-The trigger mechanism uses a payload to pass static as well as dynamic metadata to a pipeline. 
-The next section explain this content and usage of the payload in more detail.
 
-#### Pipeline payload
+#### Pipeline input parameters
 
-For each pipeline, there is a JSON file that contains the pipeline parameters (and some other parameters) for the pipeline run in the sandbox/dev environment. 
-You can view and modify this file in `./pipelines/$PIPELINE_TEMPLATE/$pipeline/payloads/dev.json`. 
-There are also payload files for test and prod environments.
+The ML pipelines have input parameters. As you can see in the pipeline definition files (`pipelines/<xgboost|tensorflow>/<training|prediction>/pipeline.py`), they have default values, and some of these default values are derived from environment variables (which in turn are defined in `env.sh`).
 
-<details><summary>More details about the contents of payload</summary><p>
-
-```json
-{
-    "attributes": { 
-        "enable_caching": "False",
-        "template_path": "<local path for the compiled ML pipeline - or for the test/prod environments, GCS location for the compiled ML pipeline to use>"
-    },
-    "data": {
-        "key": "value"
-    }
-}
-```
-    
-| Payload Field | Purpose | Comments |
-| --- | --- | --- |
-| `enable_caching` | Control the [caching behaviour in Vertex Pipelines](https://cloud.google.com/vertex-ai/docs/pipelines/configure-caching) | <ul><li>If set to "True", Vertex Pipelines will cache the outputs of any pipeline steps where the component's specification, inputs, output definition, and pipeline name are identical</li><li>If set to "False", Vertex Pipelines will never cache the outputs of any pipeline steps</li><li>If it is not included, Vertex Pipelines will default to caching the outputs of pipeline steps where possible, unless caching is disabled in the pipeline definition</li> |
-| `template_path` | Specify where the compiled ML pipeline to run should be stored - either a local path (for development) or a GCS path (for scheduling) |  |
-| `data` | Key-value pairs of any additional input parameters for the ML pipeline | The pipeline keys and values differ between pipelines e.g. `"model_name": "my-xgboost-model"`. |
-</p>
-</details>
+When triggering ad hoc runs in your dev/sandbox environment, or when running the E2E tests in CI, these default values are used. For the test and production deployments, the pipeline parameters are defined in the Terraform code for the Cloud Scheduler jobs (`envs/<test|prod>/variables.auto.tfvars`).
 
 ### Assets
 
@@ -152,7 +127,7 @@ make unit-tests
 and
 
 ```
-make e2e-tests pipeline=<training|prediction>
+make e2e-tests pipeline=<training|prediction> [ enable_caching=<true|false> ]
 ```
 
 There are also unit tests for the pipeline triggering code [`pipelines/trigger`](../pipelines/trigger). This is not run as part of a CI/CD pipeline, as we don't expect this to be changed for each use case. To run them on your local machine:
