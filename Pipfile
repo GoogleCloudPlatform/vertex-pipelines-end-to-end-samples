@@ -4,10 +4,14 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-kfp = "==1.8.9"
-google-cloud-pipeline-components = "==0.2.0"
-google-cloud-aiplatform = "==1.10.0"
+kfp = "==1.8.17"
+google-cloud-pipeline-components = "==1.0.5"
+google-cloud-aiplatform = "==1.12.1"
 Jinja2 = ">=3.0.1,<4.0.0"
+numpy = "==1.21.4"
+ipykernel = "==6.16.2"
+ipython = "==7.34.0"
+jupyter-core = "==4.11.2"
 
 [dev-packages]
 pytest = ">=6.2.4,<7.0.0"
@@ -15,13 +19,12 @@ pre-commit = ">=2.14.1,<3.0.0"
 xgboost = "==1.4.2"
 scikit-learn = "==0.24.1"
 pandas = "==1.3.2"
-protobuf = "==3.18.0"
+protobuf = "==3.20.1"
 tensorflow-data-validation = "==1.6.0"
-tensorflow = "==2.7.1"
+tensorflow = "==2.8.0"
 tensorflow-model-analysis = "==0.37.0"
 google-cloud-storage = "==1.42.2"
 google-cloud-bigquery = "==2.30.0"
-numpy = "==1.19.5"
 apache-beam = "==2.35.0"
 
 [requires]
