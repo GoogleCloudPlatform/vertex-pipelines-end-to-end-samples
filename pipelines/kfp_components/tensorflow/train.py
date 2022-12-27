@@ -27,7 +27,6 @@ def train_tensorflow_model(
     metrics_artifact: Output[Artifact],
 ):
     """Train a Tensorflow Keras model.
-
     Args:
         training_data (Input[Dataset]): Training data as kfp's Dataset object.
             Attribute .path is the GCS location for csv files
@@ -96,7 +95,6 @@ def train_tensorflow_model(
         input_data: Path, label_name: str, model_params: dict, file_pattern: str = ""
     ) -> Dataset:
         """Create a TF Dataset from input csv files.
-
         Args:
             input_data (Input[Dataset]): Train/Valid data in CSV format
             label_name (str): Name of column containing the labels
@@ -143,7 +141,6 @@ def train_tensorflow_model(
 
     def get_distribution_strategy(distribute_strategy: str) -> tf.distribute.Strategy:
         """Set distribute strategy based on input string.
-
         Args:
             distribute_strategy (str): single, mirror or multi
         Returns:
@@ -171,11 +168,9 @@ def train_tensorflow_model(
 
     def normalization(name: str, dataset: Dataset) -> Normalization:
         """Create a Normalization layer for a feature.
-
         Args:
             name (str): name of feature to be normalized
             dataset (Dataset): dataset to adapt layer
-
         Returns:
             normalization layer (Normalization): adapted normalization layer
                 of shape (?,1)
@@ -187,12 +182,10 @@ def train_tensorflow_model(
 
     def str_lookup(name: str, dataset: Dataset, output_mode: str) -> StringLookup:
         """Create a StringLookup layer for a feature.
-
         Args:
             name (str): name of feature to be encoded
             dataset (Dataset): dataset to adapt layer
             output_mode (str): argument for StringLookup layer (e.g. 'one_hot', 'int')
-
         Returns:
             StringLookup layer (StringLookup): adapted StringLookup layer of shape (?,X)
         """
@@ -206,11 +199,9 @@ def train_tensorflow_model(
 
     def build_and_compile_model(dataset: Dataset, model_params: dict) -> Model:
         """Build and compile model.
-
         Args:
             dataset (Dataset): training dataset
             model_params (dict): model parameters
-
         Returns:
             model (Model): built and compiled model
         """
@@ -267,15 +258,26 @@ def train_tensorflow_model(
         """Determine whether current worker is the chief (master). See more info:
         - https://www.tensorflow.org/tutorials/distribute/multi_worker_with_keras
         - https://www.tensorflow.org/api_docs/python/tf/distribute/cluster_resolver/ClusterResolver # noqa: E501
-
         Args:
             strategy (tf.distribute.Strategy): strategy
-
         Returns:
             is_chief (bool): True if worker is chief, otherwise False
         """
         cr = strategy.cluster_resolver
         return (cr is None) or (cr.task_type == "chief" and cr.task_id == 0)
+    
+    def _get_temp_dir(dirpath, task_id):
+        base_dirpath = 'workertemp_' + str(task_id)
+        temp_dir = os.path.join(dirpath, base_dirpath)
+        tf.io.gfile.makedirs(temp_dir)
+        return temp_dir
+    
+    def write_filepath(filepath, strategy, task_type, task_id):
+        dirpath = os.path.dirname(filepath)
+        base = os.path.basename(filepath)
+        if not _is_chief(strategy):
+            dirpath = _get_temp_dir(dirpath, task_id)
+        return os.path.join(dirpath, base)
 
     def save_model_outputs(
         model_path: str,
@@ -284,23 +286,29 @@ def train_tensorflow_model(
         strategy: tf.distribute.Strategy,
     ) -> None:
         """Save model outputs only for chief - Model binaries + Metrics
-
         Args:
             model_path (str): Original model path where chief saves model artifacts
             metrics_artifact_path (str): Path where chief will save eval metrics
             model (tf.keras.Model): Trained TF Keras model
             strategy (tf.distribute.Strategy): strategy
-
         Returns:
             None
         """
         is_chief = _is_chief(strategy)
 
         if is_chief:
-            # Save model artefacts only from chief
+            logging.info("Save model artefacts only from chief")
             model.save(model_path, save_format="tf")
-            # Save metrics only from chief
+            logging.info("Save metrics only from chief")
             with open(metrics_artifact_path, "w") as fp:
+                json.dump(history.history, fp)
+        else:
+            task_type, task_id = (strategy.cluster_resolver.task_type,
+                      strategy.cluster_resolver.task_id)
+            write_model_path = write_filepath('/tmp/keras-model', strategy, task_type, task_id)
+            write_metrics_path = write_filepath('/tmp/metrics.json', strategy, task_type, task_id)
+            model.save(write_model_path, save_format="tf")
+            with open(write_metrics_path, "w") as fp:
                 json.dump(history.history, fp)
 
     # prepare model params
@@ -356,6 +364,8 @@ def train_tensorflow_model(
 
     # only persist output files if current worker is chief
     os.makedirs(model.path, exist_ok=True)
-    logging.info(f"Save model to: {model.path}")
-    logging.info(f"Save metrics to: {metrics_artifact.path}")
+    is_chief = _is_chief(strategy)
+    if is_chief:
+        logging.info(f"Save model to: {model.path}")
+        logging.info(f"Save metrics to: {metrics_artifact.path}")
     save_model_outputs(model.path, metrics_artifact.path, tf_model, strategy)
