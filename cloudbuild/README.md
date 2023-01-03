@@ -18,12 +18,13 @@ limitations under the License.
 
 ## Overview
 
-There are four CI/CD pipelines
+There are five CI/CD pipelines
 
 1. `pr-checks.yaml` - runs pre-commit checks and unit tests on the custom KFP components, and checks that the ML pipelines (training and prediction) can compile.
-1. `release.yaml` - compiles training and prediction pipelines, then copies the compiled pipelines and their respective "assets" folders to GCS destinations in the test and prod environments.
-3. `terraform-plan.yaml` - Checks the Terraform configuration under `envs/<env>` (i.e. `envs/test` or `envs/prod`), and produces a summary of any proposed changes that will be applied on merge to the main branch. Out of the box, this just includes Cloud Scheduler jobs used to schedule your ML pipelines.
-4. `terraform-apply.yaml` - Applies the Terraform configuration under `envs/<env>` (i.e. `envs/test` or `envs/prod`). Out of the box, this just includes Cloud Scheduler jobs used to schedule your ML pipelines.
+1. `e2e-test.yaml` - copies the "assets" folders to the chosen GCS destination (versioned by git commit hash) and runs end-to-end tests of the training and prediction pipeline.
+1. `release.yaml` - compiles training and prediction pipelines, then copies the compiled pipelines and their respective "assets" folders to the chosen GCS destination (versioned by git tag).
+1. `terraform-plan.yaml` - Checks the Terraform configuration under `envs/<env>` (i.e. `envs/test` or `envs/prod`), and produces a summary of any proposed changes that will be applied on merge to the main branch. Out of the box, this just includes Cloud Scheduler jobs used to schedule your ML pipelines.
+1. `terraform-apply.yaml` - Applies the Terraform configuration under `envs/<env>` (i.e. `envs/test` or `envs/prod`). Out of the box, this just includes Cloud Scheduler jobs used to schedule your ML pipelines.
 
 The last two assume you have already set up your infrastructure separately (GCS buckets, service accounts, IAM, Pub/Sub topic, and Cloud Function). If not, you can use the Terraform modules under [`terraform/modules`](../terraform) to do this.
 
@@ -54,13 +55,7 @@ Below is a table detailing the variable substitutions you will need to set up in
 
 Set up a trigger for the `pr-checks.yaml` pipeline, and provide a substitution value for the variable `_PIPELINE_TEMPLATE` (either `xgboost` or `tensorflow`).
 
-Set up two triggers for `terraform-plan.yaml`:
-  - One for the test environment. Set the substitution value for the variable `_ENV_DIRECTORY` to `envs/test`.
-  - One for the prod environment. Set the substitution value for the variable `_ENV_DIRECTORY` to `envs/prod`.
-
-### On push of new tag
-
-Set up a trigger for the `release.yaml` pipeline, and provide substitution values for the following variables (described in the table above):
+Set up a trigger for the `e2e-test.yaml` pipeline, and provide substitution values for the following variables (described in the table above):
 
 - `_PIPELINE_PUBLISH_GCS_PATH`
 - `_PIPELINE_TEMPLATE`
@@ -71,6 +66,20 @@ Set up a trigger for the `release.yaml` pipeline, and provide substitution value
 - `_TEST_VERTEX_PIPELINE_ROOT`
 - `_TEST_VERTEX_PROJECT_ID`
 - `_TEST_VERTEX_SA_EMAIL`
+
+We recommend to enable comment control for this trigger (select `Required` under `Comment Control`). This will mean that the end-to-end tests will only run once a repository collaborator or owner comments `/gcbrun` on the pull request.
+This will help to avoid unnecessary runs of the ML pipelines while a Pull Request is still being worked on, as they can take a long time (and can be expensive to run on every pull request!)
+
+Set up two triggers for `terraform-plan.yaml`:
+  - One for the test environment. Set the substitution value for the variable `_ENV_DIRECTORY` to `envs/test`.
+  - One for the prod environment. Set the substitution value for the variable `_ENV_DIRECTORY` to `envs/prod`.
+
+### On push of new tag
+
+Set up a trigger for the `release.yaml` pipeline, and provide substitution values for the following variables (described in the table above):
+
+- `_PIPELINE_PUBLISH_GCS_PATH`
+- `_PIPELINE_TEMPLATE`
 
 ### On merge to `main` / `master` branch
 
