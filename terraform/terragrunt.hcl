@@ -57,10 +57,10 @@ inputs = {
     },
   }
   gcs_buckets_names = {
-    pipeline_root_bucket      = get_env("PIPELINE_ROOT_BUCKET_NAME")
+    pipeline_root_bucket      = "${local.project_id}-pipeline-root-bucket"
     cf_staging_bucket         = "${local.project_id}-cf-staging-bucket"
     compiled_pipelines_bucket = "${local.project_id}-compiled-pipelines-bucket"
-    assets_bucket             = get_env("PIPELINE_FILES_BUCKET_NAME")
+    assets_bucket             = "${local.project_id}-pipeline-assets-bucket"
   }
   cloud_function_config = {
     name          = "vertex-pipelines-trigger",
