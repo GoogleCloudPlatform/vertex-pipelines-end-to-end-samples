@@ -11,3 +11,19 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+import pytest
+
+
+def pytest_addoption(parser):
+    parser.addoption(
+        "--enable_caching",
+        type=str,
+        help="Whether to enable or disable caching for all pipeline steps",
+        default=None,
+    )
+
+
+@pytest.fixture(scope="session")
+def enable_caching(pytestconfig):
+    return pytestconfig.getoption("enable_caching")

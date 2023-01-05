@@ -32,8 +32,8 @@ vertex_region     = "europe-west4"
 
 service_accounts = {
   pipelines_sa = {
-    name         = "vertex-pipelines",
-    display_name = "Vertex Pipelines SA",
+    name         = "vertex-pipelines"
+    display_name = "Vertex Pipelines SA"
     project_roles = [
       "roles/aiplatform.user",
       "roles/bigquery.user",
@@ -42,8 +42,8 @@ service_accounts = {
     ],
   },
   cloudfunction_sa = {
-    name         = "pipeline-cf-trigger",
-    display_name = "Vertex Cloud Function trigger SA",
+    name         = "pipeline-cf-trigger"
+    display_name = "Vertex Cloud Function trigger SA"
     project_roles = [
       "roles/aiplatform.user"
     ],
@@ -60,19 +60,114 @@ gcs_buckets_names = {
 pubsub_topic_name = "vertex-pipelines-trigger"
 
 cloud_function_config = {
-  name          = "vertex-pipelines-trigger",
-  region        = "europe-west4",
-  description   = "Vertex Pipeline trigger function",
+  name          = "vertex-pipelines-trigger"
+  region        = "europe-west4"
+  description   = "Vertex Pipeline trigger function"
   vpc_connector = null,
 }
 
 cloud_schedulers_config = {
-  training = {
-    name         = "training-pipeline-trigger",
-    region       = "europe-west4",
-    description  = "Trigger my training pipeline in Vertex",
-    schedule     = "0 0 * * 0",
-    time_zone    = "UTC",
-    payload_file = "../pipelines/xgboost/training/payloads/dev.json",
-  },
+  # Uncomment and amend as required
+
+  # xgboost_training = {
+  #   name         = "xgboost-training-pipeline-trigger"
+  #   region       = "europe-west4"
+  #   description  = "Trigger my XGBoost training pipeline in Vertex"
+  #   schedule     = "0 0 * * 0"
+  #   time_zone    = "UTC"
+  #   template_path = "gs://my-assets-bucket/<Git tag>/training/training.json"
+  #   enable_caching = null
+  #   pipeline_parameters = {
+  #     project_id = "my-project-id"
+  #     project_location = "europe-west4"
+  #     pipeline_files_gcs_path = "gs://my-assets-bucket/<Git tag>"
+  #     ingestion_project_id = "my-project-id"
+  #     model_name = "xgboost-with-preprocessing"
+  #     model_label = "label_name"
+  #     tfdv_schema_filename = "tfdv_schema_training.pbtxt"
+  #     tfdv_train_stats_path = "gs://my-assets-bucket/train_stats/train.stats"
+  #     dataset_id = "preprocessing"
+  #     dataset_location = "EU"
+  #     ingestion_dataset_id = "chicago_taxi_trips"
+  #     timestamp = "2021-08-01 00:00:00"
+  #   },
+  # },
+
+  # xgboost_prediction = {
+  #   name         = "xgboost-prediction-pipeline-trigger"
+  #   region       = "europe-west4"
+  #   description  = "Trigger my XGBoost prediction pipeline in Vertex"
+  #   schedule     = "0 0 * * 0"
+  #   time_zone    = "UTC"
+  #   template_path = "gs://my-assets-bucket/<Git tag>/prediction/prediction.json"
+  #   enable_caching = null
+  #   pipeline_parameters = {
+  #     project_id = "my-project-id"
+  #     project_location = "europe-west4"
+  #     pipeline_files_gcs_path = "gs://my-assets-bucket/<Git tag>"
+  #     ingestion_project_id = "my-project-id"
+  #     model_name = "xgboost-with-preprocessing"
+  #     model_label = "label_name"
+  #     tfdv_schema_filename = "tfdv_schema_training.pbtxt"
+  #     tfdv_train_stats_path = "gs://my-assets-bucket/train_stats/train.stats"
+  #     dataset_id = "preprocessing"
+  #     dataset_location = "EU"
+  #     ingestion_dataset_id = "chicago_taxi_trips"
+  #     timestamp = "2021-08-01 00:00:00"
+  #     batch_prediction_machine_type = "n1-standard-4"
+  #     batch_prediction_min_replicas = 3
+  #     batch_prediction_max_replicas = 5
+  #   },
+  # },
+
+  # tensorflow_training = {
+  #   name         = "tensorflow-training-pipeline-trigger"
+  #   region       = "europe-west4"
+  #   description  = "Trigger my TensorFlow training pipeline in Vertex"
+  #   schedule     = "0 0 * * 0"
+  #   time_zone    = "UTC"
+  #   template_path = "gs://my-assets-bucket/<Git tag>/training/training.json"
+  #   enable_caching = null
+  #   pipeline_parameters = {
+  #     project_id = "my-project-id"
+  #     project_location = "europe-west4"
+  #     pipeline_files_gcs_path = "gs://my-assets-bucket/<Git tag>"
+  #     ingestion_project_id = "my-project-id"
+  #     model_name = "tensorflow-with-preprocessing"
+  #     model_label = "label_name"
+  #     tfdv_schema_filename = "tfdv_schema_training.pbtxt"
+  #     tfdv_train_stats_path = "gs://my-assets-bucket/train_stats/train.stats"
+  #     dataset_id = "preprocessing"
+  #     dataset_location = "EU"
+  #     ingestion_dataset_id = "chicago_taxi_trips"
+  #     timestamp = "2021-08-01 00:00:00"
+  #   },
+  # },
+
+  # tensorflow_prediction = {
+  #   name         = "tensorflow-prediction-pipeline-trigger"
+  #   region       = "europe-west4"
+  #   description  = "Trigger my TensorFlow prediction pipeline in Vertex"
+  #   schedule     = "0 0 * * 0"
+  #   time_zone    = "UTC"
+  #   template_path = "gs://my-assets-bucket/<Git tag>/prediction/prediction.json"
+  #   enable_caching = null
+  #   pipeline_parameters = {
+  #     project_id = "my-project-id"
+  #     project_location = "europe-west4"
+  #     pipeline_files_gcs_path = "gs://my-assets-bucket/<Git tag>"
+  #     ingestion_project_id = "my-project-id"
+  #     model_name = "tensorflow-with-preprocessing"
+  #     model_label = "label_name"
+  #     tfdv_schema_filename = "tfdv_schema_training.pbtxt"
+  #     tfdv_train_stats_path = "gs://my-assets-bucket/train_stats/train.stats"
+  #     dataset_id = "preprocessing"
+  #     dataset_location = "EU"
+  #     ingestion_dataset_id = "chicago_taxi_trips"
+  #     timestamp = "2021-08-01 00:00:00"
+  #     batch_prediction_machine_type = "n1-standard-4"
+  #     batch_prediction_min_replicas = 3
+  #     batch_prediction_max_replicas = 5
+  #   },
+  # },
 }

@@ -40,13 +40,14 @@ Below is a table detailing the variable substitutions you will need to set up in
 |-------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |--------------------------------------------------------------------------|
 | _PIPELINE_PUBLISH_GCS_PATH | The GCS folder (i.e. path prefix) in the build/CI/CD environment where the pipeline files will be copied to. See the [Assets](../README.md#assets) section of the main README for more information.                                     | gs://my-cicd-bucket/pipelines                                            |
 | _PIPELINE_TEMPLATE            | The set of pipelines in the repo that you would like to use - i.e. the subfolder under `pipelines` where you pipelines live. Currently, can be either `xgboost` or `tensorflow`.                                            | xgboost                                                                  |
-| _TEST_PAYLOAD                 | The file name of the JSON payload that you want to use for the ML pipeline runs in the E2E tests.                                                                                                                    | test.json                                                                |
 | _TEST_VERTEX_CMEK_IDENTIFIER  | Optional. ID of the CMEK (Customer Managed Encryption Key) that you want to use for the ML pipeline runs in the E2E tests as part of the CI/CD pipeline.                                                             | projects/my-project/locations/my-region/keyRings/my-kr/cryptoKeys/my-key |
 | _TEST_VERTEX_LOCATION         | The GCP region where you want to run the ML pipelines in the E2E tests as part of the CI/CD pipeline.                                                                                                                | europe-west4                                                             |
 | _TEST_VERTEX_NETWORK          | Optional. The full name of the Compute Engine network to which the ML pipelines should be peered during the E2E tests as part of the CI/CD pipeline.                                                                 | projects/12345/global/networks/myVPC                                     |
 | _TEST_VERTEX_PIPELINE_ROOT    | The GCS folder (i.e. path prefix) that you want to use for the pipeline artifacts and for passing data between stages in the pipeline. Used during the pipeline runs in the E2E tests as part of the CI/CD pipeline. | gs://my_pipeline_root_bucket/pipeline_root                               |
 | _TEST_VERTEX_PROJECT_ID       | GCP Project ID in which you want to run the ML pipelines in the E2E tests as part of the CI/CD pipeline.                                                                                                             | my-first-gcp-project                                                     |
 | _TEST_VERTEX_SA_EMAIL         | Email address of the service account you want to use to run the ML pipelines in the E2E tests as part of the CI/CD pipeline.                                                                                         | vertex-pipeline-runner@my-first-gcp-project.iam.gserviceaccount.com      |
+| _TEST_ENABLE_PIPELINE_CACHING | Override the default caching behaviour of the ML pipelines. Leave blank to use the default caching behaviour.                                                                                       | "True"<br>"False"<br>""      |
+| _TEST_TRAIN_STATS_GCS_PATH | GCS path to use for storing the statistics computed about the training dataset used in the training pipeline                                                                                       | gs://my-test-environment-trainstats_bucket/train_stats/train.stats      |
 | _ENV_DIRECTORY | Terraform configuration directory for the environment to which you want to deploy - used in the Terraform Cloud Build pipelines. Value will be either `envs/test` or `envs/prod` (defaults to `envs/test`). | `envs/test` |
 
 ## Recommended triggers
@@ -59,13 +60,14 @@ Set up a trigger for the `e2e-test.yaml` pipeline, and provide substitution valu
 
 - `_PIPELINE_PUBLISH_GCS_PATH`
 - `_PIPELINE_TEMPLATE`
-- `_TEST_PAYLOAD`
 - `_TEST_VERTEX_CMEK_IDENTIFIER` (optional)
 - `_TEST_VERTEX_LOCATION`
 - `_TEST_VERTEX_NETWORK` (optional)
 - `_TEST_VERTEX_PIPELINE_ROOT`
 - `_TEST_VERTEX_PROJECT_ID`
 - `_TEST_VERTEX_SA_EMAIL`
+- `_TEST_TRAIN_STATS_GCS_PATH`
+- `_TEST_ENABLE_PIPELINE_CACHING`
 
 We recommend to enable comment control for this trigger (select `Required` under `Comment Control`). This will mean that the end-to-end tests will only run once a repository collaborator or owner comments `/gcbrun` on the pull request.
 This will help to avoid unnecessary runs of the ML pipelines while a Pull Request is still being worked on, as they can take a long time (and can be expensive to run on every pull request!)

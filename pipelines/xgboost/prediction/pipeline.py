@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import json
+import os
 import pathlib
 
 from kfp.v2 import compiler, dsl
@@ -36,21 +37,21 @@ from pipelines.kfp_components.tfdv import (
 
 @dsl.pipeline(name="xgboost-prediction-pipeline")
 def xgboost_pipeline(
-    project_id: str,
-    project_location: str,
-    pipeline_files_gcs_path: str,
-    ingestion_project_id: str,
-    model_name: str,
-    model_label: str,
-    tfdv_schema_filename: str,
-    tfdv_train_stats_path: str,
-    dataset_id: str,
-    dataset_location: str,
-    ingestion_dataset_id: str,
-    timestamp: str,
-    batch_prediction_machine_type: str,
-    batch_prediction_min_replicas: int,
-    batch_prediction_max_replicas: int,
+    project_id: str = os.environ.get("VERTEX_PROJECT_ID"),
+    project_location: str = os.environ.get("VERTEX_LOCATION"),
+    pipeline_files_gcs_path: str = os.environ.get("PIPELINE_FILES_GCS_PATH"),
+    ingestion_project_id: str = os.environ.get("VERTEX_PROJECT_ID"),
+    tfdv_schema_filename: str = "tfdv_schema_serving.pbtxt",
+    tfdv_train_stats_path: str = os.environ.get("TRAIN_STATS_GCS_PATH"),
+    model_name: str = "xgboost_with_preprocessing",
+    model_label: str = "label_name",
+    dataset_id: str = "preprocessing",
+    dataset_location: str = "EU",
+    ingestion_dataset_id: str = "chicago_taxi_trips",
+    timestamp: str = "2021-08-01 00:00:00",
+    batch_prediction_machine_type: str = "n1-standard-4",
+    batch_prediction_min_replicas: int = 3,
+    batch_prediction_max_replicas: int = 10,
 ):
     """
     XGB prediction pipeline which:

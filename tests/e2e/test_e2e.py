@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import json
 import logging
 from pipelines.trigger.main import trigger_pipeline_from_payload
 import pytest
@@ -148,8 +147,9 @@ def test_batch_prediction_job_uri(
 
 
 def pipeline_e2e_test(
-    payload_path: str,
+    template_path: str,
     common_tasks: dict,
+    enable_caching: bool = None,
     **kwargs: dict,
 ):
     """
@@ -158,13 +158,15 @@ def pipeline_e2e_test(
     2. Check if these tasks output the correct artifacts and they are all accessible
 
     Args:
-        payload_path (str): pipeline payload file path
+        template_path (str): path (relative to repository) of the compiled KFP
+            pipeline to test
         common_tasks (dict): tasks in pipline that are excuted everytime
         **kwargs (dict): conditioanal tasks groups in dictionary
     """
-    # Load JSON payload into a dictionary
-    with open(payload_path, "r") as f:
-        payload = json.load(f)
+
+    payload = {
+        "attributes": {"template_path": template_path, "enable_caching": enable_caching}
+    }
 
     try:
         pl = trigger_pipeline_from_payload(payload)

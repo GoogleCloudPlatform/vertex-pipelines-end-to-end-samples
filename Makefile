@@ -30,11 +30,15 @@ trigger-tests: ## Runs unit tests for the pipeline trigger code
 compile: ## Compile the pipeline to training.json or prediction.json. Must specify pipeline=<training|prediction>
 	@pipenv run python -m pipelines.${PIPELINE_TEMPLATE}.${pipeline}.pipeline
 
-run: ## Compile pipeline, copy assets to GCS, and run pipeline in sandbox environment. Must specify pipeline=<training|prediction>
-	@ $(MAKE) compile && \
-	gsutil -m rsync -r -d ./pipelines/${PIPELINE_TEMPLATE}/$(pipeline)/assets ${PIPELINE_FILES_GCS_PATH}/$(pipeline)/assets && \
-	pipenv run python -m pipelines.trigger.main --payload=./pipelines/${PIPELINE_TEMPLATE}/$(pipeline)/payloads/${PAYLOAD}
+sync-assets: ## Sync assets folder to GCS. Must specify pipeline=<training|prediction>
+	@gsutil -m rsync -r -d ./pipelines/${PIPELINE_TEMPLATE}/$(pipeline)/assets ${PIPELINE_FILES_GCS_PATH}/$(pipeline)/assets
 
-e2e-tests: ## Compile pipeline, trigger pipeline and perform end-to-end (E2E) pipeline tests. Must specify pipeline=<training|prediction>
+run: ## Compile pipeline, copy assets to GCS, and run pipeline in sandbox environment. Must specify pipeline=<training|prediction>. Optionally specify enable_pipeline_caching=<true|false> (defaults to default Vertex caching behaviour)
 	@ $(MAKE) compile && \
-	pipenv run python -m pytest tests/${PIPELINE_TEMPLATE}/$(pipeline)
+	$(MAKE) sync-assets && \
+	pipenv run python -m pipelines.trigger.main --pipeline=./$(pipeline).json --enable_caching=$(enable_pipeline_caching)
+
+e2e-tests: ## Compile pipeline, copy assets to GCS, and perform end-to-end (E2E) pipeline tests. Must specify pipeline=<training|prediction>. Optionally specify enable_pipeline_caching=<true|false> (defaults to default Vertex caching behaviour)
+	@ $(MAKE) compile && \
+	$(MAKE) sync-assets && \
+	pipenv run python -m pytest --log-cli-level=INFO tests/${PIPELINE_TEMPLATE}/$(pipeline) --enable_caching=$(enable_pipeline_caching)
