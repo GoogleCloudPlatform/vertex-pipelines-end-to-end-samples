@@ -161,6 +161,9 @@ pytest.ini
 *.tfstate.*
 .terraform.lock.hcl
 
+# Terragrunt cache files
+**/.terragrunt-cache
+
 # Cloud Function zip
 terraform/*.zip
 

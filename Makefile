@@ -28,10 +28,10 @@ trigger-tests: ## Runs unit tests for the pipeline trigger code
 	@pipenv run python -m pytest tests/trigger
 
 deploy-infra: ## Deploy infrastructure as defined in ./terraform directory using env variables from env.sh
-	@cd terraform && terragrunt init && terragrunt apply
+	@terragrunt apply --terragrunt-working-dir="envs/dev/module"
 
 destroy-infra: ## Destroy infrastructure defined in ./terraform directory using env variables from env.sh
-	@cd terraform && terragrunt init && terragrunt destroy
+	@terragrunt destroy --terragrunt-working-dir="envs/dev/module"
 
 compile: ## Compile the pipeline to training.json or prediction.json. Must specify pipeline=<training|prediction>
 	@pipenv run python -m pipelines.${PIPELINE_TEMPLATE}.${pipeline}.pipeline

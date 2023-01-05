@@ -1,6 +1,13 @@
+terraform {
+  source = "${get_repo_root()}//terraform"
+}
+
+# Local values are overwritten by environment specific terragrunt config values
 locals {
-  project_id = get_env("VERTEX_PROJECT_ID")
-  region     = get_env("VERTEX_REGION")
+  env_config  = read_terragrunt_config(find_in_parent_folders("env.hcl"))
+  project_id  = local.env_config.locals.project_id
+  environment = local.env_config.locals.environment
+  region      = get_env("VERTEX_REGION")
 }
 
 remote_state {
@@ -8,7 +15,7 @@ remote_state {
 
   config = {
     bucket   = "${local.project_id}-tfstate-store"
-    prefix   = "module/${path_relative_to_include()}"
+    prefix   = "${path_relative_to_include()}"
     project  = local.project_id
     location = local.region
   }
@@ -76,7 +83,7 @@ inputs = {
       description  = "Trigger my training pipeline in Vertex",
       schedule     = "0 0 * * 0",
       time_zone    = "UTC",
-      payload_file = "${get_path_to_repo_root()}/pipelines/xgboost/training/payloads/dev.json",
+      payload_file = "${get_repo_root()}/pipelines/xgboost/training/payloads/${local.environment}.json",
     },
   }
 }
