@@ -36,7 +36,7 @@ sync-assets: ## Sync assets folder to GCS. Must specify pipeline=<training|predi
 run: ## Compile pipeline, copy assets to GCS, and run pipeline in sandbox environment. Must specify pipeline=<training|prediction>. Optionally specify enable_pipeline_caching=<true|false> (defaults to default Vertex caching behaviour)
 	@ $(MAKE) compile && \
 	$(MAKE) sync-assets && \
-	pipenv run python -m pipelines.trigger.main --pipeline=./$(pipeline).json --enable_caching=$(enable_pipeline_caching)
+	pipenv run python -m pipelines.trigger.main --template_path=./$(pipeline).json --enable_caching=$(enable_pipeline_caching)
 
 e2e-tests: ## Compile pipeline, copy assets to GCS, and perform end-to-end (E2E) pipeline tests. Must specify pipeline=<training|prediction>. Optionally specify enable_pipeline_caching=<true|false> (defaults to default Vertex caching behaviour)
 	@ $(MAKE) compile && \
