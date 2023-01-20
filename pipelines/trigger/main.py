@@ -195,7 +195,7 @@ def sandbox_run(args: List[str] = None) -> aiplatform.PipelineJob:
 
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--template_path", help="Path to the payload JSON file", type=str
+        "--template_path", help="Path to the compiled pipeline (JSON)", type=str
     )
     parser.add_argument("--enable_caching", type=str, default=None)
 
