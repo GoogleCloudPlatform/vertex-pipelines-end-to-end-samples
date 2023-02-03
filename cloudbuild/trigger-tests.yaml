@@ -12,21 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 ---
-
 steps:
-
-  # Terraform plan
-  - name: hashicorp/terraform:1.1.3
-    dir: /workspace/${_ENV_DIRECTORY}
-    entrypoint: /bin/sh
+  - name: 'python:3.7'
     args:
-      - -c
+      - '-c'
       - |
-        terraform init -input=false &&
-        terraform plan -input=false
+        pip install pipenv && \
+        pipenv install --dev && \
+        make trigger-tests
+    entrypoint: /bin/sh
 
 options:
   logging: CLOUD_LOGGING_ONLY
 
-substitutions:
-  _ENV_DIRECTORY: envs/test  # envs/test or envs/prod
+timeout: 3600s

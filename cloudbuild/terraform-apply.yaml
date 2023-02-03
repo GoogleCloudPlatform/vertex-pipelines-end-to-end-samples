@@ -25,5 +25,8 @@ steps:
         terraform init -input=false &&
         terraform apply -auto-approve -input=false
 
+options:
+  logging: CLOUD_LOGGING_ONLY
+
 substitutions:
   _ENV_DIRECTORY: envs/test  # envs/test or envs/prod

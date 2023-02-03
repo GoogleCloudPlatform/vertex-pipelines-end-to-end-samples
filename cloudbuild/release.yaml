@@ -43,4 +43,7 @@ steps:
         cp -r pipelines/${_PIPELINE_TEMPLATE}/prediction/assets ${TAG_NAME}/prediction/ && \
         gsutil cp -r ${TAG_NAME} ${_PIPELINE_PUBLISH_GCS_PATH}
 
+options:
+  logging: CLOUD_LOGGING_ONLY
+
 timeout: 1800s  # 30mins
