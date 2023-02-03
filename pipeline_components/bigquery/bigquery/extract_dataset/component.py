@@ -14,10 +14,14 @@
 
 from typing import NamedTuple
 from kfp.v2.dsl import Dataset, Output, component
-from pipelines.kfp_components.dependencies import PYTHON37, GOOGLE_CLOUD_BIGQUERY
+from pathlib import Path
 
 
-@component(base_image=PYTHON37, packages_to_install=[GOOGLE_CLOUD_BIGQUERY])
+@component(
+    base_image="python:3.7",
+    packages_to_install=["google-cloud-bigquery==2.30.0"],
+    output_component_file=str(Path(__file__).with_suffix(".yaml")),
+)
 def extract_bq_to_dataset(
     bq_client_project_id: str,
     source_project_id: str,

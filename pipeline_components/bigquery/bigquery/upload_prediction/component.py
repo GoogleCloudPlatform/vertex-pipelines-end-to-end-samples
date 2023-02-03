@@ -13,10 +13,14 @@
 # limitations under the License.
 
 from kfp.v2.dsl import Input, component, Artifact
-from pipelines.kfp_components.dependencies import PYTHON37, GOOGLE_CLOUD_BIGQUERY
+from pathlib import Path
 
 
-@component(base_image=PYTHON37, packages_to_install=[GOOGLE_CLOUD_BIGQUERY])
+@component(
+    base_image="python:3.7",
+    packages_to_install=["google-cloud-bigquery==2.30.0"],
+    output_component_file=str(Path(__file__).with_suffix(".yaml")),
+)
 def load_dataset_to_bq(
     bq_client_project_id: str,
     destination_project_id: str,
