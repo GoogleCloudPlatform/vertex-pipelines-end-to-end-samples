@@ -33,8 +33,8 @@ compile-pipeline: ## Compile the pipeline to training.json or prediction.json. M
 compile-components: ## Compile all the components in a component group
 	@cd pipeline_components/${GROUP} && \
 	pipenv install && \
-	for component in ${GROUP}/* ; do \
-		pipenv run python $$component/component.py ; \
+	for component in ${GROUP}/*/component.py ; do \
+		pipenv run python $$component ; \
 	done
 
 sync-assets: ## Sync assets folder to GCS. Must specify pipeline=<training|prediction>
