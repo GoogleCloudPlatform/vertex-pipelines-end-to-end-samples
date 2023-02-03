@@ -54,7 +54,7 @@ def tensorflow_pipeline(
     model_name: str = "tensorflow_with_preprocessing",
     model_label: str = "label_name",
     dataset_id: str = "preprocessing",
-    dataset_location: str = "EU",
+    dataset_location: str = os.environ.get("VERTEX_LOCATION"),
     ingestion_dataset_id: str = "chicago_taxi_trips",
     timestamp: str = "2021-08-01 00:00:00",
 ):

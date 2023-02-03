@@ -52,5 +52,8 @@ steps:
       - PIPELINE_FILES_GCS_PATH=${_PIPELINE_PUBLISH_GCS_PATH}/${COMMIT_SHA}
       - TRAIN_STATS_GCS_PATH=${_TEST_TRAIN_STATS_GCS_PATH}
 
+options:
+  logging: CLOUD_LOGGING_ONLY
+
 # Increase timeout to allow end-to-end (E2E) pipeline tests to run
 timeout: 18000s  # 5 hours
