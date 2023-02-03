@@ -1,0 +1,50 @@
+name: Get current time
+description: Create time stamp for the filter in data ingestion step.
+inputs:
+- {name: timestamp, type: String}
+outputs:
+- {name: Output, type: String}
+implementation:
+  container:
+    image: python:3.7
+    command:
+    - sh
+    - -c
+    - |2
+
+      if ! [ -x "$(command -v pip)" ]; then
+          python3 -m ensurepip || python3 -m ensurepip --user || apt-get install python3-pip
+      fi
+
+      PIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet     --no-warn-script-location 'kfp==1.8.9' && "$0" "$@"
+    - sh
+    - -ec
+    - |
+      program_path=$(mktemp -d)
+      printf "%s" "$0" > "$program_path/ephemeral_component.py"
+      python3 -m kfp.v2.components.executor_main                         --component_module_path                         "$program_path/ephemeral_component.py"                         "$@"
+    - "\nimport kfp\nfrom kfp.v2 import dsl\nfrom kfp.v2.dsl import *\nfrom typing\
+      \ import *\n\ndef get_current_time(timestamp: str) -> str:\n    \"\"\"\n   \
+      \ Create time stamp for the filter in data ingestion step.\n    If timestamp\
+      \ is empty, returns current time (UTC+0)\n    in ISO 6801 date format. Otherwise,\
+      \ returns input timestamp.\n    If the input timestamp is specified, it must\
+      \ follow ISO 6801 date format,\n    which consist of two parts, date and time.\
+      \ For example 2022-01-18T19:00:00.\n    The date part is mandatory while any\
+      \ missing value in time part\n    will be regarded as zero.\n\n    Args:\n \
+      \       timestamp (str): Optional. Empty or\n        a specific timestamp in\
+      \ ISO 8601 format\n\n    Returns:\n        str: A string of current times in\
+      \ ISO 8601 format or\n        a specific timestamp in ISO 8601 format.\n   \
+      \ \"\"\"\n    from datetime import datetime, timezone\n    import logging\n\n\
+      \    if not timestamp:\n        return datetime.now(timezone.utc).isoformat()\n\
+      \n    else:\n        try:\n            logging.info(\n                f\"timestamp\
+      \ in ISO 8601 format: \\\n                {datetime.fromisoformat(timestamp)}\"\
+      \n            )\n            return datetime.fromisoformat(timestamp).isoformat()\n\
+      \        except ValueError:\n            raise ValueError(\n               \
+      \ f\"timestamp is not in correct ISO 6801 format \\\n                    (YYYY-MM-DD\
+      \ or YYYY-MM-DD hh:mm:ss or \\\n                    YYYY-MM-DDThh:mm:ss.sss\xB1\
+      hh:mm)\\\n                    or an empty string\"\n            )\n\n"
+    args:
+    - --executor_input
+    - {executorInput: null}
+    - --function_to_execute
+    - get_current_time

@@ -27,8 +27,15 @@ unit-tests: ## Runs unit tests for kfp_components
 trigger-tests: ## Runs unit tests for the pipeline trigger code
 	@pipenv run python -m pytest tests/trigger
 
-compile: ## Compile the pipeline to training.json or prediction.json. Must specify pipeline=<training|prediction>
+compile-pipeline: ## Compile the pipeline to training.json or prediction.json. Must specify pipeline=<training|prediction>
 	@pipenv run python -m pipelines.${PIPELINE_TEMPLATE}.${pipeline}.pipeline
+
+compile-components: ## Compile all the components in a component group
+	@cd pipeline_components/${GROUP} && \
+	pipenv install && \
+	for component in ${GROUP}/* ; do \
+		pipenv run python $$component/component.py ; \
+	done
 
 sync-assets: ## Sync assets folder to GCS. Must specify pipeline=<training|prediction>
 	@gsutil -m rsync -r -d ./pipelines/${PIPELINE_TEMPLATE}/$(pipeline)/assets ${PIPELINE_FILES_GCS_PATH}/$(pipeline)/assets

@@ -13,10 +13,14 @@
 # limitations under the License.
 
 from kfp.v2.dsl import Output, Model, component
-from pipelines.kfp_components.dependencies import PYTHON37, GOOGLE_CLOUD_AIPLATFORM
+from pathlib import Path
 
 
-@component(base_image=PYTHON37, packages_to_install=[GOOGLE_CLOUD_AIPLATFORM])
+@component(
+    base_image="python:3.7",
+    packages_to_install=["google-cloud-aiplatform==1.10.0"],
+    output_component_file=str(Path(__file__).with_suffix(".yaml")),
+)
 def export_model(
     model_resource_name: str,
     model: Output[Model],
