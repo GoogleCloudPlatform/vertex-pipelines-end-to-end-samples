@@ -265,13 +265,13 @@ def train_tensorflow_model(
         """
         cr = strategy.cluster_resolver
         return (cr is None) or (cr.task_type == "chief" and cr.task_id == 0)
-    
+
     def _get_temp_dir(dirpath, task_id):
-        base_dirpath = 'workertemp_' + str(task_id)
+        base_dirpath = "workertemp_" + str(task_id)
         temp_dir = os.path.join(dirpath, base_dirpath)
         tf.io.gfile.makedirs(temp_dir)
         return temp_dir
-    
+
     def write_filepath(filepath, strategy, task_type, task_id):
         dirpath = os.path.dirname(filepath)
         base = os.path.basename(filepath)
@@ -303,10 +303,16 @@ def train_tensorflow_model(
             with open(metrics_artifact_path, "w") as fp:
                 json.dump(history.history, fp)
         else:
-            task_type, task_id = (strategy.cluster_resolver.task_type,
-                      strategy.cluster_resolver.task_id)
-            write_model_path = write_filepath('/tmp/keras-model', strategy, task_type, task_id)
-            write_metrics_path = write_filepath('/tmp/metrics.json', strategy, task_type, task_id)
+            task_type, task_id = (
+                strategy.cluster_resolver.task_type,
+                strategy.cluster_resolver.task_id,
+            )
+            write_model_path = write_filepath(
+                "/tmp/keras-model", strategy, task_type, task_id
+            )
+            write_metrics_path = write_filepath(
+                "/tmp/metrics.json", strategy, task_type, task_id
+            )
             model.save(write_model_path, save_format="tf")
             with open(write_metrics_path, "w") as fp:
                 json.dump(history.history, fp)
