@@ -13,12 +13,13 @@
 # limitations under the License.
 
 from kfp.v2.dsl import Artifact, Input, Output, Dataset, Model, component
-from pipelines.kfp_components.dependencies import PYTHON37, XGBOOST, SKLEARN, PANDAS
+from pathlib import Path
 
 
 @component(
-    base_image=PYTHON37,
-    packages_to_install=[XGBOOST, SKLEARN, PANDAS],
+    base_image="python:3.7",
+    packages_to_install=["xgboost==1.4.2", "scikit-learn==0.24.1", "pandas==1.3.2"],
+    output_component_file=str(Path(__file__).with_suffix(".yaml")),
 )
 def train_xgboost_model(
     training_data: Input[Dataset],
