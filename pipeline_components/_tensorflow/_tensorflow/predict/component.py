@@ -13,10 +13,14 @@
 # limitations under the License.
 
 from kfp.v2.dsl import Dataset, Input, Output, Model, component
-from pipelines.kfp_components.dependencies import PYTHON37, TENSORFLOW, PANDAS
+from pathlib import Path
 
 
-@component(base_image=PYTHON37, packages_to_install=[TENSORFLOW, PANDAS])
+@component(
+    base_image="python:3.7",
+    packages_to_install=["tensorflow==2.7.1", "pandas==1.3.2"],
+    output_component_file=str(Path(__file__).with_suffix(".yaml")),
+)
 def predict_tensorflow_model(
     input_data: Input[Dataset],
     model: Input[Model],

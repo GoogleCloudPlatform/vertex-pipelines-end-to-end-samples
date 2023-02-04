@@ -13,10 +13,14 @@
 # limitations under the License.
 
 from kfp.v2.dsl import Artifact, Input, Output, Dataset, Model, component
-from pipelines.kfp_components.dependencies import PYTHON37, TENSORFLOW
+from pathlib import Path
 
 
-@component(base_image=PYTHON37, packages_to_install=[TENSORFLOW])
+@component(
+    base_image="python:3.7",
+    packages_to_install=["tensorflow==2.7.1"],
+    output_component_file=str(Path(__file__).with_suffix(".yaml")),
+)
 def train_tensorflow_model(
     training_data: Input[Dataset],
     validation_data: Input[Dataset],
