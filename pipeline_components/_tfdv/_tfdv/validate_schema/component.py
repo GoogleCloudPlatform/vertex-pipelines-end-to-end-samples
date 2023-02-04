@@ -13,10 +13,14 @@
 # limitations under the License.
 
 from kfp.v2.dsl import Input, Output, Artifact, component
-from pipelines.kfp_components.dependencies import PYTHON37, TENSORFLOW_DATA_VALIDATION
+from pathlib import Path
 
 
-@component(base_image=PYTHON37, packages_to_install=[TENSORFLOW_DATA_VALIDATION])
+@component(
+    base_image="python:3.7",
+    packages_to_install=["tensorflow-data-validation==1.6.0"],
+    output_component_file=str(Path(__file__).with_suffix(".yaml")),
+)
 def validate_schema(
     statistics: Input[Artifact],
     anomalies: Output[Artifact],
