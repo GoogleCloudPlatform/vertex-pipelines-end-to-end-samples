@@ -1,0 +1,70 @@
+name: Copy artifact
+description: Copy artifact.
+inputs:
+- {name: src_artifact, type: Artifact, description: Source artifact.}
+- name: des_uri
+  type: String
+  description: |-
+    Optional. Set destination URI of copied artifact which includes
+    the artifact itself. Defaults to None.
+  optional: true
+outputs:
+- {name: des_artifact, type: Artifact, description: Copy of artifact}
+implementation:
+  container:
+    image: python:3.7
+    command:
+    - sh
+    - -c
+    - |2
+
+      if ! [ -x "$(command -v pip)" ]; then
+          python3 -m ensurepip || python3 -m ensurepip --user || apt-get install python3-pip
+      fi
+
+      PIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet     --no-warn-script-location 'kfp==1.8.9' && "$0" "$@"
+    - sh
+    - -ec
+    - |
+      program_path=$(mktemp -d)
+      printf "%s" "$0" > "$program_path/ephemeral_component.py"
+      python3 -m kfp.v2.components.executor_main                         --component_module_path                         "$program_path/ephemeral_component.py"                         "$@"
+    - |2+
+
+      import kfp
+      from kfp.v2 import dsl
+      from kfp.v2.dsl import *
+      from typing import *
+
+      def copy_artifact(
+          src_artifact: Input[Artifact], des_artifact: Output[Artifact], des_uri: str = None
+      ) -> None:
+          """
+          Copy artifact.
+
+          Args:
+              src_artifact (Input[Artifact]): Source artifact.
+              des_artifact (Output[Artifact]): Copy of artifact
+              des_uri (str): Optional. Set destination URI of copied artifact which includes
+                  the artifact itself. Defaults to None.
+
+          Returns:
+              None
+          """
+          import shutil
+          from pathlib import Path
+
+          if des_uri is not None:
+              des_artifact.uri = des_uri
+
+          # ensure parent folder(s) exist
+          Path(des_artifact.path).parent.mkdir(parents=True, exist_ok=True)
+
+          # copy artifact
+          shutil.copy(src_artifact.path, des_artifact.path)
+
+    args:
+    - --executor_input
+    - {executorInput: null}
+    - --function_to_execute
+    - copy_artifact

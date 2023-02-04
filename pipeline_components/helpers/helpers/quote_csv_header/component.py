@@ -13,10 +13,13 @@
 # limitations under the License.
 
 from kfp.v2.dsl import Input, Output, component, Dataset
-from pipelines.kfp_components.dependencies import PYTHON37
+from pathlib import Path
 
 
-@component(base_image=PYTHON37)
+@component(
+    base_image="python:3.7",
+    output_component_file=str(Path(__file__).with_suffix(".yaml")),
+)
 def quote_csv_header(
     input_dataset: Input[Dataset],
     output_dataset: Output[Dataset],

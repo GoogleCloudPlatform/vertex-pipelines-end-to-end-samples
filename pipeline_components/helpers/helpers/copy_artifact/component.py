@@ -13,10 +13,13 @@
 # limitations under the License.
 
 from kfp.v2.dsl import Artifact, Input, Output, component
-from pipelines.kfp_components.dependencies import PYTHON37
+from pathlib import Path
 
 
-@component(base_image=PYTHON37)
+@component(
+    base_image="python:3.7",
+    output_component_file=str(Path(__file__).with_suffix(".yaml")),
+)
 def copy_artifact(
     src_artifact: Input[Artifact], des_artifact: Output[Artifact], des_uri: str = None
 ) -> None:

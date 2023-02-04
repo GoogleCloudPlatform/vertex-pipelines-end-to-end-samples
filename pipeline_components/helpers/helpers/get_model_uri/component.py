@@ -13,10 +13,13 @@
 # limitations under the License.
 
 from kfp.v2.dsl import Input, Model, component
-from pipelines.kfp_components.dependencies import PYTHON37
+from pathlib import Path
 
 
-@component(base_image=PYTHON37)
+@component(
+    base_image="python:3.7",
+    output_component_file=str(Path(__file__).with_suffix(".yaml")),
+)
 def model_to_uri(model: Input[Model], parent: bool = True) -> str:
     """
     Return the URI of a model.

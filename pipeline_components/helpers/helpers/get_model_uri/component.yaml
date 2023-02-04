@@ -1,0 +1,59 @@
+name: Model to uri
+description: Return the URI of a model.
+inputs:
+- {name: model, type: Model, description: Input model.}
+- name: parent
+  type: Boolean
+  description: Whether to return the URI of the parent folder. Defaults to True.
+  default: "True"
+  optional: true
+outputs:
+- {name: Output, type: String}
+implementation:
+  container:
+    image: python:3.7
+    command:
+    - sh
+    - -c
+    - |2
+
+      if ! [ -x "$(command -v pip)" ]; then
+          python3 -m ensurepip || python3 -m ensurepip --user || apt-get install python3-pip
+      fi
+
+      PIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet     --no-warn-script-location 'kfp==1.8.9' && "$0" "$@"
+    - sh
+    - -ec
+    - |
+      program_path=$(mktemp -d)
+      printf "%s" "$0" > "$program_path/ephemeral_component.py"
+      python3 -m kfp.v2.components.executor_main                         --component_module_path                         "$program_path/ephemeral_component.py"                         "$@"
+    - |2+
+
+      import kfp
+      from kfp.v2 import dsl
+      from kfp.v2.dsl import *
+      from typing import *
+
+      def model_to_uri(model: Input[Model], parent: bool = True) -> str:
+          """
+          Return the URI of a model.
+
+          Args:
+              model (Input[Model]): Input model.
+              parent (bool): Whether to return the URI of the parent folder. Defaults to True.
+
+          Returns:
+              str: URI of model (or URI of its parent folder).
+          """
+
+          uri = model.uri
+          if parent:
+              uri = uri.rsplit("/", 1)[0]
+          return uri
+
+    args:
+    - --executor_input
+    - {executorInput: null}
+    - --function_to_execute
+    - model_to_uri
