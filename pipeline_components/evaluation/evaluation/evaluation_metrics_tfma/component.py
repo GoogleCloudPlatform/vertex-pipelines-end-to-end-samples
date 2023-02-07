@@ -13,23 +13,18 @@
 # limitations under the License.
 
 from kfp.v2.dsl import Dataset, Input, Output, Artifact, component, HTML
-from pipelines.kfp_components.dependencies import (
-    PYTHON37,
-    TENSORFLOW_MODEL_ANALYSIS,
-    PANDAS,
-    PROTOBUF,
-    GOOGLE_CLOUD_STORAGE,
-)
+from pathlib import Path
 
 
 @component(
-    base_image=PYTHON37,
+    base_image="python:3.7",
     packages_to_install=[
-        TENSORFLOW_MODEL_ANALYSIS,
-        PANDAS,
-        PROTOBUF,
-        GOOGLE_CLOUD_STORAGE,
+        "tensorflow-model-analysis==0.37.0",
+        "pandas==1.3.2",
+        "protobuf==3.18.0",
+        "google-cloud-storage==1.42.2",
     ],
+    output_component_file=str(Path(__file__).with_suffix(".yaml")),
 )
 def calculate_eval_metrics(
     csv_file: Input[Dataset],
