@@ -16,7 +16,7 @@ limitations under the License.
 
 # KFP Components
 
-Please see components for training pipeline and prediction pipeline [here](../README.md)
+Please see components for training pipeline and prediction pipeline [here](../pipelines/README.md)
 
 ## Add a new Python function-based component
 
@@ -27,10 +27,12 @@ The following code shows an example of creating a KFP component. In this compone
 
 ```python
 from kfp.v2.dsl import component
+from pathlib import Path
 
 @component(
   packages_to_install=[`numpy`],
   base_image='python:3.7',
+  output_component_file=str(Path(__file__).with_suffix(".yaml")),
 )
 """
   Example of building a  Python function-based component
@@ -81,7 +83,11 @@ It takes a list of Google Cloud Storage URIs referring to the upcoming data for 
 Following pipeline best practice, a custom component, [extract_bq_to_dataset](./bigquery/extract_dataset.py) is designed. 
 
 ```python
-@component(base_image="python:3.7", packages_to_install=[GOOGLE_CLOUD_BIGQUERY])
+@component(
+  base_image="python:3.7",
+  packages_to_install=["google-cloud-bigquery==2.30.0"],
+  output_component_file=str(Path(__file__).with_suffix(".yaml")),
+)
 def extract_bq_to_dataset(
     project_id: str,
     dataset_id: str,
@@ -99,14 +105,12 @@ Thus, it is necessary to have these three outputs when designing. To calling ind
 you can apply '.outputs['dataset_gcs_uri']' on this component.
 
 ### Component validation
-Once you have built new components and included them in a pipeline, you should add expected tasks and corresponding outputs to e2e test scripts in tests/e2e/<tensorflow|xgboost>. 
+Once you have built new components and included them in a pipeline, you should add expected tasks and corresponding outputs to e2e test scripts in pipelines/tests/e2e/<tensorflow|xgboost>. 
 Then, you can run the following end-to-end (E2E) pipeline tests to validate if the components works properly in the pipeline.
 ```
-make e2e-tests pipeline=<training|prediction>
+make e2e-tests pipeline=<training|prediction> enable_caching=False
 ```
 
 ## Customising the base image used in your components
 
 You can easily change the base image used in your custom Python components - see the [KFP docs](https://www.kubeflow.org/docs/components/pipelines/sdk/v2/python-function-components/#selecting-or-building-a-container-image) for more information. You can do this on an individual component basis (using the `base_image` argument in the `@component` decorator).
-
-However you may like to update all (or many) of the base images with the same image, for example if you want to mirror the images in your own container registry e.g. if using a VPC-SC environment. All the custom components use the `python:3.7` image (as is the KFP default) - we have specified this in [`dependencies.py`](dependencies.py) and then imported this value into each custom component decorator. If you want to update all your components to use a mirrored version of `python:3.7`, you can simply update the value in [`dependencies.py`](dependencies.py). Alternatively, if you have more images you would like to use, you can define more images in the [`dependencies.py`](dependencies.py) file and import them to be used in the component definitions in the same way.

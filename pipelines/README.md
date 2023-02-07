@@ -135,11 +135,11 @@ When triggering ad hoc runs in your dev/sandbox environment, or when running the
 
 ### Python packages and Docker images
 
-You can specify the Python base image and packages required for KFP components in [`dependencies.py`](./kfp_components/dependencies.py). Container images related to Vertex training could also be specified in the same file. These values can then be imported to the different components and pipelines used in the project.
+You can specify the Python base image and packages required for KFP components in the `@component` decorator using the `base_image` and `packages_to_install` arguments respectively.
 
 ### Compute resources configuration in pipeline
-In general there are two methods to configure compute resources in each pipeline. Firstly, by setting the `machine_type` variable in [XGboost training pipeline](./xgboost/training/pipeline.py), [XGboost prediction pipeline](./xgboost/prediction/pipeline.py), [Tensorflow training pipeline](./tensorflow/training/pipeline.py), [Tensorflow prediction pipeline](./tensorflow//pipeline.py). The default value is `n1-standard-4` with 4 core CPUs and 15GB memory.
-Secondly, in order to manage the requirements of each step in your pipeline, you can set up machine type on the pipeline steps. This is because some steps might need more computational resources than others. For example, when you run [`calculate_eval_metrics`](./kfp_components/evaluation/evaluation_metrics_tfma.py) with a large input data, you can increase CPU and memory limits by applying `.set_cpu_limit({CPU_LIMIT})` and `.set_memory_limit('MEMORY_LIMIT')` for that component. 
+In general there are two methods to configure compute resources in each pipeline. Firstly, by setting the `machine_type` variable in [XGboost training pipeline](./pipelines/xgboost/training/pipeline.py), [XGboost prediction pipeline](./pipelines/xgboost/prediction/pipeline.py), [Tensorflow training pipeline](./pipelines/tensorflow/training/pipeline.py), [Tensorflow prediction pipeline](./pipelines/tensorflow//pipeline.py). The default value is `n1-standard-4` with 4 core CPUs and 15GB memory.
+Secondly, in order to manage the requirements of each step in your pipeline, you can set up machine type on the pipeline steps. This is because some steps might need more computational resources than others. For example, when you run [`calculate_eval_metrics`](../pipeline_components/evaluation/evaluation/evaluation_metrics_tfma/component.py) with a large input data, you can increase CPU and memory limits by applying `.set_cpu_limit({CPU_LIMIT})` and `.set_memory_limit('MEMORY_LIMIT')` for that component. 
 - CPU_LIMIT: The maximum CPU limit for this operator. This string value can be a number (integer value for number of CPUs), or a number followed by "m", which means 1/1000. You can specify at most 96 CPUs.
 - MEMORY_LIMIT: The maximum memory limit for this operator. This string value can be a number, or a number followed by "K" (kilobyte), "M" (megabyte), or "G" (gigabyte). At most 624GB is supported.
 
@@ -151,7 +151,7 @@ If the component is exactly the same and the arguments are exactly the same as i
 Since most of the ML projects take a long time and expensive computation resources, it is cost-effective to use cache when you are sure that the output of components is correct. 
 In terms of [how to control cache reuse behavior](https://cloud.google.com/vertex-ai/docs/pipelines/configure-caching), in generally, you can do it for either a component or the entire pipeline (for all components). 
 If you want to control caching behavior for individual components, add `.set_caching_options(<True|False>)` after each component when building a pipeline.
-To change the caching behaviour of ALL components within a pipeline, you can specify this when you trigger the pipeline like so: `make run pipeline=<training|prediction> enable_cachine=<true|false>`
+To change the caching behaviour of ALL components within a pipeline, you can specify this when you trigger the pipeline like so: `make run pipeline=<training|prediction> enable_caching=<true|false>`
 It is suggested to start by disabling caching of components during development, until you have a good idea of how the caching behaviour works, as it can lead to unexpected results.
 
 Note:
@@ -161,6 +161,6 @@ corresponding step, for example `Ingest data`. While for the other components, w
 
 ### Champion / Challenger evaluation
 
-In the training pipelines, a Champion-Challenger evaluation is conducted via the models with same name pattern in the same project. Explore [`lookup_model.py`](./kfp_components/aiplatform/lookup_model.py) for more detailed information.
+In the training pipelines, a Champion-Challenger evaluation is conducted via the models with same name pattern in the same project. Explore [`lookup_model.py`](../pipeline_components/aiplatform/aiplatform/lookup_model/component.py) for more detailed information.
 In practice, you should be aware of that and give the model a specific name related to the ML project you are working on once the new model is not comparable with the previous models. 
 For example, when you want to train a new model using different features, the best practice is to change you model name in the pipeline input parameters.

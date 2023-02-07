@@ -49,5 +49,5 @@ The data field contains the pipeline input parameters as a JSON string, encoded 
 ## Testing the trigger
 To run the unit tests developed for the trigger code, use the following make command:
 ```
-make trigger-tests
+make test-trigger
 ```
