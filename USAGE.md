@@ -50,6 +50,17 @@ To use the same rules listed in the Makefile, you will only need to update the e
 
 If you have organised your pipeline as described [above](#Folder-structure), you should then be able to use the Makefile as usual.
 
+Before compiling your pipeline, make sure to re-compile your pipeline components if you have made any changes:
+
+```
+make compile-components GROUP=<component group e.g. aiplatform>
+```
+
+Or to re-compile all pipeline components to YAML:
+```
+make compile-all-components
+```
+
 You can compile your pipeline to `training.json` or `prediction.json` with the following command:
 ```
 make compile pipeline=<training|prediction>

@@ -85,9 +85,20 @@ This project supports a no. of pipeline templates (see the [separate README](pip
 | TensorFlow | Training | `tensorflow` |
 | TensorFlow | Prediction | `tensorflow` |
 
-For example, you can run the XGBoost training pipeline with:
+Before you run the pipeline(s), if you have made any changes to pipeline components, make sure to re-compile the pipeline components to their YAML format with:
 
+```bash
+make compile-components GROUP=<component group e.g. aiplatform>
 ```
+
+Or to re-compile all pipeline components to YAML:
+```bash
+make compile-all-components
+```
+
+You can run the XGBoost training pipeline (for example) with:
+
+```bash
 make run PIPELINE_TEMPLATE=xgboost pipeline=training
 ```
 
@@ -120,7 +131,13 @@ This directory is rsync'd to Google Cloud Storage when running a pipeline in the
 Unit tests and end-to-end (E2E) pipeline tests are performed using [pytest](https://docs.pytest.org). The unit tests for custom KFP components are run on each pull request, and the E2E tests are run on merge to the main branch. To run them on your local machine:
 
 ```
-make unit-tests
+make test-components GROUP=<component group e.g. aiplatform>
+```
+
+or
+
+```
+make test-all-components
 ```
 
 and
@@ -132,7 +149,7 @@ make e2e-tests pipeline=<training|prediction> [ enable_caching=<true|false> ]
 There are also unit tests for the pipeline triggering code [`pipelines/pipelines/trigger`](../pipelines/trigger). This is not run as part of a CI/CD pipeline, as we don't expect this to be changed for each use case. To run them on your local machine:
 
 ```
-make trigger-tests
+make test-trigger
 ```
 
 ## Customize pipelines

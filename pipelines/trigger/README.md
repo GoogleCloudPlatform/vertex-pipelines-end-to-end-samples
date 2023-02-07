@@ -28,6 +28,17 @@ This command compiles the pipeline, copies assets to GCS, and then triggers the 
 - `VERTEX_CMEK_IDENTIFIER`: customer-managed encryption key (can be `""` or `None`)
 - `VERTEX_NETWORK`: private network (can be `""` or `None`)
 
+Before you run the pipeline, if you have made any changes to pipeline components, make sure to re-compile the pipeline components to their YAML format with:
+
+```bash
+make compile-components GROUP=<component group e.g. aiplatform>
+```
+
+Or to re-compile all pipeline components to YAML:
+```bash
+make compile-all-components
+```
+
 ### Deploy as a Cloud Function
 
 This directory can also be deployed as a Cloud Function to trigger pipeline runs from a Pub/Sub message. The format of the Pub/Sub message is as follows:
