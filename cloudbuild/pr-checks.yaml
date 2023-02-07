@@ -22,14 +22,14 @@ steps:
     args:
       - -c
       - |
-        pip install pipenv && \
-        pipenv install --dev && \
+        make setup && \
         git init && \
         git add . && \
         make pre-commit && \
-        make unit-tests && \
-        make compile pipeline=training && \
-        make compile pipeline=prediction
+        make compile-all-components && \
+        make test-all-components && \
+        make compile-pipeline pipeline=training && \
+        make compile-pipeline pipeline=prediction
     env:
       - SKIP=terraform-fmt,git-dirty
       - PIPELINE_TEMPLATE=${_PIPELINE_TEMPLATE}

@@ -18,8 +18,7 @@ steps:
       - '-c'
       - |
         pip install pipenv && \
-        pipenv install --dev && \
-        make trigger-tests
+        make test-trigger
     entrypoint: /bin/sh
 
 options:

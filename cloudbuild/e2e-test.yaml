@@ -24,21 +24,24 @@ steps:
       - |
         mkdir -p ${COMMIT_SHA}/training/assets && \
         mkdir -p ${COMMIT_SHA}/prediction/assets && \
-        cp -r pipelines/${_PIPELINE_TEMPLATE}/training/assets ${COMMIT_SHA}/training/ && \
-        cp -r pipelines/${_PIPELINE_TEMPLATE}/prediction/assets ${COMMIT_SHA}/prediction/ && \
+        cp -r pipelines/pipelines/${_PIPELINE_TEMPLATE}/training/assets ${COMMIT_SHA}/training/ && \
+        cp -r pipelines/pipelines/${_PIPELINE_TEMPLATE}/prediction/assets ${COMMIT_SHA}/prediction/ && \
         gsutil cp -r ${COMMIT_SHA} ${_PIPELINE_PUBLISH_GCS_PATH}
 
   # Install Python deps
   # Run end-to-end (E2E) pipeline tests on both pipelines
   - name: python:3.7
     entrypoint: /bin/sh
+    dir: pipelines
     args:
       - -c
       - |
         pip install pipenv && \
         pipenv install --dev && \
-        make compile pipeline=training && \
-        make compile pipeline=prediction && \
+        cd ../ && \
+        make compile-pipeline pipeline=training && \
+        make compile-pipeline pipeline=prediction && \
+        cd pipelines && \
         pipenv run python -m pytest --log-cli-level=INFO tests/${_PIPELINE_TEMPLATE}/training --enable_caching=${_TEST_ENABLE_PIPELINE_CACHING} && \
         pipenv run python -m pytest --log-cli-level=INFO tests/${_PIPELINE_TEMPLATE}/prediction --enable_caching=${_TEST_ENABLE_PIPELINE_CACHING}
     env:
