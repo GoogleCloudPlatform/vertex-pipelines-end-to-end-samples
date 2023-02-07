@@ -44,7 +44,7 @@ compile-components: ## Compile all the components in a component group
 	done
 
 compile-all-components: ## Compile all pipeline components
-	@set -euo pipefail && \
+	@set -e && \
 	for component_group in pipeline_components/*/ ; do \
 		echo "Compiling components under $$component_group" && \
 		$(MAKE) compile-components GROUP=$$(basename $$component_group) ; \
@@ -56,7 +56,7 @@ test-components: ## Run unit tests for a component group
 	pipenv run pytest
 
 test-all-components: ## Run unit tests for all pipeline components
-	@set -euo pipefail && \
+	@set -e && \
 	for component_group in pipeline_components/*/ ; do \
 		echo "Running unit tests for components under $$component_group" && \
 		$(MAKE) test-components GROUP=$$(basename $$component_group) ; \
