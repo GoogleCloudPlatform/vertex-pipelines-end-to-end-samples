@@ -38,6 +38,7 @@ CLASS_NAME_TO_TEST = "example_count_custom"
 PATH_TO_MODULE_TO_TEST = str(
     Path(__file__).resolve().parents[3]
     / "pipelines"
+    / "pipelines"
     / "tensorflow"
     / "training"
     / "assets"
