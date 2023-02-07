@@ -17,7 +17,7 @@ import pytest
 import base64
 import json
 import os
-from pipelines.trigger.main import cf_handler, convert_payload, get_env
+from trigger.main import cf_handler, convert_payload, get_env
 
 
 def test_cf_handler():
@@ -34,7 +34,7 @@ def test_cf_handler():
     }
 
     with mock.patch(
-        "pipelines.trigger.main.trigger_pipeline_from_payload"
+        "trigger.main.trigger_pipeline_from_payload"
     ) as mock_trigger_pipeline_from_payload:
 
         cf_handler(payload, {})
@@ -56,9 +56,9 @@ def test_trigger_pipeline():
     network = "my-network"
     enable_caching = True
 
-    with mock.patch("pipelines.trigger.main.aiplatform") as mock_aiplatform:
+    with mock.patch("trigger.main.aiplatform") as mock_aiplatform:
 
-        from pipelines.trigger.main import trigger_pipeline
+        from trigger.main import trigger_pipeline
 
         pl = trigger_pipeline(
             project_id=project_id,
@@ -233,10 +233,10 @@ def test_sandbox_run(cmdline_args, expected_payload):
 
     # mock get_args(), and trigger_pipeline_from_payload()
     with mock.patch(
-        "pipelines.trigger.main.trigger_pipeline_from_payload"
+        "trigger.main.trigger_pipeline_from_payload"
     ) as mock_trigger_pipeline_from_payload:
 
-        from pipelines.trigger.main import sandbox_run
+        from trigger.main import sandbox_run
 
         sandbox_run(cmdline_args)
 

@@ -22,8 +22,9 @@ pre-commit: ## Runs the pre-commit checks over entire repo
 	@cd pipelines && \
 	pipenv run pre-commit run --all-files
 
-trigger-tests: ## Runs unit tests for the pipeline trigger code
+test-trigger: ## Runs unit tests for the pipeline trigger code
 	@cd pipelines && \
+	pipenv install --dev && \
 	pipenv run python -m pytest tests/trigger
 
 compile-pipeline: ## Compile the pipeline to training.json or prediction.json. Must specify pipeline=<training|prediction>
