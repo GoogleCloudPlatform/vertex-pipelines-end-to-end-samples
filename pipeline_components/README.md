@@ -81,7 +81,7 @@ It takes a list of Google Cloud Storage URIs referring to the upcoming data for 
 Following pipeline best practice, a custom component, [extract_bq_to_dataset](./bigquery/extract_dataset.py) is designed. 
 
 ```python
-@component(base_image=PYTHON37, packages_to_install=[GOOGLE_CLOUD_BIGQUERY])
+@component(base_image="python:3.7", packages_to_install=[GOOGLE_CLOUD_BIGQUERY])
 def extract_bq_to_dataset(
     project_id: str,
     dataset_id: str,
