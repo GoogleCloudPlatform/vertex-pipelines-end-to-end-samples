@@ -22,18 +22,12 @@ from google_cloud_pipeline_components.aiplatform import (
 )
 
 from pipelines import generate_query
-from pipelines.kfp_components.aiplatform import (
+from pipelines.components import (
     lookup_model,
     get_current_time,
-)
-
-from pipelines.kfp_components.bigquery import (
     extract_bq_to_dataset,
     bq_query_to_table,
     load_dataset_to_bq,
-)
-
-from pipelines.kfp_components.tfdv import (
     validate_skew,
     generate_statistics,
     visualise_statistics,

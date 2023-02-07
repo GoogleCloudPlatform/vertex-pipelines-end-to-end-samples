@@ -21,26 +21,28 @@ from google_cloud_pipeline_components.experimental.custom_job.utils import (
     create_custom_training_job_op_from_component,
 )
 from pipelines import generate_query
-from pipelines.kfp_components.dependencies import TF_SERVING_CONTAINER_IMAGE_URI
-from pipelines.kfp_components.aiplatform import (
+from pipelines.components import (
     lookup_model,
     export_model,
     upload_model,
     get_current_time,
-)
-from pipelines.kfp_components.helpers import copy_artifact
-from pipelines.kfp_components.bigquery import extract_bq_to_dataset, bq_query_to_table
-from pipelines.kfp_components.tfdv import (
+    copy_artifact,
+    extract_bq_to_dataset,
+    bq_query_to_table,
     show_anomalies,
     validate_schema,
     visualise_statistics,
     generate_statistics,
-)
-from pipelines.kfp_components.tensorflow import (
     train_tensorflow_model,
     predict_tensorflow_model,
+    calculate_eval_metrics,
+    compare_models,
 )
-from pipelines.kfp_components.evaluation import calculate_eval_metrics, compare_models
+
+
+TF_SERVING_CONTAINER_IMAGE_URI = (
+    "europe-docker.pkg.dev/vertex-ai/prediction/tf2-cpu.2-6:latest"
+)
 
 
 @dsl.pipeline(name="tensorflow-train-pipeline")
