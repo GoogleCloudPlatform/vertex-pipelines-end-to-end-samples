@@ -18,17 +18,17 @@ export
 help: ## Display this help screen
 	@grep -h -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
     
-pre-commit: ## Runs the pre-commit over entire repo
-	@pipenv run pre-commit run --all-files
-
-unit-tests: ## Runs unit tests for kfp_components
-	@pipenv run python -m pytest tests/kfp_components
+pre-commit: ## Runs the pre-commit checks over entire repo
+	@cd pipelines && \
+	pipenv run pre-commit run --all-files
 
 trigger-tests: ## Runs unit tests for the pipeline trigger code
-	@pipenv run python -m pytest tests/trigger
+	@cd pipelines && \
+	pipenv run python -m pytest tests/trigger
 
 compile-pipeline: ## Compile the pipeline to training.json or prediction.json. Must specify pipeline=<training|prediction>
-	@pipenv run python -m pipelines.${PIPELINE_TEMPLATE}.${pipeline}.pipeline
+	@cd pipelines && \
+	pipenv run python -m pipelines.${PIPELINE_TEMPLATE}.${pipeline}.pipeline
 
 compile-components: ## Compile all the components in a component group
 	@cd pipeline_components/${GROUP} && \
@@ -37,15 +37,35 @@ compile-components: ## Compile all the components in a component group
 		pipenv run python $$component ; \
 	done
 
+compile-all-components: ## Compile all pipeline components
+	@set -euo pipefail && \
+	for component_group in pipeline_components/*/ ; do \
+		echo "Compiling components under $$component_group" && \
+		$(MAKE) compile-components GROUP=$$(basename $$component_group) ; \
+	done
+
+test-components: ## Run unit tests for a component group
+	@cd pipeline_components/${GROUP} && \
+	pipenv install --dev && \
+	pipenv run pytest
+
+test-all-components: ## Run unit tests for all pipeline components
+	@set -euo pipefail && \
+	for component_group in pipeline_components/*/ ; do \
+		echo "Running unit tests for components under $$component_group" && \
+		$(MAKE) test-components GROUP=$$(basename $$component_group) ; \
+	done
+
 sync-assets: ## Sync assets folder to GCS. Must specify pipeline=<training|prediction>
-	@gsutil -m rsync -r -d ./pipelines/${PIPELINE_TEMPLATE}/$(pipeline)/assets ${PIPELINE_FILES_GCS_PATH}/$(pipeline)/assets
+	@gsutil -m rsync -r -d ./pipelines/pipelines/${PIPELINE_TEMPLATE}/$(pipeline)/assets ${PIPELINE_FILES_GCS_PATH}/$(pipeline)/assets
 
 run: ## Compile pipeline, copy assets to GCS, and run pipeline in sandbox environment. Must specify pipeline=<training|prediction>. Optionally specify enable_pipeline_caching=<true|false> (defaults to default Vertex caching behaviour)
-	@ $(MAKE) compile && \
+	@ $(MAKE) compile-pipeline && \
 	$(MAKE) sync-assets && \
-	pipenv run python -m pipelines.trigger.main --template_path=./$(pipeline).json --enable_caching=$(enable_pipeline_caching)
+	cd pipelines && \
+	pipenv run python -m trigger.main --template_path=./$(pipeline).json --enable_caching=$(enable_pipeline_caching)
 
 e2e-tests: ## Compile pipeline, copy assets to GCS, and perform end-to-end (E2E) pipeline tests. Must specify pipeline=<training|prediction>. Optionally specify enable_pipeline_caching=<true|false> (defaults to default Vertex caching behaviour)
-	@ $(MAKE) compile && \
+	@ $(MAKE) compile-pipeline && \
 	$(MAKE) sync-assets && \
 	pipenv run python -m pytest --log-cli-level=INFO tests/${PIPELINE_TEMPLATE}/$(pipeline) --enable_caching=$(enable_pipeline_caching)
