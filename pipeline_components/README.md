@@ -70,17 +70,17 @@ def dummy_dummy(input1:float,input2:float):
     output_one = my_component(a=input1,b=input2)
     my_component(a=output_one.output, b=output_one.outputs['Output'])
 ```
-![Pipeline_screenshot_1](../../docs/images/example_component_1.png)
-![Pipeline_screenshot_2](../../docs/images/example_component_2.png)
+![Pipeline_screenshot_1](../docs/images/example_component_1.png)
+![Pipeline_screenshot_2](../docs/images/example_component_2.png)
 
 
 It is noticeable that the output of a component is a Kubeflow component `TaskOutputArgument` object, so you could not do any operation on it rather than passing it to another component. 
 For example, if your component function returns a numerical value, you can not add it with another number (`output_one + 1`)in the pipeline. 
 
 Sometimes you might need to use custom components alongside with prebuilt components. [KFP Prebuilt components](https://google-cloud-pipeline-components.readthedocs.io/en/google-cloud-pipeline-components-0.2.1/google_cloud_pipeline_components.aiplatform.html#google_cloud_pipeline_components.aiplatform.ModelBatchPredictOp)
-In that case, it is essential to design your component outputs more carefully. For example, in the [TensorFlow prediction pipeline](../tensorflow/prediction/pipeline.py), a prebuilt component, `ModelBatchPredictOp`, is used for batch prediction.
+In that case, it is essential to design your component outputs more carefully. For example, in the [TensorFlow prediction pipeline](../pipelines/tensorflow/tensorflow/prediction/pipeline.py), a prebuilt component, `ModelBatchPredictOp`, is used for batch prediction.
 It takes a list of Google Cloud Storage URIs referring to the upcoming data for prediction and the directory of dataset. You can directly hard-code these URIs and directory in you pipeline. A more practical way is to design a component that returns this information because it changes once you rerun a pipeline without caches. 
-Following pipeline best practice, a custom component, [extract_bq_to_dataset](./bigquery/extract_dataset.py) is designed. 
+Following pipeline best practice, a custom component, [extract_bq_to_dataset](./bigquery/bigquery/extract_dataset/component.py) is designed. 
 
 ```python
 @component(
@@ -100,12 +100,12 @@ def extract_bq_to_dataset(
 .....
 ```
 It extracts BQ table to GCS and returns three outputs, a dataset artifact, its GCS URI in list format and an output dataset directory. 
-It seems that the dataset artifact and the GCS URI in list is duplicated, because the dataset artifact has an attribute, URI, which is the same as the dataset URI. But, the pre-built component only takes a list of URIs rather than artifact as an input while another component [`generate_statistics`](./tfdv/generate_statistics.py) takes a dataset artifact as an input.
+It seems that the dataset artifact and the GCS URI in list is duplicated, because the dataset artifact has an attribute, URI, which is the same as the dataset URI. But, the pre-built component only takes a list of URIs rather than artifact as an input while another component [`generate_statistics`](./_tfdv/_tfdv/generate_statistics/component.py) takes a dataset artifact as an input.
 Thus, it is necessary to have these three outputs when designing. To calling individual result in the pipeline, you can use the method mentioned above. For example, if you want to get the list of URIS,
 you can apply '.outputs['dataset_gcs_uri']' on this component.
 
 ### Component validation
-Once you have built new components and included them in a pipeline, you should add expected tasks and corresponding outputs to e2e test scripts in pipelines/tests/e2e/<tensorflow|xgboost>. 
+Once you have built new components and included them in a pipeline, you should add expected tasks and corresponding outputs to e2e test scripts in `pipelines/tests/<tensorflow|xgboost>/. 
 Then, you can run the following end-to-end (E2E) pipeline tests to validate if the components works properly in the pipeline.
 ```
 make e2e-tests pipeline=<training|prediction> enable_caching=False

@@ -106,7 +106,7 @@ The prediction pipeline can be broken down into the following sequence of compon
 Each of these components can be connected using `.after({component_name})` or if the output of a preceding component is used as input for that component
 Every component can be set with a display name using `.set_display_name({display_name})`. Note that this applies to both the training pipeline and the prediction pipeline. 
 
-The final loading stage has an optional argument `dataset_location` which is the location to run the loading job and must match the location of the destination table. It is defaulted to "EU" in the [component definition](kfp_components/bigquery/upload_prediction.py). 
+The final loading stage has an optional argument `dataset_location` which is the location to run the loading job and must match the location of the destination table. It is defaulted to "EU" in the [component definition](pipeline_components/bigquery/bigquery/upload_prediction/component.py). 
 
 ## TFDV Schema Creation
 
@@ -138,7 +138,7 @@ When triggering ad hoc runs in your dev/sandbox environment, or when running the
 You can specify the Python base image and packages required for KFP components in the `@component` decorator using the `base_image` and `packages_to_install` arguments respectively.
 
 ### Compute resources configuration in pipeline
-In general there are two methods to configure compute resources in each pipeline. Firstly, by setting the `machine_type` variable in [XGboost training pipeline](./pipelines/xgboost/training/pipeline.py), [XGboost prediction pipeline](./pipelines/xgboost/prediction/pipeline.py), [Tensorflow training pipeline](./pipelines/tensorflow/training/pipeline.py), [Tensorflow prediction pipeline](./pipelines/tensorflow//pipeline.py). The default value is `n1-standard-4` with 4 core CPUs and 15GB memory.
+In general there are two methods to configure compute resources in each pipeline. Firstly, by setting the `machine_type` variable in [XGboost training pipeline](./pipelines/pipelines/xgboost/training/pipeline.py), [XGboost prediction pipeline](./pipelines/pipelines/xgboost/prediction/pipeline.py), [Tensorflow training pipeline](./pipelines/pipelines/tensorflow/training/pipeline.py), [Tensorflow prediction pipeline](./pipelines/pipelines/tensorflow//pipeline.py). The default value is `n1-standard-4` with 4 core CPUs and 15GB memory.
 Secondly, in order to manage the requirements of each step in your pipeline, you can set up machine type on the pipeline steps. This is because some steps might need more computational resources than others. For example, when you run [`calculate_eval_metrics`](../pipeline_components/evaluation/evaluation/evaluation_metrics_tfma/component.py) with a large input data, you can increase CPU and memory limits by applying `.set_cpu_limit({CPU_LIMIT})` and `.set_memory_limit('MEMORY_LIMIT')` for that component. 
 - CPU_LIMIT: The maximum CPU limit for this operator. This string value can be a number (integer value for number of CPUs), or a number followed by "m", which means 1/1000. You can specify at most 96 CPUs.
 - MEMORY_LIMIT: The maximum memory limit for this operator. This string value can be a number, or a number followed by "K" (kilobyte), "M" (megabyte), or "G" (gigabyte). At most 624GB is supported.
