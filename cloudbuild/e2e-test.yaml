@@ -39,6 +39,7 @@ steps:
         pip install pipenv && \
         pipenv install --dev && \
         cd ../ && \
+        make compile-all-components && \
         make compile-pipeline pipeline=training && \
         make compile-pipeline pipeline=prediction && \
         cd pipelines && \
