@@ -18,7 +18,12 @@ from pathlib import Path
 
 @component(
     base_image="python:3.7",
-    packages_to_install=["xgboost==1.4.2", "scikit-learn==0.24.1", "pandas==1.3.2"],
+    packages_to_install=[
+        "xgboost==1.4.2",
+        "scikit-learn==0.24.1",
+        "pandas==1.3.2",
+        "joblib==1.1.0",
+    ],
     output_component_file=str(Path(__file__).with_suffix(".yaml")),
 )
 def train_xgboost_model(
