@@ -169,3 +169,6 @@ env.sh
 
 # VS code configurations
 .vscode
+
+# Compiled pipeline components
+**/component.yaml
