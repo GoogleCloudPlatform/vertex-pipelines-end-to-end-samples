@@ -51,11 +51,11 @@ We use unit tests to test small sections of logically isolated code in our pipel
 When we test a function that makes an external API call (for example to a service on GCP), we mock the associated module or class and its functions and attributes. The rationale behind this is that we want to test our own logic and not the API call(s) themselves. Indeed, API calls can be broken, computationally expensive, slow, or limited, and we do not want our unit tests to fail because of any of these. 
 
 We do mocking/patching in two different ways:
-1. [`monkeypatch`](https://docs.pytest.org/en/6.2.x/monkeypatch.html): this built-in `pytest` fixture allows you to modify an attribute (such as an instance method in a class). We use `monkeypatch` only in the [`conftest.py`](tests/kfp_components/conftest.py) file for the fixtures that are applied before every unit test. We have used `monkeypatch` in the following fixtures:
+1. [`monkeypatch`](https://docs.pytest.org/en/6.2.x/monkeypatch.html): this built-in `pytest` fixture allows you to modify an attribute (such as an instance method in a class). We use `monkeypatch` only in the relevant `conftest.py` file for the fixtures that are applied before every unit test. We have used `monkeypatch` in the following fixtures:
     - `patch_kfp_component_decorator`: used to patch the decorator `@component` in `kfp.v2.dsl`. This allows us to test each KFP component as an untouched Python function. Importantly, when testing KFP components, you must import the component inside the unit test function, otherwise the monkeypatch of the `@component` decorator will fail.
     - `mock_kfp_artifact`: used to mock the `Artifact` object (and thus any derived classes such as `Dataset`, `Model`, etc.) in `kfp.v2.dsl` to return the URI as
     the path. This lets us create mock Artifact objects locally for our unit tests.
-2. `unittest.mock.patch`: this object in the `unittest` library enables us to mock classes (and its associated attributes and methods) within a context manager. We use `mock.patch` inside the individual test scripts to mock object(s) that are used in the function being tested. This allows us to replace the target class/object with a Mock object, ultimately allowing us to make assertions on how this Mock object has been used. For example, the `assert_called_once_with` method allows us to check that a specific method of a Mock object was called once with specific arguments. Alternatively, we can set the attributes of our Mock objects to specific values, and assert that the component logic being tested handles these cases correctly (e.g. by raising a `ValueError`). An example of using the `mock.patch` context manager is in [`test_lookup_model.py`](tests/kfp_components/aiplatform/test_lookup_model.py) for [`lookup_model.py`](pipelines/kfp_components/aiplatform/lookup_model.py), where there is an API call to list models (in Vertex AI) based on a filter, namely `google.cloud.aiplatform.Model.list`. When we test this KFP component, we are not interested in actually making this API call, so instead we mock it. We do this by mocking the `google.cloud.aiplatform.Model` class:
+2. `unittest.mock.patch`: this object in the `unittest` library enables us to mock classes (and its associated attributes and methods) within a context manager. We use `mock.patch` inside the individual test scripts to mock object(s) that are used in the function being tested. This allows us to replace the target class/object with a Mock object, ultimately allowing us to make assertions on how this Mock object has been used. For example, the `assert_called_once_with` method allows us to check that a specific method of a Mock object was called once with specific arguments. Alternatively, we can set the attributes of our Mock objects to specific values, and assert that the component logic being tested handles these cases correctly (e.g. by raising a `ValueError`). An example of using the `mock.patch` context manager is in [`test_lookup_model.py`](tests/kfp_components/aiplatform/test_lookup_model.py) for [`lookup_model.py`](./pipeline_components/aiplatform/aiplatform/lookup_model/component.py), where there is an API call to list models (in Vertex AI) based on a filter, namely `google.cloud.aiplatform.Model.list`. When we test this KFP component, we are not interested in actually making this API call, so instead we mock it. We do this by mocking the `google.cloud.aiplatform.Model` class:
 ```
 with mock.patch("google.cloud.aiplatform.Model") as mock_model:
 
@@ -78,16 +78,16 @@ with mock.patch("google.cloud.aiplatform.Model") as mock_model:
 #### `pytest` fixtures & `conftest.py`
 - `tmpdir`: a built-in `pytest` fixture that we use to create temporary paths for our unit tests.
 - `monkeypatch`: see above.
-- The file [`conftest.py`](tests/kfp_components/conftest.py) contains our custom `pytest` fixtures which we apply for each testing session. 
+- The file `conftest.py` contains our custom `pytest` fixtures which we apply for each testing session. 
 
 #### How to write unit tests
 Some things to consider testing for in your code:
-- **Do you have any logical conditions?** Consider writing tests that assert the desired outcome occurs for each possible outcome. In particular, you can assert that a certain error is raised in your function under certain conditions. For example, in [`lookup_model.py`](pipelines/kfp_components/aiplatform/lookup_model.py), the function `lookup_model` raises a `RuntimeError` if no models are found:
+- **Do you have any logical conditions?** Consider writing tests that assert the desired outcome occurs for each possible outcome. In particular, you can assert that a certain error is raised in your function under certain conditions. For example, in [`lookup_model.py`](./pipeline_components/aiplatform/aiplatform/lookup_model/component.py), the function `lookup_model` raises a `RuntimeError` if no models are found:
 ```
 if fail_on_model_not_found:
     raise RuntimeError(f"Failed as model not found")
 ```
-Now in [`test_lookup_model.py`](tests/kfp_components/aiplatform/test_lookup_model.py), in the unit test `test_lookup_model_when_no_models_fail` you can use `pytest.raises` to check that `lookup_model` actually raises a `RuntimeError`:
+Now in [`test_lookup_model.py`](./pipeline_components/aiplatform/tests/test_lookup_model.py), in the unit test `test_lookup_model_when_no_models_fail` you can use `pytest.raises` to check that `lookup_model` actually raises a `RuntimeError`:
 ```
 with pytest.raises(RuntimeError):
     lookup_model(
@@ -100,9 +100,14 @@ with pytest.raises(RuntimeError):
 ```
 
 #### How to run unit tests
-Unit tests are run automatically on each pull request. You can also run them on your local machine:
+Unit tests for pipeline components are run automatically on each pull request. You can also run them on your local machine:
 ```
-make unit-tests
+make test-all-components
+```
+
+Or to just run the unit tests for a given component group (e.g. `aiplatform`):
+```
+make test-components GROUP=aiplatform
 ```
 
 ### End-to-end (E2E) pipeline tests
@@ -113,11 +118,11 @@ We use End-to-end (E2E) pipeline tests to ensure that our pipelines are running 
 - That these pipeline tasks output the correct artifacts, by checking whether they have been saved to a GCS URI or have been generated successfully in Vertex AI.
   
 Note:
-These dictionary objects (`common_tasks`, `conditional_tasks`) are defined in `test_e2e.py` in each pipeline folder e.g (`../xgboost/training/test_e2e.py`). 
+These dictionary objects (`common_tasks`, `conditional_tasks`) are defined in `test_e2e.py` in each pipeline folder e.g (`./pipelines/tests/xgboost/training/test_e2e.py`). 
 The E2E test only allows one common tasks group but the number of conditional tasks group is not limited. To define the correct task group, 
 please go to pipeline job on Vertex AI for more information. 
 For example, in the XGBoost training pipeline, we have two conditional tasks groups that are bounded in the dashed frame. 
-Thus, in `../xgboost/training/test_e2e.py`, there are two dictionaries of two conditional tasks group.
+Thus, in `./pipelines/tests/xgboost/training/test_e2e.py`, there are two dictionaries of two conditional tasks group.
 
 
 ![Conditional tasks in XGB](docs/images/conditional_tasks_snippet.png)
@@ -133,7 +138,7 @@ As described above, we provide our E2E tests with a dictionary of expected outpu
  For information on how tasks and outputs are stored in your pipeline, we recommend looking at these [AI Platform documents](https://googleapis.dev/python/aiplatform/latest/aiplatform_v1beta1/types.html#google.cloud.aiplatform_v1beta1.types.PipelineJob). The following briefly describes how we created this dictionary, and you can use this to create your own dictionary of expected tasks:
 1. Trigger a pipeline (using the default pipeline input parameters), and collect the pipeline tasks and their details. For example:
 ```
-from pipelines.trigger.main import trigger_pipeline_from_payload
+from trigger.main import trigger_pipeline_from_payload
 
 ...
 
@@ -149,7 +154,7 @@ from pipelines.trigger.main import trigger_pipeline_from_payload
     tasks = details["jobDetail"]["taskDetails"]
 
 ```
-2. Check missing tasks by comparing the actual task produced in pipeline and the expected tasks defined in each pipeline test file ( e.g `../xgboost/training/test_e2e.py`))
+2. Check missing tasks by comparing the actual task produced in pipeline and the expected tasks defined in each pipeline test file ( e.g `./pipelines/tests/xgboost/training/test_e2e.py`))
 ```
     missing_tasks = [
         task_name
@@ -208,10 +213,10 @@ def test_vertex_endpoint_uri(output_uri: str):
 ```
 
 ## Adding or changing python dependencies
-We use [pipenv](https://pipenv-fork.readthedocs.io/en/latest/index.html) to handle our packages and their dependencies. 
+We use [pipenv](https://pipenv-fork.readthedocs.io/en/latest/index.html) to handle our packages and their dependencies. Each group of pipeline components (e.g. [aiplatform](./pipeline_components/aiplatform/)) containers its own pipenv environment, and there is a [separate pipenv environment](./pipelines/) for the ML pipelines themselves and the pipeline trigger code.
 
 ### Adding python dependencies
-You may need to add new packages for your own use cases. To do this, run the following:
+You may need to add new packages for your own use cases. To do this, run the following from the relevant directory ([pipelines](./pipelines) for the main ML pipeline dependencies or the directory of the relevant component group e.g. [aiplatform](./pipeline_components/aiplatform/)):
 ```
 pipenv install <package name>
 ```
@@ -257,7 +262,7 @@ make pre-commit
 - **Checks fail and displays an error message**. Some errors cannot be automatically fixed by pre-commit hooks, and instead they will display the error number and the file and line which failed. For more details beyond the error message, you can look up the error number online. The most common errors are caused by lines which exceed the character limit. Once you identify the cause of the error, you will need to fix this in your code, add the edited file to the staging area, and then commit again.
 
 ### Commit changes to Python packages and dependencies
-If you have changes to [`Pipfile`](Pipfile) and [`Pipfile.lock`](Pipfile.lock), after running `pipenv install`, please make sure you commit these files!
+If you have changes to `Pipfile` and `Pipfile.lock`, please make sure you commit these files!
 
 ## Makefile
 This project contains a [Makefile](Makefile) which contains "rules" describing the commands to be executed by the system. These allow you to quickly and easily run commands for specific purposes, for example running all of the unit-tests, or compiling a pipeline. You can find the full set of available `make` rules by running:
@@ -265,7 +270,7 @@ This project contains a [Makefile](Makefile) which contains "rules" describing t
 make help
 ```
 
-Some of these rules use the environment variables specified in [`.env.sh`](.env.sh).
+Some of these rules use the environment variables specified in [`env.sh`](env.sh).
 
 **It is not expected that you will need to change the Makefile or create a new one.**
 

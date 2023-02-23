@@ -1,0 +1,15 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+kfp = "==1.8.9"
+
+[dev-packages]
+pytest = ">=6.2.4,<7.0.0"
+tensorflow-data-validation = "==1.6.0"
+apache-beam = "==2.35.0"
+
+[requires]
+python_version = "3.7"

@@ -38,9 +38,9 @@ google.api_core.exceptions.InvalidArgument: 400 You do not have permission to ac
 exists and you have permission to act as the service account.
 
 ```bash
-$ make unit-tests
+$ make test-components GROUP=_xgboost
 
-FAILED tests/kfp_components/xgboost/train/test_train.py::test_xgboost_train - xgboost.core.XGBoostError: XGBoost Library (libxgboost.dylib) could not be loaded.
+FAILED tests/test_train.py::test_xgboost_train - xgboost.core.XGBoostError: XGBoost Library (libxgboost.dylib) could not be loaded.
 ```
 
 **Solution:** if you are using macOS, try to also install XGBoost using Homebrew: `brew install xgboost`

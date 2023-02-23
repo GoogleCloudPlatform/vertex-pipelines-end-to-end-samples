@@ -70,9 +70,8 @@ a one-time manual copy of this dataset to your project location using the [BigQu
 In the repository, execute:
 
 1. Install Python: `pyenv install`
-1. Install pipenv: `pip install pipenv`
-1. Install pipenv dependencies: `pipenv install --dev`
-1. Install pre-commit hooks: `pipenv run pre-commit install`
+1. Install pipenv and pipenv dependencies: `make setup`
+1. Install pre-commit hooks: `cd pipelines && pipenv run pre-commit install`
 1. Copy `env.sh.example` to `env.sh`, and update the environment variables in `env.sh`
 
 ### Run pipelines
@@ -86,9 +85,20 @@ This project supports a no. of pipeline templates (see the [separate README](pip
 | TensorFlow | Training | `tensorflow` |
 | TensorFlow | Prediction | `tensorflow` |
 
-For example, you can run the XGBoost training pipeline with:
+Before you run the pipeline(s), if you have made any changes to pipeline components, make sure to re-compile the pipeline components to their YAML format with:
 
+```bash
+make compile-components GROUP=<component group e.g. aiplatform>
 ```
+
+Or to re-compile all pipeline components to YAML:
+```bash
+make compile-all-components
+```
+
+You can run the XGBoost training pipeline (for example) with:
+
+```bash
 make run PIPELINE_TEMPLATE=xgboost pipeline=training
 ```
 
@@ -106,13 +116,13 @@ This will execute the pipeline using the chosen template on Vertex AI, namely it
 
 #### Pipeline input parameters
 
-The ML pipelines have input parameters. As you can see in the pipeline definition files (`pipelines/<xgboost|tensorflow>/<training|prediction>/pipeline.py`), they have default values, and some of these default values are derived from environment variables (which in turn are defined in `env.sh`).
+The ML pipelines have input parameters. As you can see in the pipeline definition files (`pipelines/pipelines/<xgboost|tensorflow>/<training|prediction>/pipeline.py`), they have default values, and some of these default values are derived from environment variables (which in turn are defined in `env.sh`).
 
 When triggering ad hoc runs in your dev/sandbox environment, or when running the E2E tests in CI, these default values are used. For the test and production deployments, the pipeline parameters are defined in the Terraform code for the Cloud Scheduler jobs (`envs/<test|prod>/variables.auto.tfvars`).
 
 ### Assets
 
-In each pipeline folder, there is an `assets` directory (`pipelines/<xgboost|tensorflow>/<training|prediction>/assets/`). This can be used for any additional files that may be needed during execution of the pipelines. 
+In each pipeline folder, there is an `assets` directory (`pipelines/pipelines/<xgboost|tensorflow>/<training|prediction>/assets/`). This can be used for any additional files that may be needed during execution of the pipelines. 
 For the example pipelines, it may contain data schemata (for Data Validation) or training scripts. This [notebook](pipelines/schema_creation.ipynb) gives an example on schema generation. 
 This directory is rsync'd to Google Cloud Storage when running a pipeline in the sandbox environment or as part of the CD pipeline (see [CI/CD setup](cloudbuild/README.md)).
 
@@ -121,7 +131,13 @@ This directory is rsync'd to Google Cloud Storage when running a pipeline in the
 Unit tests and end-to-end (E2E) pipeline tests are performed using [pytest](https://docs.pytest.org). The unit tests for custom KFP components are run on each pull request, and the E2E tests are run on merge to the main branch. To run them on your local machine:
 
 ```
-make unit-tests
+make test-components GROUP=<component group e.g. aiplatform>
+```
+
+or
+
+```
+make test-all-components
 ```
 
 and
@@ -130,10 +146,10 @@ and
 make e2e-tests pipeline=<training|prediction> [ enable_caching=<true|false> ]
 ```
 
-There are also unit tests for the pipeline triggering code [`pipelines/trigger`](../pipelines/trigger). This is not run as part of a CI/CD pipeline, as we don't expect this to be changed for each use case. To run them on your local machine:
+There are also unit tests for the pipeline triggering code [`pipelines/pipelines/trigger`](../pipelines/trigger). This is not run as part of a CI/CD pipeline, as we don't expect this to be changed for each use case. To run them on your local machine:
 
 ```
-make trigger-tests
+make test-trigger
 ```
 
 ## Customize pipelines
@@ -165,7 +181,7 @@ git push -u origin master                        # push to new upstream repo
 
 ### Update existing pipelines
 
-See existing [XGBoost](pipelines/xgboost) and [Tensorflow](pipelines/tensorflow) pipelines as part of this template.
+See existing [XGBoost](pipelines/pipelines/xgboost) and [Tensorflow](pipelines/pipelines/tensorflow) pipelines as part of this template.
 Update `PIPELINE_TEMPLATE` to `xgboost` or `tensorflow` in [env.sh](env.sh.example) to specify whether to run the XGBoost pipelines or TensorFlow pipelines. 
 Make changes to the ML pipelines and their associated tests.
 Refer to the [contribution instructions](CONTRIBUTING.md) for more information on committing changes. 
@@ -232,4 +248,4 @@ For a full walkthrough of the journey from changing the ML pipeline code to havi
 
 The `generate_statistics` pipeline component generates statistics about a given dataset (using the [`generate_statistics_from_csv`](https://www.tensorflow.org/tfx/data_validation/api_docs/python/tfdv/generate_statistics_from_csv) function in the [TensorFlow Data Validation](https://www.tensorflow.org/tfx/guide/tfdv) package) can optionally be run using [DataFlow](https://cloud.google.com/dataflow/) to scale to huge datasets.
 
-For instructions on how to do this, see the [README](pipelines/kfp_components/tfdv/generate_statistics.md) for this component.
+For instructions on how to do this, see the [README](pipeline_components/_tfdv/generate_statistics.md) for this component.

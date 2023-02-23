@@ -1,0 +1,17 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+kfp = "==1.8.9"
+google-cloud-pipeline-components = "==0.2.0"
+google-cloud-aiplatform = "==1.10.0"
+Jinja2 = ">=3.0.1,<4.0.0"
+
+[dev-packages]
+pytest = ">=6.2.4,<7.0.0"
+pre-commit = ">=2.14.1,<3.0.0"
+
+[requires]
+python_version = "3.7"
