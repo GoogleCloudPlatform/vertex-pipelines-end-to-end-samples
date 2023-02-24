@@ -172,9 +172,3 @@ env.sh
 
 # Compiled pipeline components
 **/component.yaml
-
-# Files generated during unit testing
-# TODO remove these from .gitignore when addressing https://github.com/GoogleCloudPlatform/vertex-pipelines-end-to-end-samples/issues/29
-pipeline_components/evaluation/example_count.py
-pipeline_components/evaluation/plots_num_feat.html
-pipeline_components/evaluation/plots_overall.html
