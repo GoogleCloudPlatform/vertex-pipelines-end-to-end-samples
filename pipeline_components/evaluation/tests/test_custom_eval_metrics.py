@@ -52,7 +52,7 @@ def mock_download(tmpdir, local_path):
     shutil.copy(local_path, tmp_path)
 
 
-def test_calculate_custom_eval_metrics_overall(tmpdir):
+def test_calculate_custom_eval_metrics_overall(tmpdir, monkeypatch):
     """
     Test that calculate_eval_metrics produces the specified metrics (mean squared
     error, accuracy, and mean label) at an overall level.
@@ -63,6 +63,10 @@ def test_calculate_custom_eval_metrics_overall(tmpdir):
     Returns:
         None
     """
+
+    # use temporary directory as working directory for the test
+    monkeypatch.chdir(tmpdir)
+
     from evaluation.evaluation_metrics_tfma.component import calculate_eval_metrics
 
     # Import example_count module from assets directory
@@ -127,7 +131,7 @@ def test_calculate_custom_eval_metrics_overall(tmpdir):
     assert CLASS_NAME_TO_TEST in metrics_dict["Overall"]
 
 
-def test_calculate_custom_eval_metrics_with_slice(tmpdir):
+def test_calculate_custom_eval_metrics_with_slice(tmpdir, monkeypatch):
     """
     Test that calculate_eval_metrics produces the specified metrics (mean squared
     error, accuracy, and mean label) at an overall level + for slices.
@@ -138,6 +142,10 @@ def test_calculate_custom_eval_metrics_with_slice(tmpdir):
     Returns:
         None
     """
+
+    # use temporary directory as working directory for the test
+    monkeypatch.chdir(tmpdir)
+
     from evaluation.evaluation_metrics_tfma.component import calculate_eval_metrics
 
     # Import example_count module from assets directory

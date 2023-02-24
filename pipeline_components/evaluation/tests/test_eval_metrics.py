@@ -18,7 +18,7 @@ import numpy as np
 from kfp.v2.dsl import Dataset, Artifact
 
 
-def test_calculate_eval_metrics_overall(tmpdir):
+def test_calculate_eval_metrics_overall(tmpdir, monkeypatch):
     """
     Test that calculate_eval_metrics produces the specified metrics (mean squared
     error, accuracy, and mean label) at an overall level.
@@ -29,6 +29,10 @@ def test_calculate_eval_metrics_overall(tmpdir):
     Returns:
         None
     """
+
+    # use temporary directory as working directory for the test
+    monkeypatch.chdir(tmpdir)
+
     from evaluation.evaluation_metrics_tfma.component import calculate_eval_metrics
 
     # Create a uri for the Metrics artifact which the kfp_component writes to
@@ -72,7 +76,7 @@ def test_calculate_eval_metrics_overall(tmpdir):
     assert "mean_label" in metrics_dict["Overall"]
 
 
-def test_calculate_eval_metrics_with_slice(tmpdir):
+def test_calculate_eval_metrics_with_slice(tmpdir, monkeypatch):
     """
     Test that calculate_eval_metrics produces the specified metrics (mean squared
     error, accuracy, and mean label) at an overall level + for slices.
@@ -83,6 +87,10 @@ def test_calculate_eval_metrics_with_slice(tmpdir):
     Returns:
         None
     """
+
+    # use temporary directory as working directory for the test
+    monkeypatch.chdir(tmpdir)
+
     from evaluation.evaluation_metrics_tfma.component import calculate_eval_metrics
 
     # Create a uri for the Metrics artifact which the kfp_component writes to
@@ -128,7 +136,7 @@ def test_calculate_eval_metrics_with_slice(tmpdir):
     assert "mean_label" in metrics_dict["Overall"]
 
 
-def test_visualise_eval_metrics_overall(tmpdir):
+def test_visualise_eval_metrics_overall(tmpdir, monkeypatch):
     """
     Test that calculate_eval_metrics produces the specified output plot
         ("plots_overall.html) at an overall level
@@ -139,6 +147,10 @@ def test_visualise_eval_metrics_overall(tmpdir):
     Returns:
         None
     """
+
+    # use temporary directory as working directory for the test
+    monkeypatch.chdir(tmpdir)
+
     from evaluation.evaluation_metrics_tfma.component import calculate_eval_metrics
 
     # Create a uri for the Metrics artifact which the kfp_component writes to
@@ -177,7 +189,7 @@ def test_visualise_eval_metrics_overall(tmpdir):
     assert view.path.endswith(".html")
 
 
-def test_visualise_eval_metrics_with_slice(tmpdir):
+def test_visualise_eval_metrics_with_slice(tmpdir, monkeypatch):
     """
     Test that calculate_eval_metrics produces the specified output plot
         ("plots_overall.html) at an overall level and at a slice level
@@ -189,6 +201,10 @@ def test_visualise_eval_metrics_with_slice(tmpdir):
     Returns:
         None
     """
+
+    # use temporary directory as working directory for the test
+    monkeypatch.chdir(tmpdir)
+
     from evaluation.evaluation_metrics_tfma.component import calculate_eval_metrics
 
     # Create a uri for the Metrics artifact which the kfp_component writes to
