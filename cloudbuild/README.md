@@ -91,7 +91,10 @@ Set up a trigger for the `release.yaml` pipeline, and provide substitution value
 
 ### On merge to `main` / `master` branch
 
-Set up three triggers for `terraform-apply.yaml`:
-  - One for the dev environment. Set the substitution value for the variable `_ENV_DIRECTORY` to `terraform/envs/dev`.
-  - One for the test environment. Set the substitution value for the variable `_ENV_DIRECTORY` to `terraform/envs/test`.
-  - One for the prod environment. Set the substitution value for the variable `_ENV_DIRECTORY` to `terraform/envs/prod`.
+Set up three triggers for `terraform-apply.yaml` - one for each of the dev/test/prod environments. Set the Cloud Build substitution variables as follows:
+
+| Environment | Cloud Build substitution variables |
+| ----------- | ---------------------------------- |
+| dev         | **\_PROJECT_ID**=\<Google Cloud Project ID for the dev environment><br>**\_REGION**=\<Google Cloud region to use for the dev environment><br>**\_ENV_DIRECTORY**=terraform/envs/dev    |
+| test        | **\_PROJECT_ID**=\<Google Cloud Project ID for the test environment><br>**\_REGION**=\<Google Cloud region to use for the test environment><br>**\_ENV_DIRECTORY**=terraform/envs/test |
+| prod        | **\_PROJECT_ID**=\<Google Cloud Project ID for the prod environment><br>**\_REGION**=\<Google Cloud region to use for the prod environment><br>**\_ENV_DIRECTORY**=terraform/envs/prod |
