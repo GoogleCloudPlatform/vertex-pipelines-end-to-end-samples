@@ -21,6 +21,7 @@ steps:
       - -c
       - |
         make setup && \
+        make compile-all-components && \
         make compile-pipeline pipeline=training && \
         make compile-pipeline pipeline=prediction
     env:
