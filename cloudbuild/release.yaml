@@ -41,7 +41,9 @@ steps:
         cp pipelines/prediction.json ${TAG_NAME}/prediction/prediction.json && \
         cp -r pipelines/${_PIPELINE_TEMPLATE}/training/assets ${TAG_NAME}/training/ && \
         cp -r pipelines/${_PIPELINE_TEMPLATE}/prediction/assets ${TAG_NAME}/prediction/ && \
-        gsutil cp -r ${TAG_NAME} ${_PIPELINE_PUBLISH_GCS_PATH}
+        for dest in ${_PIPELINE_PUBLISH_GCS_PATHS} ; do \
+          gsutil cp -r ${TAG_NAME} $$dest ; \
+        done
 
 options:
   logging: CLOUD_LOGGING_ONLY

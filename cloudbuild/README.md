@@ -84,10 +84,12 @@ Set up three triggers for `terraform-plan.yaml` - one for each of the dev/test/p
 
 ### On push of new tag
 
-Set up a trigger for the `release.yaml` pipeline, and provide substitution values for the following variables (described in the table above):
+Set up a trigger for the `release.yaml` pipeline, and provide substitution values for the following variables:
 
-- `_PIPELINE_PUBLISH_GCS_PATH`
-- `_PIPELINE_TEMPLATE`
+| Variable                        | Description | Suggested value |
+| ------------------------------- | ---------------------------------- |
+| `_PIPELINE_PUBLISH_GCS_PATHS`    | The (space separated) GCS folders (plural!) where the pipeline files (compiled pipelines + pipeline assets) will be copied to. See the [Assets](../README.md#assets) section of the main README for more information.    | `gs://<Project ID for dev environment>-pl-assets gs://<Project ID for test environment>-pl-assets gs://<Project ID for prod environment>-pl-assets` |
+| `_PIPELINE_TEMPLATE`            | The set of pipelines in the repo that you would like to use - i.e. the subfolder under `pipelines` where your pipelines live.                      | Currently, can be either `xgboost` or `tensorflow`. |
 
 ### On merge to `main` / `master` branch
 
