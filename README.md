@@ -41,8 +41,6 @@ Vertex AI Pipelines is a serverless orchestrator for running ML pipelines, using
 
 In a production MLOps solution, your ML pipelines need to be repeatable. So, we have created a Cloud Function to trigger the execution of ML pipelines on Vertex AI. This can be done either using a schedule (via Cloud Scheduler), or from an external system using Pub/Sub. We use Cloud Build to compile the pipelines using the KFP SDK, and publish them to a GCS bucket. The Cloud Function retrieves the pipeline definition from the bucket, and triggers an execution of the pipeline in Vertex AI.
 
-See [Infrastructure](terraform/README.md) for an implementation of a GCP deployment in the form of a Terraform module.
-
 ![Using a Cloud Function to trigger Vertex Pipelines](docs/images/cf_view.png)
 
 ## Getting started
