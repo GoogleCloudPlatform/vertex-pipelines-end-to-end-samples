@@ -40,17 +40,14 @@ See the [Google Cloud Documentation](https://cloud.google.com/build/docs/automat
 
 Your Cloud Build pipelines will need a service account to use. We recommend the following service accounts to be created:
 
-| Pipeline(s) | Permissions |
-|---|---|
-| `pr-checks.yaml` | `roles/logging.logWriter` (`admin` project) |
-| `e2e-test.yaml` | `roles/logging.logWriter` (`admin` project)<br>`roles/storage.admin` (`dev` project)<br>`roles/aiplatform.user` (`dev` project)<br>`roles/iam.serviceAccountUser` (`dev` project) |
-| `release.yaml` | `roles/logging.logWriter` (`admin` project)<br>`roles/storage.admin` (`dev` project)<br>`roles/storage.admin` (`test` project)<br>`roles/storage.admin` (`prod` project) |
-| `terraform-plan.yaml` (dev) | `roles/logging.logWriter` (`admin` project)<br>`roles/owner` (`dev` project) |
-| `terraform-plan.yaml` (test) | `roles/logging.logWriter` (`admin` project)<br>`roles/owner` (`test` project) |
-| `terraform-plan.yaml` (prod) | `roles/logging.logWriter` (`admin` project)<br>`roles/owner` (`prod` project) |
-| `terraform-apply.yaml` (dev) | `roles/logging.logWriter` (`admin` project)<br>`roles/owner` (`dev` project) |
-| `terraform-apply.yaml` (test) | `roles/logging.logWriter` (`admin` project)<br>`roles/owner` (`test` project) |
-| `terraform-apply.yaml` (prod) | `roles/logging.logWriter` (`admin` project)<br>`roles/owner` (`prod` project) |
+| Service account name | Pipeline(s) | Permissions |
+|---|---|---|
+| `cloudbuild-prchecks` | `pr-checks.yaml` | `roles/logging.logWriter` (`admin` project) |
+| `cloudbuild-e2e-test` | `e2e-test.yaml` | `roles/logging.logWriter` (`admin` project)<br>`roles/storage.admin` (`dev` project)<br>`roles/aiplatform.user` (`dev` project)<br>`roles/iam.serviceAccountUser` (`dev` project) |
+| `cloudbuild-release` | `release.yaml` | `roles/logging.logWriter` (`admin` project)<br>`roles/storage.admin` (`dev` project)<br>`roles/storage.admin` (`test` project)<br>`roles/storage.admin` (`prod` project) |
+| `terraform-dev` | `terraform-plan.yaml` (dev)<br>`terraform-apply.yaml` (dev) | `roles/logging.logWriter` (`admin` project)<br>`roles/owner` (`dev` project) |
+| `terraform-test` | `terraform-plan.yaml` (test)<br>`terraform-apply.yaml` (test) | `roles/logging.logWriter` (`admin` project)<br>`roles/owner` (`test` project) |
+| `terraform-prod` | `terraform-plan.yaml` (prod)<br>`terraform-apply.yaml` (prod) | `roles/logging.logWriter` (`admin` project)<br>`roles/owner` (`prod` project) |
 
 ## Recommended triggers
 
@@ -91,7 +88,7 @@ Set up three triggers for `terraform-plan.yaml` - one for each of the dev/test/p
 Set up a trigger for the `release.yaml` pipeline, and provide substitution values for the following variables:
 
 | Variable | Description | Suggested value |
-|---|---|
+|---|---|---|
 | `_PIPELINE_PUBLISH_GCS_PATHS` | The (space separated) GCS folders (plural!) where the pipeline files (compiled pipelines + pipeline assets) will be copied to. See the [Assets](../README.md#assets) section of the main README for more information. | `gs://<Project ID for dev environment>-pl-assets gs://<Project ID for test environment>-pl-assets gs://<Project ID for prod environment>-pl-assets` |
 | `_PIPELINE_TEMPLATE` | The set of pipelines in the repo that you would like to use - i.e. the subfolder under `pipelines` where your pipelines live. | Currently, can be either `xgboost` or `tensorflow`. |
 
