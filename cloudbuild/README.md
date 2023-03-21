@@ -63,7 +63,7 @@ Set up a trigger for the `pr-checks.yaml` pipeline, and provide a substitution v
 Set up a trigger for the `e2e-test.yaml` pipeline, and provide substitution values for the following variables:
 
 | Variable | Description | Suggested value |
-|---|---|
+|---|---|---|
 | `_PIPELINE_PUBLISH_GCS_PATH` | The GCS folder (i.e. path prefix) where the pipeline files will be copied to. See the [Assets](../README.md#assets) section of the main README for more information. | `gs://<Project ID for dev environment>-pl-assets/e2e-tests` |
 | `_PIPELINE_TEMPLATE` | The set of pipelines in the repo that you would like to use - i.e. the subfolder under `pipelines` where your pipelines live. | Currently, can be either `xgboost` or `tensorflow`. |
 | `_TEST_VERTEX_CMEK_IDENTIFIER` | Optional. ID of the CMEK (Customer Managed Encryption Key) that you want to use for the ML pipeline runs in the E2E tests as part of the CI/CD pipeline with the format `projects/my-project/locations/my-region/keyRings/my-kr/cryptoKeys/my-key` | Leave blank |
