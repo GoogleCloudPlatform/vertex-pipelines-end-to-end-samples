@@ -70,7 +70,7 @@ The cloud infrastructure is managed using Terraform and is defined in the [`terr
 
 There is a Terraform configuration for each environment (dev/test/prod) under [`terraform/envs`](terraform/envs/).
 
-#### Deploying the dev environment
+#### Deploying only the dev environment
 
 We recommend that you set up CI/CD to deploy your environments. However, if you would prefer to deploy the dev environment manually (for example to try out the repo), you can do so as follows:
 
@@ -85,9 +85,35 @@ gsutil mb -l ${VERTEX_LOCATION} -p ${VERTEX_PROJECT_ID} --pap=enforced gs://${VE
 
 3. Deploy the cloud infrastructure by running the `make deploy-infra` command from the root of the repository.
 
-#### Deploying the test and production environments
+#### Full deployment of dev/test/prod using CI/CD
 
-We recommend that you set up CI/CD to deploy your test and production environments. You can find instructions for this [here](cloudbuild/README.md).
+You will need four Google Cloud projects:
+
+- dev
+- test
+- prod
+- admin
+
+The Cloud Build pipelines will run in the _admin_ project, and deploy resources into the dev/test/prod projects.
+
+Before your CI/CD pipelines can deploy the infrastructure, you will need to set up a Terraform state bucket for each environment:
+
+```bash
+gsutil mb -l <GCP region e.g. europe-west2> -p <DEV PROJECT ID> --pap=enforced gs://<DEV PROJECT ID>-tfstate && gsutil ubla set on gs://<DEV PROJECT ID>-tfstate
+
+gsutil mb -l <GCP region e.g. europe-west2> -p <TEST PROJECT ID> --pap=enforced gs://<TEST PROJECT ID>-tfstate && gsutil ubla set on gs://<TEST PROJECT ID>-tfstate
+
+gsutil mb -l <GCP region e.g. europe-west2> -p <PROD PROJECT ID> --pap=enforced gs://<PROD PROJECT ID>-tfstate && gsutil ubla set on gs://<PROD PROJECT ID>-tfstate
+```
+
+You will also need to manually enable the Cloud Resource Manager and Service Usage APs for your _admin_ project:
+
+```bash
+gcloud services enable cloudresourcemanager.googleapis.com --project=<ADMIN PROJECT ID>
+gcloud services enable serviceusage.googleapis.com --project=<ADMIN PROJECT ID>
+```
+
+Now that you have created a Terraform state bucket for each environment, you can set up the CI/CD pipelines. You can find instructions for this [here](cloudbuild/README.md).
 
 #### Tearing down infrastructure
 

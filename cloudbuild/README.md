@@ -30,7 +30,7 @@ There are five CI/CD pipelines
 
 ### Which project should I use for Cloud Build?
 
-It is recommended to use a separate `admin` project, so that your dev/test/prod projects are treated identically. Alternatively, you could use the `prod` project.
+It is recommended to use a separate `admin` project, so that your dev/test/prod projects are treated identically.
 
 ### Connecting your repository to Google Cloud Build
 
@@ -38,16 +38,16 @@ See the [Google Cloud Documentation](https://cloud.google.com/build/docs/automat
 
 ### Cloud Build service accounts
 
-Your Cloud Build pipelines will need a service account to use. We recommend the following service accounts to be created:
+Your Cloud Build pipelines will need a service account to use. We recommend the following service accounts to be created in the _admin_ project:
 
 | Service account name | Pipeline(s) | Permissions |
 |---|---|---|
 | `cloudbuild-prchecks` | `pr-checks.yaml` | `roles/logging.logWriter` (`admin` project) |
 | `cloudbuild-e2e-test` | `e2e-test.yaml` | `roles/logging.logWriter` (`admin` project)<br>`roles/storage.admin` (`dev` project)<br>`roles/aiplatform.user` (`dev` project)<br>`roles/iam.serviceAccountUser` (`dev` project) |
 | `cloudbuild-release` | `release.yaml` | `roles/logging.logWriter` (`admin` project)<br>`roles/storage.admin` (`dev` project)<br>`roles/storage.admin` (`test` project)<br>`roles/storage.admin` (`prod` project) |
-| `terraform-dev` | `terraform-plan.yaml` (dev)<br>`terraform-apply.yaml` (dev) | `roles/logging.logWriter` (`admin` project)<br>`roles/owner` (`dev` project) |
-| `terraform-test` | `terraform-plan.yaml` (test)<br>`terraform-apply.yaml` (test) | `roles/logging.logWriter` (`admin` project)<br>`roles/owner` (`test` project) |
-| `terraform-prod` | `terraform-plan.yaml` (prod)<br>`terraform-apply.yaml` (prod) | `roles/logging.logWriter` (`admin` project)<br>`roles/owner` (`prod` project) |
+| `terraform-dev` | `terraform-plan.yaml` (dev)<br>`terraform-apply.yaml` (dev) | `roles/logging.logWriter` (`admin` project)<br>`roles/owner` (`dev` project)<br>`roles/storage.admin` (`dev` project) |
+| `terraform-test` | `terraform-plan.yaml` (test)<br>`terraform-apply.yaml` (test) | `roles/logging.logWriter` (`admin` project)<br>`roles/owner` (`test` project)<br>`roles/storage.admin` (`test` project) |
+| `terraform-prod` | `terraform-plan.yaml` (prod)<br>`terraform-apply.yaml` (prod) | `roles/logging.logWriter` (`admin` project)<br>`roles/owner` (`prod` project)<br>`roles/storage.admin` (`prod` project) |
 
 ## Recommended triggers
 
