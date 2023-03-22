@@ -22,7 +22,7 @@ steps:
     args:
       - -c
       - |
-        terraform init -input=false -backend-config='bucket=${_PROJECT_ID}-tfstate && \
+        terraform init -input=false -backend-config='bucket=${_PROJECT_ID}-tfstate' && \
         terraform plan -input=false -var 'project_id=${_PROJECT_ID}' -var 'region=${_REGION}'
 
 options:
