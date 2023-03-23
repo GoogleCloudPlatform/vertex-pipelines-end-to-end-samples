@@ -111,7 +111,7 @@ cloud_schedulers_config = {
       dataset_id = "preprocessing"
       dataset_location = "europe-west2"
       ingestion_dataset_id = "chicago_taxi_trips"
-      timestamp = "2021-08-01 00:00:00"
+      timestamp = "2022-12-01 00:00:00"
     },
   },
 
@@ -134,7 +134,7 @@ cloud_schedulers_config = {
       dataset_id = "preprocessing"
       dataset_location = "europe-west2"
       ingestion_dataset_id = "chicago_taxi_trips"
-      timestamp = "2021-08-01 00:00:00"
+      timestamp = "2022-12-01 00:00:00"
       batch_prediction_machine_type = "n1-standard-4"
       batch_prediction_min_replicas = 3
       batch_prediction_max_replicas = 5

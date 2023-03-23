@@ -58,7 +58,7 @@ def tensorflow_pipeline(
     dataset_id: str = "preprocessing",
     dataset_location: str = os.environ.get("VERTEX_LOCATION"),
     ingestion_dataset_id: str = "chicago_taxi_trips",
-    timestamp: str = "2021-08-01 00:00:00",
+    timestamp: str = "2022-12-01 00:00:00",
 ):
     """
     Tensorflow Keras training pipeline which:
