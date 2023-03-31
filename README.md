@@ -41,59 +41,127 @@ Vertex AI Pipelines is a serverless orchestrator for running ML pipelines, using
 
 In a production MLOps solution, your ML pipelines need to be repeatable. So, we have created a Cloud Function to trigger the execution of ML pipelines on Vertex AI. This can be done either using a schedule (via Cloud Scheduler), or from an external system using Pub/Sub. We use Cloud Build to compile the pipelines using the KFP SDK, and publish them to a GCS bucket. The Cloud Function retrieves the pipeline definition from the bucket, and triggers an execution of the pipeline in Vertex AI.
 
-See [Infrastructure](terraform/README.md) for an implementation of a GCP deployment in the form of a Terraform module.
-
 ![Using a Cloud Function to trigger Vertex Pipelines](docs/images/cf_view.png)
 
 ## Getting started
 
 ### Prerequisites
 
-- Python 3.7.12
+- [pyenv](https://github.com/pyenv/pyenv#installation) for managing Python versions
 - [Cloud SDK](https://cloud.google.com/sdk/docs/quickstart)
-- [pyenv](https://github.com/pyenv/pyenv/wiki#suggested-build-environment)
-
-For Unix users, we recommend the use of `pyenv` to manage the Python version as specifed in `.python-version`. See the [installation instruction](https://github.com/pyenv/pyenv#installation) for setting up `pyenv` on your system.
-
-<details><summary>What if my project is outside of any US region?</summary><p>
-
-Since the Chicago Taxi Trips dataset isn't available outside of the US, 
-a one-time manual copy of this dataset to your project location using the [BigQuery Data Transfer Service](https://cloud.google.com/bigquery-transfer/docs/introduction) is needed.
-
-1. Ensure you have the [required permissions](https://cloud.google.com/bigquery-transfer/docs/working-with-transfers#required_permissions_5)
-1. Enable BigQuery Data Transfer API enabled in your project `gcloud services enable bigquerydatatransfer.googleapis.com`
-1. Run `bash transfer_dataset.sh <project_id> <dataset> <location>`
-</p></details>
+- Make
 
 ### Local setup
 
-In the repository, execute:
-
+1. Clone the repository locally
 1. Install Python: `pyenv install`
 1. Install pipenv and pipenv dependencies: `make setup`
 1. Install pre-commit hooks: `cd pipelines && pipenv run pre-commit install`
 1. Copy `env.sh.example` to `env.sh`, and update the environment variables in `env.sh`
+1. Load the environment variables in `env.sh` by running `source env.sh`
 
-### Run pipelines
-    
-This project supports a no. of pipeline templates (see the [separate README](pipelines/README.md) for the pipelines in detail) which can be invoked by setting the environment variable `PIPELINE_TEMPLATE` and executing the `make`:
+### Deploying Cloud Infrastructure
 
-| ML Framework | Pipeline | `PIPELINE_TEMPLATE` |
-| --- | --- | --- |
-| XGBoost | Training | `xgboost` |
-| XGBoost | Prediction | `xgboost` |
-| TensorFlow | Training | `tensorflow` |
-| TensorFlow | Prediction | `tensorflow` |
+The cloud infrastructure is managed using Terraform and is defined in the [`terraform`](terraform) directory. There are three Terraform modules defined in [`terraform/modules`](terraform/modules):
 
-Before you run the pipeline(s), if you have made any changes to pipeline components, make sure to re-compile the pipeline components to their YAML format with:
+- `cloudfunction` - deploys a (Pub/Sub-triggered) Cloud Function from local source code
+- `scheduled_pipelines` - deploys Cloud Scheduler jobs that will trigger Vertex Pipeline runs (via the above Cloud Function)
+- `vertex_deployment` - deploys Cloud infrastructure required for running Vertex Pipelines, including enabling APIs, creating buckets, service accounts, and IAM permissions.
+
+There is a Terraform configuration for each environment (dev/test/prod) under [`terraform/envs`](terraform/envs/).
+
+#### Deploying only the dev environment
+
+We recommend that you set up CI/CD to deploy your environments. However, if you would prefer to deploy the dev environment manually (for example to try out the repo), you can do so as follows:
+
+(Assuming you have an empty Google Cloud project where you are an Owner)
+
+1. Install Terraform on your local machine. We recommend using [`tfswitch`](https://tfswitch.warrensbox.com/) to automatically choose and download an appropriate version for you (run `tfswitch` from the [`terraform/envs/dev`](terraform/envs/dev/) directory).
+2. Using the `gsutil` command line tool, create a Cloud Storage bucket for the Terraform state:
+
+```
+gsutil mb -l ${VERTEX_LOCATION} -p ${VERTEX_PROJECT_ID} --pap=enforced gs://${VERTEX_PROJECT_ID}-tfstate && gsutil ubla set on gs://${VERTEX_PROJECT_ID}-tfstate
+```
+
+3. Deploy the cloud infrastructure by running the `make deploy-infra` command from the root of the repository.
+
+#### Full deployment of dev/test/prod using CI/CD
+
+You will need four Google Cloud projects:
+
+- dev
+- test
+- prod
+- admin
+
+The Cloud Build pipelines will run in the _admin_ project, and deploy resources into the dev/test/prod projects.
+
+Before your CI/CD pipelines can deploy the infrastructure, you will need to set up a Terraform state bucket for each environment:
+
+```bash
+gsutil mb -l <GCP region e.g. europe-west2> -p <DEV PROJECT ID> --pap=enforced gs://<DEV PROJECT ID>-tfstate && gsutil ubla set on gs://<DEV PROJECT ID>-tfstate
+
+gsutil mb -l <GCP region e.g. europe-west2> -p <TEST PROJECT ID> --pap=enforced gs://<TEST PROJECT ID>-tfstate && gsutil ubla set on gs://<TEST PROJECT ID>-tfstate
+
+gsutil mb -l <GCP region e.g. europe-west2> -p <PROD PROJECT ID> --pap=enforced gs://<PROD PROJECT ID>-tfstate && gsutil ubla set on gs://<PROD PROJECT ID>-tfstate
+```
+
+You will also need to manually enable the Cloud Resource Manager and Service Usage APs for your _admin_ project:
+
+```bash
+gcloud services enable cloudresourcemanager.googleapis.com --project=<ADMIN PROJECT ID>
+gcloud services enable serviceusage.googleapis.com --project=<ADMIN PROJECT ID>
+```
+
+Now that you have created a Terraform state bucket for each environment, you can set up the CI/CD pipelines. You can find instructions for this [here](cloudbuild/README.md).
+
+#### Tearing down infrastructure
+
+To tear down the infrastructure you have created with Terraform, run `make destroy-infra`.
+
+### Example ML pipelines
+
+This repository contains example ML training and prediction pipelines for two popular frameworks (XGBoost/sklearn and Tensorflow) using the popular [Chicago Taxi Dataset](https://console.cloud.google.com/marketplace/details/city-of-chicago-public-data/chicago-taxi-trips). The details of these can be found in the [separate README](pipelines/README.md).
+
+#### Pre-requisites
+
+Before you can run these example pipelines successfully there are a few additional things you will need to deploy (they have not been included in the Terraform code as they are specific to these pipelines)
+
+1. Create a new BigQuery dataset for the Chicago Taxi data:
+
+```
+bq --location=${VERTEX_LOCATION} mk --dataset "${VERTEX_PROJECT_ID}:chicago_taxi_trips"
+```
+
+2. Create a new BigQuery dataset for data processing during the pipelines:
+
+```
+bq --location=${VERTEX_LOCATION} mk --dataset "${VERTEX_PROJECT_ID}:preprocessing"
+```
+
+3. Set up a BigQuery transfer job to mirror the Chicago Taxi dataset to your project
+
+```
+bq mk --transfer_config \
+  --project_id=${VERTEX_PROJECT_ID} \
+  --data_source="cross_region_copy" \
+  --target_dataset="chicago_taxi_trips" \
+  --display_name="Chicago taxi trip mirror" \
+  --params='{"source_dataset_id":"'"chicago_taxi_trips"'","source_project_id":"'"bigquery-public-data"'"}'
+```
+
+#### Running Pipelines
+
+Before you run the pipeline(s), you will need to compile the pipeline components to their YAML format with:
+
+```bash
+make compile-all-components
+```
+
+Whenever you make changes to the pipeline components, you will need to re-compile the relevant components with:
 
 ```bash
 make compile-components GROUP=<component group e.g. aiplatform>
-```
-
-Or to re-compile all pipeline components to YAML:
-```bash
-make compile-all-components
 ```
 
 You can run the XGBoost training pipeline (for example) with:
@@ -118,7 +186,7 @@ This will execute the pipeline using the chosen template on Vertex AI, namely it
 
 The ML pipelines have input parameters. As you can see in the pipeline definition files (`pipelines/pipelines/<xgboost|tensorflow>/<training|prediction>/pipeline.py`), they have default values, and some of these default values are derived from environment variables (which in turn are defined in `env.sh`).
 
-When triggering ad hoc runs in your dev/sandbox environment, or when running the E2E tests in CI, these default values are used. For the test and production deployments, the pipeline parameters are defined in the Terraform code for the Cloud Scheduler jobs (`envs/<test|prod>/variables.auto.tfvars`).
+When triggering ad hoc runs in your dev/sandbox environment, or when running the E2E tests in CI, these default values are used. For the test and production deployments, the pipeline parameters are defined in the Terraform code for the Cloud Scheduler jobs (`terraform/envs/<test|prod>/variables.auto.tfvars`).
 
 ### Assets
 
@@ -154,31 +222,6 @@ make test-trigger
 
 ## Customize pipelines
 
-### Start a new project
-
-There are three ways to create a new project from this template as outlined below.
-
-**GitHub UI**
-
-On the repository main page, click on "Use this template". then continue to create a new repository based on the master branch.
-
-![Use template](./docs/images/use_template.png)
-
-**Github CLI**
-
-Create a new git repo, using this directory as a starting point: `gh repo create <repo name> -p <link-to-this-repository>`.
-
-**Git CLI**
-
-Assuming you already have an empty REMOTE repository (i.e. in GitHub), use the following commands:
-
-```bash
-git clone <link-to-this-repository>              # clone this repo as a template
-git remote rm origin                             # remove upstream origin
-git remote add origin <link-to-new-repository>   # add new upstream origin
-git push -u origin master                        # push to new upstream repo
-```
-
 ### Update existing pipelines
 
 See existing [XGBoost](pipelines/pipelines/xgboost) and [Tensorflow](pipelines/pipelines/tensorflow) pipelines as part of this template.
@@ -194,25 +237,7 @@ See [USAGE](USAGE.md) for guidelines on how to add new pipelines (e.g. other tha
 
 Terraform is used to deploy Cloud Scheduler jobs that trigger the Vertex Pipeline runs. This is done by the CI/CD pipelines (see section below on CI/CD).
 
-#### Configuring Terraform
-
-The Terraform configuration is provided for two environments under the `envs` directory - `envs/test` and `envs/prod`. Each will need some setup steps for their respective environment:
-
-1. In `main.tf`, you will need to configure the GCS location for the Terraform state. For example, the following configuration will store the Terraform state file under the directory `gs://my-tf-state-bucket/path/to/tfstate`.
-
-```
-  backend "gcs" {
-    bucket = "my-tfstate-bucket" # Change this
-    prefix = "/path/to/tfstate"  # Change this
-  }
-```
-
-Remember that this configuration must be different for the two environments.
-
-2. In `variables.auto.tfvars`, you need to configure the following variables:
-  - `project_id` - the GCP project ID for your Cloud Scheduler jobs.
-  - `pubsub_topic_name` - the name of the Pub/Sub topic that the Cloud Scheduler job should publish to. This is the same Pub/Sub topic that your Cloud Function must be subscribed to.
-  - `cloud_schedulers_config` - a map of Cloud Scheduler jobs that you want to deploy. An example is given for scheduling a training pipeline.
+To schedule pipelines into an environment, you will need to provide the `cloud_schedulers_config` variable to the Terraform configuration for the relevant environment. You can find an example of this configuration in [`terraform/modules/scheduled_pipelines/scheduled_jobs.auto.tfvars.example`](terraform/modules/scheduled_pipelines/scheduled_jobs.auto.tfvars.example). Copy this example file into the relevant directory for your environment (e.g. `terraform/envs/dev` for the dev environment) and remove the `.example` suffix. Adjust the configuration file as appropriate.
 
 ### CI/CD
 
@@ -237,8 +262,8 @@ Below is a diagram of how the files are published in each environment in the `e2
         └── training.json   <-- compiled training pipeline
 ```
 
-4. `terraform-plan.yaml` - Checks the Terraform configuration under `envs/<env>` (i.e. `envs/test` or `envs/prod`), and produces a summary of any proposed changes that will be applied on merge to the main branch. Out of the box, this just includes Cloud Scheduler jobs used to schedule your ML pipelines.
-5. `terraform-apply.yaml` - Applies the Terraform configuration under `envs/<env>` (i.e. `envs/test` or `envs/prod`). Out of the box, this just includes Cloud Scheduler jobs used to schedule your ML pipelines.
+4. `terraform-plan.yaml` - Checks the Terraform configuration under `terraform/envs/<env>` (e.g. `terraform/envs/test`), and produces a summary of any proposed changes that will be applied on merge to the main branch.
+5. `terraform-apply.yaml` - Applies the Terraform configuration under `terraform/envs/<env>` (e.g. `terraform/envs/test`).
 
 For more details on setting up CI/CD, see the [separate README](cloudbuild/README.md).
 

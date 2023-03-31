@@ -20,7 +20,7 @@ This document describes the full process from making a change to your pipeline c
 
 ## Pre-requisites
 
-- Suitable GCP environments set up - see the README section on [Cloud Architecture](../README.md#cloud-architecture)
+- Suitable GCP environments set up - see the README section on [Deploying Cloud Infrastructure](../README.md#deploying-cloud-infrastructure)
 - This repo forked / used as a template for a new GitHub repo
 - CI/CD set up - see the instructions [here](cloudbuild/README.md)
 - Access set up for the BigQuery datasets used in the example pipelines
@@ -44,26 +44,34 @@ When you open the Pull Request, the CI pipeline (`pr-checks.yaml`) should be tri
 
 To compile and publish your ML pipelines into your test and prod environments, you will need to [create a release](https://docs.github.com/en/repositories/releasing-projects-on-github/managing-releases-in-a-repository#creating-a-release).
 
-When the new tag is created, the `release.yaml` pipeline should be triggered. It will compile both the training and prediction pipelines, then copy the ML pipelines and their [assets](../README.md#assets) to the Cloud Storage location specified in your [CI/CD setup](../cloudbuild/README.md#cicd-setup) under a folder with the name of your git tag.
+When the new tag is created, the `release.yaml` pipeline should be triggered. It will compile both the training and prediction pipelines, then copy the ML pipelines and their [assets](../README.md#assets) to the Cloud Storage locations specified in your [CI/CD setup](../cloudbuild/README.md) under a folder with the name of your git tag.
 
 #### Example
 
 - You are using the `xgboost` template
 - You create a release from the main/master branch and use the git tag `v1.2`
 - You have set up the following Cloud Build variables / substitutions for the `release.yaml` CI/CD pipeline
-  - `_PIPELINE_PUBLISH_GCS_PATH` = `gs://my-cicd-env-bucket/pipelines`
+  - `_PIPELINE_PUBLISH_GCS_PATHS` = `gs://<Project ID of dev project>-pl-assets gs://<Project ID of test project>-pl-assets gs://<Project ID of prod project>-pl-assets`
 
-Assuming your end-to-end tests pass, your compiled training pipeline will be published in this location:
-- `gs://my-cicd-env-bucket/pipelines/v1.2/training/training.json`
+Assuming your end-to-end tests pass, your compiled training pipeline will be published to:
+- `gs://<Project ID of dev project>-pl-assets/v1.2/training/training.json`
+- `gs://<Project ID of test project>-pl-assets/v1.2/training/training.json`
+- `gs://<Project ID of prod project>-pl-assets/v1.2/training/training.json`
 
-The contents of your assets folder for your training pipeline will be published in this location:
-- `gs://my-cicd-env-bucket/pipelines/v1.2/training/assets/`
+The contents of your assets folder for your training pipeline will be published to:
+- `gs://<Project ID of dev project>-pl-assets/v1.2/training/assets/`
+- `gs://<Project ID of test project>-pl-assets/v1.2/training/assets/`
+- `gs://<Project ID of prod project>-pl-assets/v1.2/training/assets/`
 
 Similarly, your compiled prediction pipeline will be published in this location:
-- `gs://my-cicd-env-bucket/pipelines/v1.2/prediction/prediction.json`
+- `gs://<Project ID of dev project>-pl-assets/v1.2/prediction/prediction.json`
+- `gs://<Project ID of test project>-pl-assets/v1.2/prediction/prediction.json`
+- `gs://<Project ID of prod project>-pl-assets/v1.2/prediction/prediction.json`
 
 The contents of your assets folder for your prediction pipeline will be published in this location:
-- `gs://my-cicd-env-bucket/pipelines/v1.2/prediction/assets/`
+- `gs://<Project ID of dev project>-pl-assets/v1.2/prediction/assets/`
+- `gs://<Project ID of test project>-pl-assets/v1.2/prediction/assets/`
+- `gs://<Project ID of prod project>-pl-assets/v1.2/prediction/assets/`
 
 | :exclamation: IMPORTANT    |
 |:---------------------------|
@@ -77,18 +85,8 @@ Of course, we will begin by scheduling the pipelines to run in the test environm
 
 Create a new branch off the main/master branch e.g. `git checkout -b test-env-scheduling`
 
-We need to set up the Terraform configuration for the test environment:
-
-1. In `envs/test/main.tf`, set up the backend configuration of Terraform, so that the Terraform state is stored somewhere in GCS (note that this step is only required the first time you set this up).
-
-| :boom: BE CAREFUL    |
-|:---------------------|
-| Make sure that the Terraform state for the test environment (in `envs/test`) and the prod environment (in `envs/prod`) are not set to reside in the same GCS location! |
-
-2. Set up the following Terraform variables in `envs/test/variables.auto.tfvars`:
-  - `project_id`
-  - `pubsub_topic_name`
-3. For the variable `cloud_schedulers_config`, we pass in a map of all the Cloud Scheduler jobs that we want to deploy. Continuing with our example earlier, the code below shows how we can schedule the training pipeline to run on the first of every month, and the prediction pipeline will run every night:
+1. Copy the file `terraform/modules/scheduled_pipelines/scheduled_jobs.auto.tfvars.example` to `terraform/envs/test/scheduled_jobs.auto.tfvars`
+1. In this file you will see the variable `cloud_schedulers_config`. Here we pass in a map of all the Cloud Scheduler jobs that we want to deploy. Continuing with our example earlier, the code below shows how we can schedule the training pipeline to run on the first of every month, and the prediction pipeline will run every night:
 
 ```
 cloud_schedulers_config = {
@@ -96,49 +94,47 @@ cloud_schedulers_config = {
 
   xgboost_training = {
     name         = "xgboost-training-pipeline-trigger"
-    region       = "europe-west4"
     description  = "Trigger my XGBoost training pipeline in Vertex"
     schedule     = "0 0 1 * *"
     time_zone    = "UTC"
-    template_path = "gs://my-compiled-pipelines-bucket/v1.2/training.json"
+    template_path = "gs://<Project ID of test project>-pl-assets/v1.2/training/training.json"
     enable_caching = null
     pipeline_parameters = {
-      project_id = "my-ptest-project"
-      project_location = "europe-west4"
-      pipeline_files_gcs_path = "gs://my-assets-bucket/assets/v1.2/training/files"
-      ingestion_project_id = "my-test-project"
+      project_id = <Project ID of test project>
+      project_location = "europe-west2"
+      pipeline_files_gcs_path = "gs://<Project ID of test project>-pl-assets/v1.2/training/assets"
+      ingestion_project_id = <Project ID of test project>
       model_name = "xgboost-with-preprocessing"
       model_label = "label_name"
       tfdv_schema_filename = "tfdv_schema_training.pbtxt"
-      tfdv_train_stats_path = "gs://my-assets-bucket/train_stats/train.stats"
+      tfdv_train_stats_path = "gs://<Project ID of test project>-pl-root/train_stats/train.stats"
       dataset_id = "preprocessing"
-      dataset_location = "EU"
+      dataset_location = "europe-west2"
       ingestion_dataset_id = "chicago_taxi_trips"
-      timestamp = "2021-08-01 00:00:00"
+      timestamp = "2022-12-01 00:00:00"
     },
   },
 
     xgboost_prediction = {
     name         = "xgboost-prediction-pipeline-trigger"
-    region       = "europe-west4"
     description  = "Trigger my XGBoost prediction pipeline in Vertex"
     schedule     = "0 0 * * *"
     time_zone    = "UTC"
-    template_path = "gs://my-compiled-pipelines-bucket/v1.2/prediction.json"
+    template_path = "gs://<Project ID of test project>-pl-assets/v1.2/prediction/prediction.json"
     enable_caching = null
     pipeline_parameters = {
-      project_id = "my-test-project"
-      project_location = "europe-west4"
-      pipeline_files_gcs_path = "gs://my-assets-bucket/assets/v1.2/prediction/files"
-      ingestion_project_id = "my-test-project"
+      project_id = <Project ID of test project>
+      project_location = "europe-west2"
+      pipeline_files_gcs_path = "gs://<Project ID of test project>-pl-assets/v1.2/prediction/assets"
+      ingestion_project_id = <Project ID of test project>
       model_name = "xgboost-with-preprocessing"
       model_label = "label_name"
-      tfdv_schema_filename = "tfdv_schema_training.pbtxt"
-      tfdv_train_stats_path = "gs://my-assets-bucket/train_stats/train.stats"
+      tfdv_schema_filename = "tfdv_schema_prediction.pbtxt"
+      tfdv_train_stats_path = "gs://<Project ID of test project>-pl-root/train_stats/train.stats"
       dataset_id = "preprocessing"
-      dataset_location = "EU"
+      dataset_location = "europe-west2"
       ingestion_dataset_id = "chicago_taxi_trips"
-      timestamp = "2021-08-01 00:00:00"
+      timestamp = "2022-12-01 00:00:00"
       batch_prediction_machine_type = "n1-standard-4"
       batch_prediction_min_replicas = 3
       batch_prediction_max_replicas = 5
@@ -154,4 +150,4 @@ cloud_schedulers_config = {
 
 ## Deploying a release to the production environment
 
-Once you are happy with how `v1.2` is working in the test environment, you can follow the same process for the prod environment (using `envs/prod`, swapping the necessary values out for the different environment e.g. bucket names).
+Once you are happy with how `v1.2` is working in the test environment, you can follow the same process for the prod environment (using `terraform/envs/prod`, swapping the necessary values out for the different environment e.g. bucket names).

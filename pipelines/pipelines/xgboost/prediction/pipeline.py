@@ -47,7 +47,7 @@ def xgboost_pipeline(
     dataset_id: str = "preprocessing",
     dataset_location: str = os.environ.get("VERTEX_LOCATION"),
     ingestion_dataset_id: str = "chicago_taxi_trips",
-    timestamp: str = "2021-08-01 00:00:00",
+    timestamp: str = "2022-12-01 00:00:00",
     batch_prediction_machine_type: str = "n1-standard-4",
     batch_prediction_min_replicas: int = 3,
     batch_prediction_max_replicas: int = 10,

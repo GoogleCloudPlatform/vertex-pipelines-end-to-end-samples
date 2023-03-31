@@ -16,17 +16,21 @@
 steps:
 
   # Apply terraform
-  - name: hashicorp/terraform:1.1.3
+  - name: hashicorp/terraform:1.4.0
     dir: /workspace/${_ENV_DIRECTORY}
     entrypoint: /bin/sh
     args:
       - -c
       - |
-        terraform init -input=false &&
-        terraform apply -auto-approve -input=false
+        terraform init -input=false -backend-config='bucket=${_PROJECT_ID}-tfstate' &&
+        terraform apply -auto-approve -input=false -var 'project_id=${_PROJECT_ID}' -var 'region=${_REGION}'
 
 options:
   logging: CLOUD_LOGGING_ONLY
 
 substitutions:
-  _ENV_DIRECTORY: envs/test  # envs/test or envs/prod
+  # Either:
+  #   - terraform/envs/dev
+  #   - terraform/envs/test
+  #   - terraform/envs/prod
+  _ENV_DIRECTORY: terraform/envs/test

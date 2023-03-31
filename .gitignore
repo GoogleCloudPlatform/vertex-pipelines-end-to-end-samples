@@ -162,7 +162,7 @@ pytest.ini
 .terraform.lock.hcl
 
 # Cloud Function zip
-terraform/*.zip
+terraform/**/*.zip
 
 # env.sh (only example file should be committed)
 env.sh
