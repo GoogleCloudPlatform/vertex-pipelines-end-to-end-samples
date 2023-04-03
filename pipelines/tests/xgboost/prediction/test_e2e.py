@@ -34,7 +34,6 @@ def test_pipeline_run(enable_caching) -> None:
 
     # tasks (components) and outputs for tasks which occur unconditionally
     common_tasks = {
-        "get-current-time": [],
         "bq-query-to-table": [],
         "extract-bq-to-dataset": ["dataset"],
         "generate-statistics": ["statistics"],

@@ -25,7 +25,6 @@ from pipelines.components import (
     lookup_model,
     export_model,
     upload_model,
-    get_current_time,
     copy_artifact,
     extract_bq_to_dataset,
     bq_query_to_table,
@@ -121,17 +120,13 @@ def tensorflow_pipeline(
 
     queries_folder = pathlib.Path(__file__).parent / "queries"
 
-    time_filter = get_current_time(timestamp=timestamp).set_display_name(
-        "Get time filter for ingestion query"
-    )
-
     ingest_query = generate_query(
         queries_folder / "ingest.sql",
         source_dataset=f"{ingestion_project_id}.{ingestion_dataset_id}",
         source_table=ingestion_table,
         filter_column=time_column,
         target_column=label_column_name,
-        filter_start_value=time_filter.output,
+        filter_start_value=timestamp,
     )
     split_train_query = generate_query(
         queries_folder / "sample.sql",
