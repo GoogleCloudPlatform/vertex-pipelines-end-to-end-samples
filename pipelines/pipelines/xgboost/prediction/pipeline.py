@@ -24,7 +24,6 @@ from google_cloud_pipeline_components.aiplatform import (
 from pipelines import generate_query
 from pipelines.components import (
     lookup_model,
-    get_current_time,
     extract_bq_to_dataset,
     bq_query_to_table,
     validate_skew,
@@ -100,16 +99,12 @@ def xgboost_pipeline(
     # operations
     queries_folder = pathlib.Path(__file__).parent / "queries"
 
-    time_filter = get_current_time(timestamp=timestamp).set_display_name(
-        "Get time filter for ingestion query"
-    )
-
     ingest_query = generate_query(
         queries_folder / "ingest.sql",
         source_dataset=f"{ingestion_project_id}.{ingestion_dataset_id}",
         source_table=ingestion_table,
         filter_column=time_column,
-        filter_start_value=time_filter.output,
+        filter_start_value=timestamp,
     )
 
     # data ingestion and preprocessing operations

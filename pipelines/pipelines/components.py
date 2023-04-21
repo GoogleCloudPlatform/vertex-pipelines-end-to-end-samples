@@ -97,16 +97,6 @@ export_model = load_component_from_file(
     )
 )
 
-get_current_time = load_component_from_file(
-    str(
-        PIPELINE_COMPONENTS_DIR
-        / "aiplatform"
-        / "aiplatform"
-        / "get_current_time"
-        / "component.yaml"
-    )
-)
-
 lookup_model = load_component_from_file(
     str(
         PIPELINE_COMPONENTS_DIR
