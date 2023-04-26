@@ -80,7 +80,6 @@ feature {
 feature {
   name: "company"
   type: BYTES
-  domain: "company"
   presence {
     min_fraction: 1.0
     min_count: 1
@@ -113,36 +112,4 @@ string_domain {
   value: "Unknown"
   value: "Dispute"
   value: "No Charge"
-}
-string_domain {
-  name: "company"
-  value: "Top Cab"
-  value: "Sun Taxi"
-  value: "Flash Cab"
-  value: "U Taxicab"
-  value: "Globe Taxi"
-  value: "Setare Inc"
-  value: "5 Star Taxi"
-  value: "City Service"
-  value: "24 Seven Taxi"
-  value: "Leonard Cab Co"
-  value: "Chicago Taxicab"
-  value: "Petani Cab Corp"
-  value: "Medallion Leasin"
-  value: "Metro Jet Taxi A."
-  value: "Top Cab Affiliation"
-  value: "Chicago Independents"
-  value: "Koam Taxi Association"
-  value: "5062 - 34841 Sam Mestas"
-  value: "Choice Taxi Association"
-  value: "Taxi Affiliation Services"
-  value: "3556 - 36214 RC Andrews Cab"
-  value: "6574 - Babylon Express Inc."
-  value: "4053 - 40193 Adwar H. Nikola"
-  value: "Blue Ribbon Taxi Association"
-  value: "Taxicab Insurance Agency Llc"
-  value: "312 Medallion Management Corp"
-  value: "Taxicab Insurance Agency, LLC"
-  value: "Star North Taxi Management Llc"
-  value: "Patriot Taxi Dba Peace Taxi Associat"
 }
