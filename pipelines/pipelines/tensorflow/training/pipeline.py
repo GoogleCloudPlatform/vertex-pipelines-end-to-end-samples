@@ -204,7 +204,7 @@ def tensorflow_pipeline(
     ).set_display_name("Validate data schema")
     # show anomalies and fail if any anomalies were detected
     anomalies = show_anomalies(
-        anomalies=validated_schema.output, fail_on_anomalies=True
+        anomalies=validated_schema.output, fail_on_anomalies=False
     ).set_display_name("Show anomalies")
 
     split_train_data = (

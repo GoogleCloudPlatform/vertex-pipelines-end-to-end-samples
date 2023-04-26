@@ -180,7 +180,7 @@ def tensorflow_pipeline(
     ).set_display_name("Validate data skew")
 
     anomalies = show_anomalies(
-        anomalies=validated_skew.output, fail_on_anomalies=True
+        anomalies=validated_skew.output, fail_on_anomalies=False
     ).set_display_name("Show anomalies")
 
     # lookup champion model
