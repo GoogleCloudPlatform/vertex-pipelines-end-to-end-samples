@@ -25,54 +25,6 @@ predict_tensorflow_model = load_component_from_file(
     )
 )
 
-# _tfdv components
-
-generate_statistics = load_component_from_file(
-    str(
-        PIPELINE_COMPONENTS_DIR
-        / "_tfdv"
-        / "_tfdv"
-        / "generate_statistics"
-        / "component.yaml"
-    )
-)
-
-show_anomalies = load_component_from_file(
-    str(
-        PIPELINE_COMPONENTS_DIR
-        / "_tfdv"
-        / "_tfdv"
-        / "show_anomalies"
-        / "component.yaml"
-    )
-)
-
-validate_schema = load_component_from_file(
-    str(
-        PIPELINE_COMPONENTS_DIR
-        / "_tfdv"
-        / "_tfdv"
-        / "validate_schema"
-        / "component.yaml"
-    )
-)
-
-validate_skew = load_component_from_file(
-    str(
-        PIPELINE_COMPONENTS_DIR / "_tfdv" / "_tfdv" / "validate_skew" / "component.yaml"
-    )
-)
-
-visualise_statistics = load_component_from_file(
-    str(
-        PIPELINE_COMPONENTS_DIR
-        / "_tfdv"
-        / "_tfdv"
-        / "visualise_statistics"
-        / "component.yaml"
-    )
-)
-
 # _xgboost components
 
 train_xgboost_model = load_component_from_file(
@@ -103,6 +55,16 @@ lookup_model = load_component_from_file(
         / "aiplatform"
         / "aiplatform"
         / "lookup_model"
+        / "component.yaml"
+    )
+)
+
+model_batch_predict = load_component_from_file(
+    str(
+        PIPELINE_COMPONENTS_DIR
+        / "aiplatform"
+        / "aiplatform"
+        / "model_batch_predict"
         / "component.yaml"
     )
 )
@@ -172,16 +134,6 @@ calculate_eval_metrics = load_component_from_file(
 )
 
 # helpers
-
-copy_artifact = load_component_from_file(
-    str(
-        PIPELINE_COMPONENTS_DIR
-        / "helpers"
-        / "helpers"
-        / "copy_artifact"
-        / "component.yaml"
-    )
-)
 
 model_to_uri = load_component_from_file(
     str(

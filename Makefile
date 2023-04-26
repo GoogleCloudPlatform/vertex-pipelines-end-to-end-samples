@@ -62,18 +62,13 @@ test-all-components: ## Run unit tests for all pipeline components
 		$(MAKE) test-components GROUP=$$(basename $$component_group) ; \
 	done
 
-sync-assets: ## Sync assets folder to GCS. Must specify pipeline=<training|prediction>
-	@gsutil -m rsync -r -d ./pipelines/pipelines/${PIPELINE_TEMPLATE}/$(pipeline)/assets ${PIPELINE_FILES_GCS_PATH}/$(pipeline)/assets
-
 run: ## Compile pipeline, copy assets to GCS, and run pipeline in sandbox environment. Must specify pipeline=<training|prediction>. Optionally specify enable_pipeline_caching=<true|false> (defaults to default Vertex caching behaviour)
 	@ $(MAKE) compile-pipeline && \
-	$(MAKE) sync-assets && \
 	cd pipelines && \
 	pipenv run python -m trigger.main --template_path=./$(pipeline).json --enable_caching=$(enable_pipeline_caching)
 
 e2e-tests: ## Compile pipeline, copy assets to GCS, and perform end-to-end (E2E) pipeline tests. Must specify pipeline=<training|prediction>. Optionally specify enable_pipeline_caching=<true|false> (defaults to default Vertex caching behaviour)
 	@ $(MAKE) compile-pipeline && \
-	$(MAKE) sync-assets && \
 	cd pipelines && \
 	pipenv run python -m pytest --log-cli-level=INFO tests/${PIPELINE_TEMPLATE}/$(pipeline) --enable_caching=$(enable_pipeline_caching)
 
