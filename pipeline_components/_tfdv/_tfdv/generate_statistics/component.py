@@ -18,7 +18,10 @@ from pathlib import Path
 
 @component(
     base_image="python:3.7",
-    packages_to_install=["tensorflow-data-validation==1.6.0", "apache-beam==2.35.0"],
+    packages_to_install=[
+        "tensorflow-data-validation[visualization]==1.6.0",
+        "apache-beam==2.35.0",
+    ],
     output_component_file=str(Path(__file__).with_suffix(".yaml")),
 )
 def generate_statistics(
@@ -118,7 +121,7 @@ def generate_statistics(
             f"""
                 import setuptools
                 setuptools.setup(
-                    install_requires=['tensorflow-data-validation=={tfdv.__version__}'],
+                    install_requires=['tensorflow-data-validation[visualization]=={tfdv.__version__}'],
                     packages=setuptools.find_packages()
                 )
         """

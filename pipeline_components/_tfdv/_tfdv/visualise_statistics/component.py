@@ -18,7 +18,7 @@ from pathlib import Path
 
 @component(
     base_image="python:3.7",
-    packages_to_install=["tensorflow-data-validation==1.6.0"],
+    packages_to_install=["tensorflow-data-validation[visualization]==1.6.0"],
     output_component_file=str(Path(__file__).with_suffix(".yaml")),
 )
 def visualise_statistics(

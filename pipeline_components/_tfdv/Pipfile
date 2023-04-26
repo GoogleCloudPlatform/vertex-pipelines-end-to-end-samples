@@ -8,7 +8,7 @@ kfp = "==1.8.9"
 
 [dev-packages]
 pytest = ">=6.2.4,<7.0.0"
-tensorflow-data-validation = "==1.6.0"
+"tensorflow-data-validation[visualization]" = "==1.6.0"
 apache-beam = "==2.35.0"
 
 [requires]
