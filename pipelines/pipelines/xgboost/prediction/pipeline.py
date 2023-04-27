@@ -31,12 +31,10 @@ from pipelines.components import (
 def xgboost_pipeline(
     project_id: str = os.environ.get("VERTEX_PROJECT_ID"),
     project_location: str = os.environ.get("VERTEX_LOCATION"),
-    pipeline_files_gcs_path: str = os.environ.get("PIPELINE_FILES_GCS_PATH"),
     ingestion_project_id: str = os.environ.get("VERTEX_PROJECT_ID"),
     model_name: str = "xgboost_with_preprocessing",
     model_label: str = "label_name",
-    dataset_id: str = os.environ.get("BQ_DATASET_NAME"),
-    train_table_name: str = os.environ.get("BQ_TRAIN_TABLE_NAME"),
+    dataset_id: str = "preprocessing",
     dataset_location: str = os.environ.get("VERTEX_LOCATION"),
     ingestion_dataset_id: str = "chicago_taxi_trips",
     timestamp: str = "2022-12-01 00:00:00",
@@ -53,7 +51,6 @@ def xgboost_pipeline(
     Args:
         project_id (str): project id of the Google Cloud project
         project_location (str): location of the Google Cloud project
-        pipeline_files_gcs_path (str): GCS path where the pipeline files are located
         ingestion_project_id (str): project id containing the source bigquery data
             for ingestion. This can be the same as `project_id` if the source data is
             in the same project where the ML pipeline is executed.
@@ -120,7 +117,6 @@ def xgboost_pipeline(
     # batch predict from BigQuery to BigQuery
     bigquery_source_input_uri = f"bq://{project_id}.{dataset_id}.{ingested_table}"
     bigquery_destination_output_uri = f"bq://{project_id}.{dataset_id}"
-    bigquery_source_training_uri = f"bq://{project_id}.{dataset_id}.{train_table_name}"
 
     batch_prediction = (
         model_batch_predict(
@@ -130,7 +126,6 @@ def xgboost_pipeline(
             project_id=project_id,
             bigquery_source_input_uri=bigquery_source_input_uri,
             bigquery_destination_output_uri=bigquery_destination_output_uri,
-            bigquery_source_training_uri=bigquery_source_training_uri,
             machine_type=batch_prediction_machine_type,
             starting_replica_count=batch_prediction_min_replicas,
             max_replica_count=batch_prediction_max_replicas,

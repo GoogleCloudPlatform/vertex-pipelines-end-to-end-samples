@@ -32,7 +32,6 @@ def model_batch_predict(
     project_id: str,
     bigquery_source_input_uri: str,
     bigquery_destination_output_uri: str,
-    bigquery_source_training_uri: str,
     machine_type: str = "n1-standard-2",
     starting_replica_count: int = 1,
     max_replica_count: int = 1,
@@ -49,6 +48,7 @@ def model_batch_predict(
         None
     """
 
+    import json
     import logging
     from google.protobuf.json_format import ParseDict, MessageToJson
     from google.cloud.aiplatform_v1beta1.services.job_service import JobServiceClient
@@ -58,6 +58,12 @@ def model_batch_predict(
     api_endpoint = f"{project_location}-aiplatform.googleapis.com"
     if alert_email_addresses is None:
         alert_email_addresses = []
+
+    TRAINING_DATASET_INFO = "training_dataset.json"
+    logging.info(f"Read {model.path + '/' + TRAINING_DATASET_INFO}")
+    with open(model.path + "/" + TRAINING_DATASET_INFO, "r") as fp:
+        training_dataset = json.load(fp)
+
     message = {
         "displayName": job_display_name,
         "model": model.metadata["resourceName"],
@@ -68,21 +74,18 @@ def model_batch_predict(
         },
         "outputConfig": {
             "predictionsFormat": "bigquery",
-            "bigqueryDestination": {"output_uri": bigquery_destination_output_uri}
-            # gcs_destination=GcsDestination(output_uri_prefix=...),
+            "bigqueryDestination": {"outputUri": bigquery_destination_output_uri},
         },
-        "dedicated_resources": {
+        "dedicatedResources": {
             "machineSpec": {"machineType": machine_type},
             "startingReplicaCount": starting_replica_count,
             "maxReplicaCount": max_replica_count,
         },
-        "model_monitoring_config": {
+        "modelMonitoringConfig": {
             "alertConfig": {"emailAlertConfig": {"userEmails": alert_email_addresses}},
             "objectiveConfigs": [
                 {
-                    "trainingDataset": {
-                        "bigquerySource": {"inputUri": bigquery_source_training_uri},
-                    },
+                    "trainingDataset": training_dataset,
                     "trainingPredictionSkewDetectionConfig": {
                         "defaultSkewThreshold": {"value": 0.001}
                     },

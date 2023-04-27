@@ -81,7 +81,7 @@ def lookup_model(
         logging.info(f"model display name: {target_model.display_name}")
         logging.info(f"model resource name: {target_model.resource_name}")
         logging.info(f"model uri: {target_model.uri}")
-        model.uri = model_resource_name
+        model.uri = target_model.uri
         model.metadata["resourceName"] = model_resource_name
 
     return model_resource_name

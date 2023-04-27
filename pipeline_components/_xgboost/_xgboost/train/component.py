@@ -65,6 +65,7 @@ def train_xgboost_model(
     import logging
     import pandas
     import joblib
+    from typing import List
     from sklearn.pipeline import Pipeline
     from sklearn.preprocessing import StandardScaler, OrdinalEncoder, OneHotEncoder
     from sklearn.compose import ColumnTransformer
@@ -72,6 +73,8 @@ def train_xgboost_model(
     from typing import Iterator
     from pathlib import Path
 
+    # used for monitoring during prediction time
+    TRAINING_DATASET_INFO = "training_dataset.json"
     # numeric/categorical features in Chicago trips dataset to be preprocessed
     NUM_COLS = ["dayofweek", "hourofday", "trip_distance", "trip_miles", "trip_seconds"]
     ORD_COLS = ["company"]
@@ -79,9 +82,15 @@ def train_xgboost_model(
 
     logging.getLogger().setLevel(logging.INFO)
 
-    def read_files(
-        path: Path, file_pattern: str = None, **kwargs
-    ) -> Iterator[pandas.DataFrame]:
+    def list_files(path: Path, file_pattern: str) -> List[Path]:
+        logging.info(f"Searching files with pattern {file_pattern} in {path}")
+        paths = list(path.glob(file_pattern))
+        logging.info(f"Found {len(paths)} files")
+        if len(paths) == 0:
+            raise RuntimeError("No input files found!")
+        return paths
+
+    def read_files(paths: List[Path], **kwargs) -> Iterator[pandas.DataFrame]:
         """
             Read from one or multiple files using `pandas.read_csv`. Provide a
             file pattern to read from multiple files e.g. "files-*.csv".
@@ -94,18 +103,9 @@ def train_xgboost_model(
         Returns:
             Iterator[pandas.DataFrame]: Iterator of Pandas DataFrames.
         """
-        paths = [path]
-        if file_pattern:
-            logging.info(f"Searching files with pattern {file_pattern} in {path}")
-            paths = list(path.glob(file_pattern))
-            logging.info(f"Found {len(paths)} files")
-            if len(paths) == 0:
-                raise RuntimeError("No input files found!")
-
         for p in paths:
             logging.info(f"Reading file: {p}")
             yield pandas.read_csv(p, **kwargs)
-
         logging.info("Finished reading files")
 
     def indices_in_list(elements: list, base_list: list) -> list:
@@ -120,8 +120,19 @@ def train_xgboost_model(
         return [idx for idx, elem in enumerate(base_list) if elem in elements]
 
     logging.info("Read train & validation data into pandas dataframes")
-    train_df = pandas.concat(read_files(Path(training_data.path), file_pattern))
-    valid_df = pandas.concat(read_files(Path(validation_data.path), file_pattern))
+    train_files = (
+        list_files(training_data.path, file_pattern)
+        if file_pattern
+        else [training_data.path]
+    )
+    valid_files = (
+        list_files(validation_data.path, file_pattern)
+        if file_pattern
+        else [validation_data.path]
+    )
+
+    train_df = pandas.concat(read_files(train_files))
+    valid_df = pandas.concat(read_files(valid_files))
 
     logging.info("Split train/validation data into features & labels")
     X_train, y_train = (
@@ -199,3 +210,15 @@ def train_xgboost_model(
     logging.info(f"Save metrics to: {metrics_artifact.path}")
     with open(metrics_artifact.path, "w") as fp:
         json.dump(evals_result, fp)
+
+    training_dataset_for_monitoring = {
+        "gcsSource": {"uris": [str(f).replace("/gcs/", "gs://") for f in train_files]},
+        "dataFormat": "csv",
+        "targetField": label_name,
+    }
+
+    path = model.path + "/" + TRAINING_DATASET_INFO
+    with open(path, "w") as fp:
+        logging.info(f"Save training dataset info for model monitoring: {path}")
+        logging.info(f"training dataset: {training_dataset_for_monitoring}")
+        json.dump(training_dataset_for_monitoring, fp)

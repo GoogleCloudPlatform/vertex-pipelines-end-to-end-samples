@@ -46,8 +46,7 @@ def xgboost_pipeline(
     ingestion_project_id: str = os.environ.get("VERTEX_PROJECT_ID"),
     model_name: str = "xgboost_with_preprocessing",
     model_label: str = "label_name",
-    dataset_id: str = os.environ.get("BQ_DATASET_NAME"),
-    train_table_name: str = os.environ.get("BQ_TRAIN_TABLE_NAME"),
+    dataset_id: str = "preprocessing",
     dataset_location: str = os.environ.get("VERTEX_LOCATION"),
     ingestion_dataset_id: str = "chicago_taxi_trips",
     timestamp: str = "2022-12-01 00:00:00",
@@ -95,6 +94,7 @@ def xgboost_pipeline(
     table_suffix = "_xgb_training"  # suffix to table names
     ingested_table = "ingested_data" + table_suffix
     preprocessed_table = "preprocessed_data" + table_suffix
+    train_table = "train_data" + table_suffix
     valid_table = "valid_data" + table_suffix
     test_table = "test_data" + table_suffix
 
@@ -135,7 +135,7 @@ def xgboost_pipeline(
     data_cleaning_query = generate_query(
         queries_folder / "engineer_features.sql",
         source_dataset=dataset_id,
-        source_table=train_table_name,
+        source_table=train_table,
     )
 
     # data ingestion and preprocessing operations
@@ -153,32 +153,19 @@ def xgboost_pipeline(
 
     # exporting data to GCS from BQ
 
-    ingested_dataset = (
-        extract_bq_to_dataset(
-            bq_client_project_id=project_id,
-            source_project_id=project_id,
-            dataset_id=dataset_id,
-            table_name=ingested_table,
-            dataset_location=dataset_location,
-            file_pattern=file_pattern,
-        )
-        .after(ingest)
-        .set_display_name("Extract data to storage")
-    )
-
     split_train_data = (
-        bq_query_to_table(query=split_train_query, table_id=train_table_name, **kwargs)
-        .after(ingested_dataset)
+        bq_query_to_table(query=split_train_query, table_id=train_table, **kwargs)
+        .after(ingest)
         .set_display_name("Split train data")
     )
     split_valid_data = (
         bq_query_to_table(query=split_valid_query, table_id=valid_table, **kwargs)
-        .after(ingested_dataset)
+        .after(ingest)
         .set_display_name("Split validation data")
     )
     split_test_data = (
         bq_query_to_table(query=split_test_query, table_id=test_table, **kwargs)
-        .after(ingested_dataset)
+        .after(ingest)
         .set_display_name("Split test data")
     )
     data_cleaning = (
