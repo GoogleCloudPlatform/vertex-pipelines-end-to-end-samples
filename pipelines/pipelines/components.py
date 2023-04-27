@@ -79,6 +79,16 @@ upload_model = load_component_from_file(
     )
 )
 
+wait_gcp_resources = load_component_from_file(
+    str(
+        PIPELINE_COMPONENTS_DIR
+        / "aiplatform"
+        / "aiplatform"
+        / "wait_gcp_resources"
+        / "component.yaml"
+    )
+)
+
 # bigquery components
 
 extract_bq_to_dataset = load_component_from_file(

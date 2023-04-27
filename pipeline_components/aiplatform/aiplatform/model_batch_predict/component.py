@@ -14,15 +14,18 @@
 
 from kfp.v2.dsl import Input, Model, component
 from pathlib import Path
-from typing import List
+from typing import List, NamedTuple
 
 
 @component(
     base_image="python:3.7",
-    packages_to_install=["google-cloud-aiplatform==1.24.1"],
+    packages_to_install=[
+        "google-cloud-aiplatform>=1.24.0",
+        "google_cloud_pipeline_components>=1.0.0",
+    ],
     output_component_file=str(Path(__file__).with_suffix(".yaml")),
 )
-def export_model(
+def model_batch_predict(
     model: Input[Model],
     job_display_name: str,
     project_location: str,
@@ -34,7 +37,7 @@ def export_model(
     starting_replica_count: int = 1,
     max_replica_count: int = 1,
     alert_email_addresses: List[str] = None,
-) -> None:
+) -> NamedTuple("Outputs", [("gcp_resources", str)]):
     """
     Fetch a model given a model name (display name) and export to GCS.
 
@@ -46,94 +49,62 @@ def export_model(
         None
     """
 
-    import google.cloud.aiplatform_v1beta1 as tmp
-
-    print(tmp.__version__)
-
-    import time
     import logging
+    from google.protobuf.json_format import ParseDict, MessageToJson
     from google.cloud.aiplatform_v1beta1.services.job_service import JobServiceClient
-    from google.cloud.aiplatform_v1beta1.types import (
-        BatchDedicatedResources,
-        BatchPredictionJob,
-        BigQuerySource,
-        MachineSpec,
-        ModelMonitoringAlertConfig,
-        ModelMonitoringConfig,
-        ModelMonitoringObjectiveConfig,
-        ThresholdConfig,
-        BigQueryDestination,
-        GetBatchPredictionJobRequest,
-    )
-    from google.cloud.aiplatform_v1beta1.types.job_state import JobState
+    from google.cloud.aiplatform_v1beta1.types import BatchPredictionJob
+    from google_cloud_pipeline_components.proto.gcp_resources_pb2 import GcpResources
 
     api_endpoint = f"{project_location}-aiplatform.googleapis.com"
-
-    alert_config = None
-    if alert_email_addresses is not None:
-        alert_config = ModelMonitoringAlertConfig(
-            email_alert_config=ModelMonitoringAlertConfig.EmailAlertConfig(
-                user_emails=[alert_email_addresses]
-            )
-        )
-
-    skew_detection_config = (
-        ModelMonitoringObjectiveConfig.TrainingPredictionSkewDetectionConfig(
-            default_skew_threshold=ThresholdConfig(value=0.001),
-        )
-    )
-
-    job_request = BatchPredictionJob(
-        display_name=job_display_name,
-        model=model.metadata["resourceName"],
-        input_config=BatchPredictionJob.InputConfig(
-            instances_format="bigquery",
-            bigquery_source=BigQuerySource(input_uri=bigquery_source_input_uri),
-        ),
-        output_config=BatchPredictionJob.OutputConfig(
-            predictions_format="bigquery",
-            bigquery_destination=BigQueryDestination(
-                output_uri=bigquery_destination_output_uri
-            ),
-        ),
-        dedicated_resources=BatchDedicatedResources(
-            machine_spec=MachineSpec(machine_type=machine_type),
-            starting_replica_count=starting_replica_count,
-            max_replica_count=max_replica_count,
-        ),
-        model_monitoring_config=ModelMonitoringConfig(
-            alert_config=alert_config,
-            objective_configs=[
-                ModelMonitoringObjectiveConfig(
-                    training_dataset=ModelMonitoringObjectiveConfig.TrainingDataset(
-                        bigquery_source=BigQuerySource(
-                            input_uri=bigquery_source_training_uri
-                        ),
-                    ),
-                    training_prediction_skew_detection_config=skew_detection_config,
-                )
+    if alert_email_addresses is None:
+        alert_email_addresses = []
+    message = {
+        "displayName": job_display_name,
+        "model": model.metadata["resourceName"],
+        "inputConfig": {
+            "instancesFormat": "bigquery",
+            # gcs_source=GcsSource(uris=[...])
+            "bigquerySource": {"inputUri": bigquery_source_input_uri},
+        },
+        "outputConfig": {
+            "predictionsFormat": "bigquery",
+            "bigqueryDestination": {"output_uri": bigquery_destination_output_uri}
+            # gcs_destination=GcsDestination(output_uri_prefix=...),
+        },
+        "dedicated_resources": {
+            "machineSpec": {"machineType": machine_type},
+            "startingReplicaCount": starting_replica_count,
+            "maxReplicaCount": max_replica_count,
+        },
+        "model_monitoring_config": {
+            "alertConfig": {"emailAlertConfig": {"userEmails": alert_email_addresses}},
+            "objectiveConfigs": [
+                {
+                    "trainingDataset": {
+                        "bigquerySource": {"inputUri": bigquery_source_training_uri},
+                    },
+                    "trainingPredictionSkewDetectionConfig": {
+                        "defaultSkewThreshold": {"value": 0.001}
+                    },
+                }
             ],
-        ),
-    )
+        },
+    }
+    request = ParseDict(message, BatchPredictionJob()._pb)
 
     logging.info(f"Submitting batch prediction job: {job_display_name}")
     client = JobServiceClient(client_options={"api_endpoint": api_endpoint})
-    job_response = client.create_batch_prediction_job(
+    response = client.create_batch_prediction_job(
         parent=f"projects/{project_id}/locations/{project_location}",
-        batch_prediction_job=job_request,
+        batch_prediction_job=request,
     )
-    logging.info(f"Submitted batch prediction job: {job_response.name}")
+    logging.info(f"Submitted batch prediction job: {response.name}")
 
-    states = [
-        JobState.JOB_STATE_SUCCEEDED,
-        JobState.JOB_STATE_FAILED,
-        JobState.JOB_STATE_CANCELLED,
-        JobState.JOB_STATE_EXPIRED,
-    ]
-    job_status_request = GetBatchPredictionJobRequest(name=job_response.name)
-    state = client.get_batch_prediction_job(request=job_status_request).state
+    # return GCP resource for Vertex AI UI integration
+    batch_job_resources = GcpResources()
+    dr = batch_job_resources.resources.add()
+    dr.resource_type = "BatchPredictionJob"
+    dr.resource_uri = response.name
+    gcp_resources = MessageToJson(batch_job_resources)
 
-    while state not in states:
-        logging.info(f"Batch prediction job state: {state}, waiting for 10s...")
-        time.sleep(10)
-        state = client.get_batch_prediction_job(request=job_status_request).state
+    return (gcp_resources,)

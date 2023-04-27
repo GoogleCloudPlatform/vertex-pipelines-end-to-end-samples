@@ -23,6 +23,7 @@ from pipelines.components import (
     lookup_model,
     bq_query_to_table,
     model_batch_predict,
+    wait_gcp_resources,
 )
 
 
@@ -136,6 +137,13 @@ def xgboost_pipeline(
         )
         .after(ingest)
         .set_display_name("Vertex Batch Prediction for XGB model")
+    )
+
+    (
+        wait_gcp_resources(
+            project_location=project_location,
+            gcp_resources=batch_prediction.outputs["gcp_resources"],
+        ).set_display_name("Wait for job completion")
     )
 
 
