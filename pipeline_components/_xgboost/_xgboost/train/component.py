@@ -83,6 +83,16 @@ def train_xgboost_model(
     logging.getLogger().setLevel(logging.INFO)
 
     def list_files(path: Path, file_pattern: str) -> List[Path]:
+        """List files in a path using a regex file pattern.
+
+        Args:
+            path: Parent folder.
+            file_pattern: Regex pattern of files to list.
+
+        Returns:
+            List[Path]:
+
+        """
         logging.info(f"Searching files with pattern {file_pattern} in {path}")
         paths = list(path.glob(file_pattern))
         logging.info(f"Found {len(paths)} files")
@@ -211,14 +221,15 @@ def train_xgboost_model(
     with open(metrics_artifact.path, "w") as fp:
         json.dump(evals_result, fp)
 
+    path = model.path + "/" + TRAINING_DATASET_INFO
+    logging.info(f"Save training dataset info for model monitoring: {path}")
+
     training_dataset_for_monitoring = {
         "gcsSource": {"uris": [str(f).replace("/gcs/", "gs://") for f in train_files]},
         "dataFormat": "csv",
         "targetField": label_name,
     }
+    logging.info(f"training dataset: {training_dataset_for_monitoring}")
 
-    path = model.path + "/" + TRAINING_DATASET_INFO
     with open(path, "w") as fp:
-        logging.info(f"Save training dataset info for model monitoring: {path}")
-        logging.info(f"training dataset: {training_dataset_for_monitoring}")
         json.dump(training_dataset_for_monitoring, fp)

@@ -40,14 +40,25 @@ def model_batch_predict(
     alert_email_addresses: List[str] = None,
 ) -> NamedTuple("Outputs", [("gcp_resources", str)]):
     """
-    Fetch a model given a model name (display name) and export to GCS.
+    Trigger a batch prediction job and enable monitoring.
 
     Args:
-        model (Output[Model]): output model to be exported to GCS
+        model (Input[Model]): Input model to use for calculating predictions.
+        job_display_name: Name of the batch prediction job.
         project_location (str): location of the Google Cloud project. Defaults to None.
         project_id (str): project id of the Google Cloud project. Defaults to None.
+        source_uri (str): bq:// URI or a list of gcs:// URIs to read input instances.
+        destination_uri (str): bq:// or gcs:// URI to store output predictions.
+        source_format (str): E.g. "bigquery", "jsonl", "csv". Reference:
+            https://cloud.google.com/python/docs/reference/aiplatform/latest/google.cloud.aiplatform_v1beta1.types.BatchPredictionJob.InputConfig
+        destination_format (str): E.g. "bigquery", "jsonl", "csv". Reference:
+            https://cloud.google.com/python/docs/reference/aiplatform/latest/google.cloud.aiplatform_v1beta1.types.BatchPredictionJob.OutputConfig
+        machine_type (str): Machine type.
+        starting_replica_count (int): Starting replica count.
+        max_replica_count (int): Max replicat count.
+        alert_email_addresses (List[str]): Email addresses to send alerts to (optional).
     Returns:
-        None
+        NamedTuple: gcp_resources for Vertex AI UI integration.
     """
 
     import json

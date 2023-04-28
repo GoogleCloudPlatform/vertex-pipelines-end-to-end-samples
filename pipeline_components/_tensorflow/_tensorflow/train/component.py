@@ -391,14 +391,15 @@ def train_tensorflow_model(
     else:
         uris = [training_data.uri]
 
+    path = model.path + "/" + TRAINING_DATASET_INFO
+    logging.info(f"Save training dataset info for model monitoring: {path}")
+
     training_dataset_for_monitoring = {
         "gcsSource": {"uris": uris},
         "dataFormat": "csv",
         "targetField": label_name,
     }
+    logging.info(f"training dataset: {training_dataset_for_monitoring}")
 
-    path = model.path + "/" + TRAINING_DATASET_INFO
     with open(path, "w") as fp:
-        logging.info(f"Save training dataset info for model monitoring: {path}")
-        logging.info(f"training dataset: {training_dataset_for_monitoring}")
         json.dump(training_dataset_for_monitoring, fp)
