@@ -87,5 +87,3 @@ For optimisation tasks, it is often better to use CPUs.
 
 ## Prediction pipeline
 The TensorFlow prediction pipeline can be found in [prediction/pipeline.py](prediction/pipeline.py). 
-
-The rationale for exporting the data twice (once as a CSV file and once as JSONL file) is that the CSV file is passed to the `generate_statistics` component (which uses the function `tfdv.generate_statistics_from_csv`) while the JSONL file is used when calling the `ModelBatchPredictOp` component for batch prediction. 

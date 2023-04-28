@@ -47,6 +47,3 @@ to avoid crash caused by memory overload.
 
 ## Prediction pipeline
 The XGBoost prediction pipeline can be found in [prediction/pipeline.py](prediction/pipeline.py). 
-
-Specifically, it starts with extracting data from BigQuery to a CSV file in Google Cloud Storage, followed by a data skew validation, which uses this CSV file in `generate_statistics` component and compares with the schema in [`assets folder`](../assets/).
-Before calling the batch prediction function, it looks for the champion model among all the trained models. Next, it takes input data from BigQuery for batch prediction and outputs a BigQuery table, namely `prediction_<model-display-name>_<job-create-time>`. 

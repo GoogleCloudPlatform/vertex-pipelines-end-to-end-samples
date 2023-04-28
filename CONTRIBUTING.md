@@ -282,6 +282,3 @@ To make sure that assets are available while running the ML pipelines, `make run
 ### Common assets
 
 Within the [assets](./assets/) folder, there are common files stored which need to be uploaded to Google Cloud Storage so that the pipelines running Vertex AI can consume such assets, namely:
-
-- TFDV schema for [detecting input data anomalies](https://www.tensorflow.org/tfx/guide/tfdv#schema_based_example_validation): This schema file can be created using a [sample notebook](pipelines/schema_creation.ipynb) to ensure that new training data complies with our data assumptions and constraints as part of the training pipeline. 
-- TFDV schema for [detecting data skew](https://www.tensorflow.org/tfx/guide/tfdv#training-serving_skew_detection): This schema file is used to detect training-serving skew in the prediction pipeline. It can be created similarly to other schema files. However, it will need to include [skew detection settings](https://www.tensorflow.org/tfx/data_validation/get_started#checking_data_skew_and_drift).
