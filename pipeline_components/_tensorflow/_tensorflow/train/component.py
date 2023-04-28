@@ -88,6 +88,8 @@ def train_tensorflow_model(
     from tensorflow.keras import Input, Model, optimizers
     from tensorflow.keras.layers import Dense, Normalization, StringLookup, Concatenate
 
+    # used for monitoring during prediction time
+    TRAINING_DATASET_INFO = "training_dataset.json"
     # numeric/categorical features in Chicago trips dataset to be preprocessed
     NUM_COLS = ["dayofweek", "hourofday", "trip_distance", "trip_miles", "trip_seconds"]
     ORD_COLS = ["company"]
@@ -379,3 +381,24 @@ def train_tensorflow_model(
         logging.info(f"Save model to: {model.path}")
         logging.info(f"Save metrics to: {metrics_artifact.path}")
     save_model_outputs(model.path, metrics_artifact.path, tf_model, strategy)
+
+    # Persist URIs of training file(s) for model monitoring in batch predictions
+    if file_pattern:
+        train_files = list(Path(training_data.path).glob(file_pattern))
+        if len(train_files) == 0:
+            raise RuntimeError("No input files found!")
+        uris = [str(f).replace("/gcs/", "gs://") for f in train_files]
+    else:
+        uris = [training_data.uri]
+
+    training_dataset_for_monitoring = {
+        "gcsSource": {"uris": uris},
+        "dataFormat": "csv",
+        "targetField": label_name,
+    }
+
+    path = model.path + "/" + TRAINING_DATASET_INFO
+    with open(path, "w") as fp:
+        logging.info(f"Save training dataset info for model monitoring: {path}")
+        logging.info(f"training dataset: {training_dataset_for_monitoring}")
+        json.dump(training_dataset_for_monitoring, fp)

@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from kfp.v2.dsl import Input, component, Artifact
+from kfp.v2.dsl import component
 from pathlib import Path
 
 
@@ -26,10 +26,9 @@ def load_dataset_to_bq(
     destination_project_id: str,
     dataset_id: str,
     table_name: str,
-    dataset: Input[Artifact],
+    gcs_source_uri: str,
     dataset_location: str = "EU",
 ) -> None:
-
     """
     Load datasets in JSONL format (e.g. results of batch prediction) to bigquery
 
@@ -47,14 +46,25 @@ def load_dataset_to_bq(
     """
     from google.cloud import bigquery
     import logging
+    from pathlib import Path
 
     logging.getLogger().setLevel(logging.INFO)
 
-    # Construct a BigQuery client object.
     client = bigquery.Client(project=bq_client_project_id)
 
     table_id = f"{destination_project_id}.{dataset_id}.{table_name}"
-    logging.info(f"loading data from GCS location: {dataset.uri}")
+
+    # find predictions folder
+    parent = Path(gcs_source_uri.replace("gs://", "/gcs/"))
+    children = list(parent.glob("prediction-*"))
+    if len(children) != 1:
+        raise RuntimeError(
+            f"Can't find single prediction folder in {gcs_source_uri}. "
+            f"Found {children}"
+        )
+    gcs_source_uri = str(children[0] / "prediction.results-*").replace("/gcs/", "gs://")
+
+    logging.info(f"loading data from GCS location: {gcs_source_uri}")
     logging.info(f"destination table in BQ: {table_id}")
 
     job_config = bigquery.LoadJobConfig(
@@ -63,11 +73,9 @@ def load_dataset_to_bq(
         source_format=bigquery.SourceFormat.NEWLINE_DELIMITED_JSON,
     )
 
-    data_location = f"{dataset.metadata['gcsOutputDirectory']}/prediction.results-*"
-
     # Make an API request.
     load_job = client.load_table_from_uri(
-        data_location,
+        gcs_source_uri,
         table_id,
         location=dataset_location,
         job_config=job_config,

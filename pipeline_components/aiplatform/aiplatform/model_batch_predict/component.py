@@ -30,8 +30,10 @@ def model_batch_predict(
     job_display_name: str,
     project_location: str,
     project_id: str,
-    bigquery_source_input_uri: str,
-    bigquery_destination_output_uri: str,
+    source_uri: str,
+    destination_uri: str,
+    source_format: str,
+    destination_format: str,
     machine_type: str = "n1-standard-2",
     starting_replica_count: int = 1,
     max_replica_count: int = 1,
@@ -64,18 +66,21 @@ def model_batch_predict(
     with open(model.path + "/" + TRAINING_DATASET_INFO, "r") as fp:
         training_dataset = json.load(fp)
 
+    input_config = {"instancesFormat": source_format}
+    output_config = {"predictionsFormat": destination_format}
+    if source_format == "bigquery" and destination_format == "bigquery":
+        input_config["bigquerySource"] = {"inputUri": source_uri}
+        output_config["bigqueryDestination"] = {"OutputUri": destination_uri}
+    else:
+        # TODO hotfix for wrong inputs from TF prediction pipeline
+        input_config["gcsSource"] = {"uris": json.loads(source_uri)}
+        output_config["gcsDestination"] = {"outputUriPrefix": destination_uri}
+
     message = {
         "displayName": job_display_name,
         "model": model.metadata["resourceName"],
-        "inputConfig": {
-            "instancesFormat": "bigquery",
-            # gcs_source=GcsSource(uris=[...])
-            "bigquerySource": {"inputUri": bigquery_source_input_uri},
-        },
-        "outputConfig": {
-            "predictionsFormat": "bigquery",
-            "bigqueryDestination": {"outputUri": bigquery_destination_output_uri},
-        },
+        "inputConfig": input_config,
+        "outputConfig": output_config,
         "dedicatedResources": {
             "machineSpec": {"machineType": machine_type},
             "startingReplicaCount": starting_replica_count,
@@ -96,6 +101,7 @@ def model_batch_predict(
     request = ParseDict(message, BatchPredictionJob()._pb)
 
     logging.info(f"Submitting batch prediction job: {job_display_name}")
+    logging.info(request)
     client = JobServiceClient(client_options={"api_endpoint": api_endpoint})
     response = client.create_batch_prediction_job(
         parent=f"projects/{project_id}/locations/{project_location}",
