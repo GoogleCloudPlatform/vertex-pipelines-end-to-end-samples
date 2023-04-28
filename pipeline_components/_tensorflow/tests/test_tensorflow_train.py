@@ -34,7 +34,7 @@ def test_train_tensorflow_model(tmpdir):
 
     # Generate random training/validation data
     n_rows = 100
-    train_path = tmpdir.join("train.csv")
+    train_path = str(tmpdir.join("train.csv"))
     train_df = pd.DataFrame(
         np.random.rand(n_rows, len(NUM_COLS) + 1), columns=["label"] + NUM_COLS
     )
