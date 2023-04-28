@@ -70,7 +70,7 @@ def model_batch_predict(
     output_config = {"predictionsFormat": destination_format}
     if source_format == "bigquery" and destination_format == "bigquery":
         input_config["bigquerySource"] = {"inputUri": source_uri}
-        output_config["bigqueryDestination"] = {"OutputUri": destination_uri}
+        output_config["bigqueryDestination"] = {"outputUri": destination_uri}
     else:
         # TODO hotfix for wrong inputs from TF prediction pipeline
         input_config["gcsSource"] = {"uris": json.loads(source_uri)}
