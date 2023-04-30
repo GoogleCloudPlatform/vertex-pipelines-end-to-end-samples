@@ -42,11 +42,6 @@ def test_pipeline_run(enable_caching) -> None:
         "extract-bq-to-dataset": ["dataset"],
         "extract-bq-to-dataset-2": ["dataset"],
         "extract-bq-to-dataset-3": ["dataset"],
-        "extract-bq-to-dataset-4": ["dataset"],
-        "generate-statistics": ["statistics"],
-        "visualise-statistics": ["view"],
-        "validate-schema": ["anomalies"],
-        "show-anomalies": [],
         "train-xgboost-model": ["model", "metrics_artifact"],
         "lookup-model": ["model"],
         "predict-xgboost-model": ["predictions"],
@@ -55,7 +50,6 @@ def test_pipeline_run(enable_caching) -> None:
 
     conditional_task_one = {
         "upload-model": [],
-        "copy-artifact": ["des_artifact"],
     }
 
     condtional_task_two = {
@@ -67,7 +61,6 @@ def test_pipeline_run(enable_caching) -> None:
 
     conditional_task_three = {
         "upload-model-2": [],
-        "copy-artifact-2": ["des_artifact"],
     }
 
     pipeline_e2e_test(

@@ -38,14 +38,9 @@ def test_pipeline_run(enable_caching) -> None:
         "bq-query-to-table-2": [],
         "bq-query-to-table-3": [],
         "bq-query-to-table-4": [],
-        "bq-query-to-table-5": [],
         "extract-bq-to-dataset": ["dataset"],
         "extract-bq-to-dataset-2": ["dataset"],
         "extract-bq-to-dataset-3": ["dataset"],
-        "generate-statistics": ["statistics"],
-        "visualise-statistics": ["view"],
-        "validate-schema": ["anomalies"],
-        "show-anomalies": [],
         "train-tensorflow-model": ["model", "metrics_artifact"],
         "lookup-model": ["model"],
         "predict-tensorflow-model": ["predictions"],
@@ -53,7 +48,6 @@ def test_pipeline_run(enable_caching) -> None:
     }
     conditional_task_one = {
         "upload-model": [],
-        "copy-artifact": ["des_artifact"],
     }
 
     condtional_task_two = {
@@ -65,7 +59,6 @@ def test_pipeline_run(enable_caching) -> None:
 
     conditional_task_three = {
         "upload-model-2": [],
-        "copy-artifact-2": ["des_artifact"],
     }
 
     pipeline_e2e_test(

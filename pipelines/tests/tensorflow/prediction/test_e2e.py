@@ -36,13 +36,9 @@ def test_pipeline_run(enable_caching) -> None:
     common_tasks = {
         "bq-query-to-table": [],
         "extract-bq-to-dataset": ["dataset"],
-        "extract-bq-to-dataset-2": ["dataset"],
-        "generate-statistics": ["statistics"],
-        "validate-skew": ["anomalies"],
-        "visualise-statistics": ["view"],
-        "show-anomalies": [],
         "lookup-model": ["model"],
-        "model-batch-predict": ["batchpredictionjob"],
+        "model-batch-predict": ["gcp_resources"],
+        "wait-gcp-resources": [],
         "load-dataset-to-bq": [],
     }
 
