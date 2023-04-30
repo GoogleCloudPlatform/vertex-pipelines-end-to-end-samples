@@ -142,25 +142,3 @@ calculate_eval_metrics = load_component_from_file(
         / "component.yaml"
     )
 )
-
-# helpers
-
-model_to_uri = load_component_from_file(
-    str(
-        PIPELINE_COMPONENTS_DIR
-        / "helpers"
-        / "helpers"
-        / "get_model_uri"
-        / "component.yaml"
-    )
-)
-
-quote_csv_header = load_component_from_file(
-    str(
-        PIPELINE_COMPONENTS_DIR
-        / "helpers"
-        / "helpers"
-        / "quote_csv_header"
-        / "component.yaml"
-    )
-)
