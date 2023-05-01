@@ -25,36 +25,14 @@ predict_tensorflow_model = load_component_from_file(
     )
 )
 
-# _xgboost components
-
-train_xgboost_model = load_component_from_file(
-    str(PIPELINE_COMPONENTS_DIR / "_xgboost" / "_xgboost" / "train" / "component.yaml")
-)
-
-predict_xgboost_model = load_component_from_file(
-    str(
-        PIPELINE_COMPONENTS_DIR / "_xgboost" / "_xgboost" / "predict" / "component.yaml"
-    )
-)
-
 # aiplatform components
 
-export_model = load_component_from_file(
+custom_train_job = load_component_from_file(
     str(
         PIPELINE_COMPONENTS_DIR
         / "aiplatform"
         / "aiplatform"
-        / "export_model"
-        / "component.yaml"
-    )
-)
-
-lookup_model = load_component_from_file(
-    str(
-        PIPELINE_COMPONENTS_DIR
-        / "aiplatform"
-        / "aiplatform"
-        / "lookup_model"
+        / "custom_train_job"
         / "component.yaml"
     )
 )
@@ -69,12 +47,22 @@ model_batch_predict = load_component_from_file(
     )
 )
 
-upload_model = load_component_from_file(
+update_best_model = load_component_from_file(
     str(
         PIPELINE_COMPONENTS_DIR
         / "aiplatform"
         / "aiplatform"
-        / "upload_model"
+        / "update_best_model"
+        / "component.yaml"
+    )
+)
+
+import_model_evaluation = load_component_from_file(
+    str(
+        PIPELINE_COMPONENTS_DIR
+        / "aiplatform"
+        / "aiplatform"
+        / "import_model_evaluation"
         / "component.yaml"
     )
 )
@@ -107,28 +95,6 @@ load_dataset_to_bq = load_component_from_file(
         / "bigquery"
         / "bigquery"
         / "upload_prediction"
-        / "component.yaml"
-    )
-)
-
-# evaluation components
-
-compare_models = load_component_from_file(
-    str(
-        PIPELINE_COMPONENTS_DIR
-        / "evaluation"
-        / "evaluation"
-        / "compare_models"
-        / "component.yaml"
-    )
-)
-
-calculate_eval_metrics = load_component_from_file(
-    str(
-        PIPELINE_COMPONENTS_DIR
-        / "evaluation"
-        / "evaluation"
-        / "evaluation_metrics_tfma"
         / "component.yaml"
     )
 )

@@ -1,5 +1,5 @@
 # Copyright 2022 Google LLC
-from typing import NamedTuple
+from typing import NamedTuple, List, Dict
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,13 +13,15 @@ from typing import NamedTuple
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from kfp.v2.dsl import Input, component, Metrics, Output, Artifact
+from kfp.v2.dsl import Input, component, Metrics, Output, Artifact, Dataset
 from pathlib import Path
 
 
 # TODO change to prebuilt container
 # TODO update test data
 # TODO update pipeline id
+# TODO return gcp resources (as artifact maybe?)
+# TODO deal with cancellation
 
 
 @component(
@@ -29,106 +31,77 @@ from pathlib import Path
 )
 def custom_train_job(
     task: Input[Artifact],
+    train_data: Input[Dataset],
+    valid_data: Input[Dataset],
+    test_data: Input[Dataset],
     project_id: str,
     project_location: str,
+    model_display_name: str,
+    train_container_uri: str,
+    serving_container_uri: str,
     model: Output[Artifact],
     metrics: Output[Metrics],
+    requirements: List[str] = None,
+    job_name: str = None,
+    hparams: Dict[str, str] = None,
+    replica_count: int = 1,
+    machine_type: str = "n1-standard-4",
+    accelerator_type: str = "ACCELERATOR_TYPE_UNSPECIFIED",
+    accelerator_count: int = 0,
 ) -> NamedTuple("Outputs", [("parent_model", str)]):
+    """"""
     import json
     import logging
+    import time
     import google.cloud.aiplatform as aip
 
-    TRAIN_VERSION = "tf-cpu.2-9"
-    DEPLOY_VERSION = "tf2-cpu.2-9"
-
-    TRAIN_IMAGE = "us-docker.pkg.dev/vertex-ai/training/{}:latest".format(TRAIN_VERSION)
-    DEPLOY_IMAGE = "us-docker.pkg.dev/vertex-ai/prediction/{}:latest".format(
-        DEPLOY_VERSION
-    )
-
-    JOB_NAME = "custom_job_unique"
-
-    # CMDARGS = [
-    #     "--epochs=1",
-    #     "--steps=100",
-    #     "--distribute=single",
-    #     f"--model={model.path}"
-    #     f"--metrics={metrics.path}"
-    # ]
-    #
-    # job = CustomJob.from_local_script(
-    #     project=project_id,
-    #     location=project_location,
-    #     staging_bucket="gs://dt-turbo-templates-dev-pl-root",
-    #     display_name=JOB_NAME,
-    #     script_path=task.path,
-    #     container_uri=TRAIN_IMAGE,
-    #     requirements=["tensorflow_datasets"],
-    #     replica_count=1,
-    #     machine_type="n1-standard-4",
-    #     args=CMDARGS
-    # )
-    #
-    # job.run()
-
-    job = aip.CustomTrainingJob(
-        project=project_id,
-        location=project_location,
-        staging_bucket="gs://dt-turbo-templates-dev-pl-root",
-        display_name=JOB_NAME,
-        script_path=task.path,
-        container_uri=TRAIN_IMAGE,
-        requirements=["tensorflow_datasets"],
-        model_serving_container_image_uri=DEPLOY_IMAGE,
-    )
-    logging.info(job)
-
-    MODEL_DISPLAY_NAME = "cifar10_unique"
-    CMDARGS = [
-        "--epochs=1",
-        "--steps=100",
-        "--distribute=single",
-        f"--metrics={metrics.path}",
-    ]
-    logging.info(f"Checking if parent model with name {MODEL_DISPLAY_NAME} exists")
-    models = aip.Model.list(filter=f"displayName={MODEL_DISPLAY_NAME}")
+    logging.info(f"Checking if parent model with name {model_display_name} exists")
+    models = aip.Model.list(filter=f"displayName={model_display_name}")
 
     if len(models) == 0:
         logging.info("No parent model found.")
         parent_model = None
         is_default_version = True
-        # version_aliases = ["champion"]
     elif len(models) == 1:
         parent_model = models[0].resource_name
         is_default_version = False
-        # version_aliases = ["challenger"]
         logging.info(f"Parent model found: {parent_model}")
     else:
         raise RuntimeError(
-            f"Multiple models with name {MODEL_DISPLAY_NAME} were found."
+            f"Multiple models with name {model_display_name} were found."
         )
 
-    # Start the training
+    job = aip.CustomTrainingJob(
+        project=project_id,
+        location=project_location,
+        staging_bucket="gs://dt-turbo-templates-dev-pl-root",
+        display_name=job_name if job_name else f"Custom job {int(time.time())}",
+        script_path=task.path,
+        container_uri=train_container_uri,
+        requirements=requirements,
+        model_serving_container_image_uri=serving_container_uri,
+    )
+    cmd_args = [
+        f"--train_data={train_data.path}",
+        f"--valid_data={valid_data.path}",
+        f"--test_data={test_data.path}",
+        f"--metrics={metrics.path}",
+        f"--hparams={json.dumps(hparams if hparams else {})}",
+    ]
     uploaded_model = job.run(
-        model_display_name=MODEL_DISPLAY_NAME,
-        # model_labels=None,
-        # model_id: Optional[str] = None,
+        model_display_name=model_display_name,
         parent_model=parent_model,
         is_default_version=is_default_version,
-        # model_version_aliases=version_aliases,
-        # model_version_description: Optional[str] = None,
-        args=CMDARGS,
-        replica_count=1,
-        machine_type="n1-standard-4",
+        args=cmd_args,
+        replica_count=replica_count,
+        machine_type=machine_type,
+        accelerator_type=accelerator_type,
+        accelerator_count=accelerator_count,
     )
 
-    logging.info(uploaded_model)
-    logging.info(uploaded_model.uri)
-
-    model.metadata[
-        "resourceName"
-    ] = f"{uploaded_model.resource_name}@{uploaded_model.version_id}"
-    model.metadata["containerSpec"] = {"imageUri": DEPLOY_IMAGE}
+    resource_name = f"{uploaded_model.resource_name}@{uploaded_model.version_id}"
+    model.metadata["resourceName"] = resource_name
+    model.metadata["containerSpec"] = {"imageUri": serving_container_uri}
     model.uri = uploaded_model.uri
     model.TYPE_NAME = "google.VertexModel"
 
@@ -141,38 +114,3 @@ def custom_train_job(
             metrics.log_metric(k, v)
 
     return (parent_model,)
-
-
-# ARTIFACT_PROPERTY_KEY_RESOURCE_NAME = 'resourceName'
-# def google_artifact(type_name):
-#   "Decorator for Google Artifact types for handling KFP v1/v2 artifact types"
-#   def add_type_name(cls):
-#     if hasattr(dsl.Artifact, 'schema_title'):
-#       cls.schema_title = type_name
-#       cls.schema_version = '0.0.1'
-#     else:
-#       cls.TYPE_NAME = type_name
-#     return cls
-#   return add_type_name
-#
-# @google_artifact('google.VertexModel')
-# class VertexModel(dsl.Artifact):
-#   """An artifact representing a Vertex Model."""
-#
-#   def __init__(self, name: str, uri: str, model_resource_name: str):
-#     """Args:
-#          name: The artifact name.
-#          uri: the Vertex Model resource uri, in a form of
-#          https://{service-endpoint}/v1/projects/{project}/locations/{location}/models/{model},
-#          where
-#          {service-endpoint} is one of the supported service endpoints at
-#          https://cloud.google.com/vertex-ai/docs/reference/rest#rest_endpoints
-#          model_resource_name: The name of the Model resource, in a form of
-#          projects/{project}/locations/{location}/models/{model}. For
-#          more details, see
-#          https://cloud.google.com/vertex-ai/docs/reference/rest/v1/projects.locations.models/get
-#     """
-#     super().__init__(
-#         uri=uri,
-#         name=name,
-#         metadata={ARTIFACT_PROPERTY_KEY_RESOURCE_NAME: model_resource_name})
