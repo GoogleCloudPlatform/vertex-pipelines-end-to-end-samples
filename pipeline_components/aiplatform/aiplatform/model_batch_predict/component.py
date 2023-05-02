@@ -37,7 +37,9 @@ def model_batch_predict(
     machine_type: str = "n1-standard-2",
     starting_replica_count: int = 1,
     max_replica_count: int = 1,
-    alert_email_addresses: List[str] = None,
+    monitoring_training_dataset: dict = None,
+    monitoring_alert_email_addresses: List[str] = None,
+    monitoring_skew_config: dict = None,
 ) -> NamedTuple("Outputs", [("gcp_resources", str)]):
     """
     Trigger a batch prediction job and enable monitoring.
@@ -63,19 +65,54 @@ def model_batch_predict(
 
     import json
     import logging
+    import time
+
+    from functools import partial
     from google.protobuf.json_format import ParseDict, MessageToJson
     from google.cloud.aiplatform_v1beta1.services.job_service import JobServiceClient
-    from google.cloud.aiplatform_v1beta1.types import BatchPredictionJob
+    from google.cloud.aiplatform_v1beta1.types import (
+        BatchPredictionJob,
+        GetBatchPredictionJobRequest,
+    )
+    from google.cloud.aiplatform_v1beta1.types.job_state import JobState
+    from google_cloud_pipeline_components.container.v1.gcp_launcher.utils import (
+        error_util,
+    )
+    from google_cloud_pipeline_components.container.utils import execution_context
     from google_cloud_pipeline_components.proto.gcp_resources_pb2 import GcpResources
 
-    api_endpoint = f"{project_location}-aiplatform.googleapis.com"
-    if alert_email_addresses is None:
-        alert_email_addresses = []
+    def send_cancel_request(client: JobServiceClient, batch_job_uri: str):
+        logging.info("Sending BatchPredictionJob cancel request")
+        client.cancel_batch_prediction_job(name=batch_job_uri)
 
-    TRAINING_DATASET_INFO = "training_dataset.json"
-    logging.info(f"Read {model.path + '/' + TRAINING_DATASET_INFO}")
-    with open(model.path + "/" + TRAINING_DATASET_INFO, "r") as fp:
-        training_dataset = json.load(fp)
+    def is_job_successful(job_state: JobState) -> bool:
+        _JOB_SUCCESSFUL_STATES = [
+            JobState.JOB_STATE_SUCCEEDED,
+        ]
+        _JOB_FAILED_STATES = [
+            JobState.JOB_STATE_FAILED,
+            JobState.JOB_STATE_CANCELLED,
+            JobState.JOB_STATE_EXPIRED,
+        ]
+
+        if job_state in _JOB_SUCCESSFUL_STATES:
+            logging.info(
+                f"GetBatchPredictionJobRequest response state={job_state}. "
+                "Job completed"
+            )
+            return True
+        elif job_state in _JOB_FAILED_STATES:
+            raise RuntimeError(
+                "Job {} failed with error state: {}.".format(response.name, job_state)
+            )
+        else:
+            logging.info(f"Job {response.name} is in a non-final state {job_state}.")
+        return False
+
+    _POLLING_INTERVAL_IN_SECONDS = 20
+    _CONNECTION_ERROR_RETRY_LIMIT = 5
+
+    api_endpoint = f"{project_location}-aiplatform.googleapis.com"
 
     input_config = {"instancesFormat": source_format}
     output_config = {"predictionsFormat": destination_format}
@@ -97,18 +134,25 @@ def model_batch_predict(
             "startingReplicaCount": starting_replica_count,
             "maxReplicaCount": max_replica_count,
         },
-        "modelMonitoringConfig": {
-            "alertConfig": {"emailAlertConfig": {"userEmails": alert_email_addresses}},
+    }
+
+    if monitoring_training_dataset and monitoring_skew_config:
+        logging.info("Adding monitoring config to request")
+        if not monitoring_alert_email_addresses:
+            monitoring_alert_email_addresses = []
+
+        message["modelMonitoringConfig"] = {
+            "alertConfig": {
+                "emailAlertConfig": {"userEmails": monitoring_alert_email_addresses}
+            },
             "objectiveConfigs": [
                 {
-                    "trainingDataset": training_dataset,
-                    "trainingPredictionSkewDetectionConfig": {
-                        "defaultSkewThreshold": {"value": 0.001}
-                    },
+                    "trainingDataset": monitoring_training_dataset,
+                    "trainingPredictionSkewDetectionConfig": monitoring_skew_config,
                 }
             ],
-        },
-    }
+        }
+
     request = ParseDict(message, BatchPredictionJob()._pb)
 
     logging.info(f"Submitting batch prediction job: {job_display_name}")
@@ -119,6 +163,41 @@ def model_batch_predict(
         batch_prediction_job=request,
     )
     logging.info(f"Submitted batch prediction job: {response.name}")
+
+    with execution_context.ExecutionContext(
+        on_cancel=partial(
+            send_cancel_request,
+            api_endpoint,
+            response.name,
+        )
+    ):
+        retry_count = 0
+        while True:
+            try:
+                job_status_request = GetBatchPredictionJobRequest(
+                    {"name": response.name}
+                )
+                job_state = client.get_batch_prediction_job(
+                    request=job_status_request
+                ).state
+                retry_count = 0
+            except ConnectionError as err:
+                retry_count += 1
+                if retry_count <= _CONNECTION_ERROR_RETRY_LIMIT:
+                    logging.warning(
+                        f"ConnectionError ({err}) encountered when polling job: "
+                        f"{response.name}. Retrying."
+                    )
+                else:
+                    error_util.exit_with_internal_error(
+                        f"Request failed after {_CONNECTION_ERROR_RETRY_LIMIT} retries."
+                    )
+            if is_job_successful(job_state):
+                break
+            logging.info(
+                f"Waiting for {_POLLING_INTERVAL_IN_SECONDS} seconds for next poll."
+            )
+            time.sleep(_POLLING_INTERVAL_IN_SECONDS)
 
     # return GCP resource for Vertex AI UI integration
     batch_job_resources = GcpResources()

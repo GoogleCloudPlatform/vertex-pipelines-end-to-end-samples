@@ -23,7 +23,6 @@ from pipelines.components import (
     lookup_model,
     bq_query_to_table,
     model_batch_predict,
-    wait_gcp_resources,
 )
 
 
@@ -33,7 +32,6 @@ def xgboost_pipeline(
     project_location: str = os.environ.get("VERTEX_LOCATION"),
     ingestion_project_id: str = os.environ.get("VERTEX_PROJECT_ID"),
     model_name: str = "xgboost_with_preprocessing",
-    model_label: str = "label_name",
     dataset_id: str = "preprocessing",
     dataset_location: str = os.environ.get("VERTEX_LOCATION"),
     ingestion_dataset_id: str = "chicago_taxi_trips",
@@ -80,6 +78,8 @@ def xgboost_pipeline(
     ingestion_table = "taxi_trips"
     table_suffix = "_xgb_prediction"  # suffix to table names
     ingested_table = "ingested_data" + table_suffix
+    monitoring_alert_email_addresses = []
+    monitoring_skew_config = {"defaultSkewThreshold": {"value": 0.001}}
 
     # generate sql queries which are used in ingestion and preprocessing
     # operations
@@ -108,10 +108,8 @@ def xgboost_pipeline(
     # lookup champion model
     champion_model = lookup_model(
         model_name=model_name,
-        model_label=model_label,
         project_location=project_location,
         project_id=project_id,
-        fail_on_model_not_found=True,
     ).set_display_name("Lookup champion model")
 
     # batch predict from BigQuery to BigQuery
@@ -131,16 +129,12 @@ def xgboost_pipeline(
             machine_type=batch_prediction_machine_type,
             starting_replica_count=batch_prediction_min_replicas,
             max_replica_count=batch_prediction_max_replicas,
+            monitoring_training_dataset=champion_model.outputs["training_dataset"],
+            monitoring_alert_email_addresses=monitoring_alert_email_addresses,
+            monitoring_skew_config=monitoring_skew_config,
         )
         .after(ingest)
         .set_display_name("Vertex Batch Prediction for XGB model")
-    )
-
-    (
-        wait_gcp_resources(
-            project_location=project_location,
-            gcp_resources=batch_prediction.outputs["gcp_resources"],
-        ).set_display_name("Wait for job completion")
     )
 
 

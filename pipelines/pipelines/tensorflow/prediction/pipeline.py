@@ -25,7 +25,6 @@ from pipelines.components import (
     bq_query_to_table,
     load_dataset_to_bq,
     model_batch_predict,
-    wait_gcp_resources,
 )
 
 
@@ -87,6 +86,8 @@ def tensorflow_pipeline(
     ingestion_table = "taxi_trips"
     table_suffix = "_tf_prediction"  # suffix to table names
     ingested_table = "ingested_data" + table_suffix
+    monitoring_alert_email_addresses = []
+    monitoring_skew_config = {"defaultSkewThreshold": {"value": 0.001}}
 
     # generate sql queries which are used in ingestion and preprocessing
     # operations
@@ -131,10 +132,8 @@ def tensorflow_pipeline(
     # lookup champion model
     champion_model = lookup_model(
         model_name=model_name,
-        model_label=model_label,
         project_location=project_location,
         project_id=project_id,
-        fail_on_model_not_found=True,
     ).set_display_name("Lookup champion model")
 
     # predict data
@@ -151,15 +150,13 @@ def tensorflow_pipeline(
             machine_type=batch_prediction_machine_type,
             starting_replica_count=batch_prediction_min_replicas,
             max_replica_count=batch_prediction_max_replicas,
+            monitoring_training_dataset=champion_model.outputs["training_dataset"],
+            monitoring_alert_email_addresses=monitoring_alert_email_addresses,
+            monitoring_skew_config=monitoring_skew_config,
         )
         .after(ingest)
         .set_display_name("Vertex Batch Prediction for TF model")
     )
-
-    wait_op = wait_gcp_resources(
-        project_location=project_location,
-        gcp_resources=batch_prediction.outputs["gcp_resources"],
-    ).set_display_name("Wait for job completion")
 
     # load predictions into bigquery
     loaded_data = (
@@ -171,7 +168,7 @@ def tensorflow_pipeline(
             gcs_source_uri=data_for_prediction.outputs["dataset_gcs_prefix"],
             dataset_location=dataset_location,
         )
-        .after(wait_op)
+        .after(batch_prediction)
         .set_display_name("Load predictions into Bigquery")
     )
 
