@@ -276,7 +276,7 @@ def xgboost_pipeline(
         fail_on_model_not_found=False,
     ).set_display_name("Lookup champion model")
 
-    champion_model_resource_name = champion_model_lookup.outputs["Output"]
+    champion_model_resource_name = champion_model_lookup.outputs["model_resource_name"]
 
     # If there is no champion model, upload challenger model
     with dsl.Condition(

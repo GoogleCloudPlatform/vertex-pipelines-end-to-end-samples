@@ -29,7 +29,7 @@ def lookup_model(
     model: Output[Model],
     order_models_by: str = "create_time desc",
     fail_on_model_not_found: bool = False,
-) -> NamedTuple("Outputs", [("training_dataset", dict)]):
+) -> NamedTuple("Outputs", [("model_resource_name", str), ("training_dataset", dict)]):
     """
     Fetch a model given a model name (display name) and export to GCS.
 
@@ -69,6 +69,7 @@ def lookup_model(
     logging.info(f"found {len(models)} models")
 
     training_dataset = {}
+    model_resource_name = ""
     if len(models) == 0:
         logging.error(
             f"No model found with name {model_name}"
@@ -76,23 +77,23 @@ def lookup_model(
         )
         if fail_on_model_not_found:
             raise RuntimeError(f"Failed as model was not found")
-        return (training_dataset,)
-
-    target_model = models[0]
-    logging.info(f"choosing model by order ({order_models_by})")
-    logging.info(f"model display name: {target_model.display_name}")
-    logging.info(f"model resource name: {target_model.resource_name}")
-    logging.info(f"model uri: {target_model.uri}")
-    model.uri = target_model.uri
-    model.metadata["resourceName"] = target_model.resource_name
-
-    path = Path(model.path) / TRAINING_DATASET_INFO
-    logging.info(f"Reading training dataset metadata: {path}")
-
-    if os.path.exists(path):
-        with open(path, "r") as fp:
-            training_dataset = json.load(fp)
     else:
-        logging.warning("Training dataset metadata doesn't exist!")
+        target_model = models[0]
+        model_resource_name = target_model.resource_name
+        logging.info(f"choosing model by order ({order_models_by})")
+        logging.info(f"model display name: {target_model.display_name}")
+        logging.info(f"model resource name: {target_model.resource_name}")
+        logging.info(f"model uri: {target_model.uri}")
+        model.uri = target_model.uri
+        model.metadata["resourceName"] = target_model.resource_name
 
-    return (training_dataset,)
+        path = Path(model.path) / TRAINING_DATASET_INFO
+        logging.info(f"Reading training dataset metadata: {path}")
+
+        if os.path.exists(path):
+            with open(path, "r") as fp:
+                training_dataset = json.load(fp)
+        else:
+            logging.warning("Training dataset metadata doesn't exist!")
+
+    return model_resource_name, training_dataset
