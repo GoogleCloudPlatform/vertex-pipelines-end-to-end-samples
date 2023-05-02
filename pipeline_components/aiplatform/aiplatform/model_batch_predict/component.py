@@ -58,7 +58,12 @@ def model_batch_predict(
         machine_type (str): Machine type.
         starting_replica_count (int): Starting replica count.
         max_replica_count (int): Max replicat count.
-        alert_email_addresses (List[str]): Email addresses to send alerts to (optional).
+        monitoring_skew_config (dict): Configuration of training-serving skew.
+            https://cloud.google.com/python/docs/reference/aiplatform/latest/google.cloud.aiplatform_v1beta1.types.ModelMonitoringObjectiveConfig.TrainingPredictionSkewDetectionConfig
+        monitoring_alert_email_addresses (List[str]):
+            Email addresses to send alerts to (optional).
+        monitoring_training_dataset (dict): Metadata of training dataset.
+            https://cloud.google.com/python/docs/reference/aiplatform/latest/google.cloud.aiplatform_v1beta1.types.ModelMonitoringObjectiveConfig.TrainingDataset
     Returns:
         NamedTuple: gcp_resources for Vertex AI UI integration.
     """
