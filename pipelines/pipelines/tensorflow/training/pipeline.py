@@ -46,7 +46,6 @@ def tensorflow_pipeline(
     pipeline_files_gcs_path: str = os.environ.get("PIPELINE_FILES_GCS_PATH"),
     ingestion_project_id: str = os.environ.get("VERTEX_PROJECT_ID"),
     model_name: str = "tensorflow_with_preprocessing",
-    model_label: str = "label_name",
     dataset_id: str = "preprocessing",
     dataset_location: str = os.environ.get("VERTEX_LOCATION"),
     ingestion_dataset_id: str = "chicago_taxi_trips",
@@ -284,7 +283,6 @@ def tensorflow_pipeline(
 
     # Lookup champion model
     champion_model_lookup = lookup_model(
-        model_label=f"{model_label}",
         model_name=model_name,
         project_location=project_location,
         project_id=project_id,
@@ -309,7 +307,6 @@ def tensorflow_pipeline(
             description="",
             labels=json.dumps(
                 dict(
-                    model_label=f"{model_label}",
                     pipeline_job_uuid="{{$.pipeline_job_uuid}}",
                     pipeline_job_name="{{$.pipeline_job_name}}",
                 )
@@ -381,7 +378,6 @@ def tensorflow_pipeline(
                 description="",
                 labels=json.dumps(
                     dict(
-                        model_label=f"{model_label}",
                         pipeline_job_uuid="{{$.pipeline_job_uuid}}",
                         pipeline_job_name="{{$.pipeline_job_name}}",
                     )

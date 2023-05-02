@@ -45,7 +45,6 @@ def xgboost_pipeline(
     project_location: str = os.environ.get("VERTEX_LOCATION"),
     ingestion_project_id: str = os.environ.get("VERTEX_PROJECT_ID"),
     model_name: str = "xgboost_with_preprocessing",
-    model_label: str = "label_name",
     dataset_id: str = "preprocessing",
     dataset_location: str = os.environ.get("VERTEX_LOCATION"),
     ingestion_dataset_id: str = "chicago_taxi_trips",
@@ -272,7 +271,6 @@ def xgboost_pipeline(
 
     champion_model_lookup = lookup_model(
         model_name=model_name,
-        model_label=model_label,
         project_location=project_location,
         project_id=project_id,
         fail_on_model_not_found=False,
@@ -296,7 +294,6 @@ def xgboost_pipeline(
             description="",
             labels=json.dumps(
                 dict(
-                    model_label=f"{model_label}",
                     pipeline_job_uuid="{{$.pipeline_job_uuid}}",
                     pipeline_job_name="{{$.pipeline_job_name}}",
                 )
@@ -355,7 +352,6 @@ def xgboost_pipeline(
                 description="",
                 labels=json.dumps(
                     dict(
-                        model_label=f"{model_label}",
                         pipeline_job_uuid="{{$.pipeline_job_uuid}}",
                         pipeline_job_name="{{$.pipeline_job_name}}",
                     )

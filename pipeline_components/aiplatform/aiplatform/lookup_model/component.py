@@ -28,6 +28,7 @@ def lookup_model(
     project_id: str,
     model: Output[Model],
     order_models_by: str = "create_time desc",
+    fail_on_model_not_found: bool = False,
 ) -> NamedTuple("Outputs", [("training_dataset", dict)]):
     """
     Fetch a model given a model name (display name) and export to GCS.
@@ -43,6 +44,8 @@ def lookup_model(
             ascending order. Use "desc" after a field name for descending.
             Supported fields: `display_name`, `create_time`, `update_time`
             Defaults to "create_time desc".
+        fail_on_model_not_found (bool): if set to True, raise runtime error if
+            model is not found
 
     Returns:
         str: Resource name of the found model. Empty string if model not found.
@@ -65,12 +68,15 @@ def lookup_model(
     )
     logging.info(f"found {len(models)} models")
 
+    training_dataset = {}
     if len(models) == 0:
         logging.error(
             f"No model found with name {model_name}"
             + f"(project: {project_id} location: {project_location})"
         )
-        raise RuntimeError(f"Failed as model not found")
+        if fail_on_model_not_found:
+            raise RuntimeError(f"Failed as model was not found")
+        return (training_dataset,)
 
     target_model = models[0]
     logging.info(f"choosing model by order ({order_models_by})")
@@ -83,7 +89,6 @@ def lookup_model(
     path = Path(model.path) / TRAINING_DATASET_INFO
     logging.info(f"Reading training dataset metadata: {path}")
 
-    training_dataset = {}
     if os.path.exists(path):
         with open(path, "r") as fp:
             training_dataset = json.load(fp)
