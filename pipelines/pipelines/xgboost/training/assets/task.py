@@ -1,4 +1,5 @@
 import argparse
+import joblib
 import json
 import os
 import logging
@@ -109,6 +110,15 @@ metrics = {
     "rSquared": metrics.r2_score(y_test, y_pred),
     "rootMeanSquaredLogError": np.sqrt(metrics.mean_squared_log_error(y_test, y_pred)),
 }
+
+try:
+    model_path = args.model.replace("gs://", "/gcs/")
+    logging.info(f"Save model to: {model_path}")
+    os.makedirs(model_path, exist_ok=True)
+    joblib.dump(pipeline, model_path + "model.joblib")
+except Exception as e:
+    print(e)
+    raise e
 
 logging.info(f"Metrics: {metrics}")
 with open(args.metrics, "w") as fp:

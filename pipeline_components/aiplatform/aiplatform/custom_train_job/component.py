@@ -113,4 +113,7 @@ def custom_train_job(
         if type(v) is float:
             metrics.log_metric(k, v)
 
+    if parent_model is None:
+        parent_model = ""
+
     return (parent_model,)

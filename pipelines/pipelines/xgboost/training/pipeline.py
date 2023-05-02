@@ -234,8 +234,9 @@ def xgboost_pipeline(
         project_location=project_location,
         model_display_name=model_name,
         train_container_uri="europe-docker.pkg.dev/vertex-ai/training/scikit-learn-cpu.0-23:latest",  # noqa: E501
-        serving_container_uri="europe-docker.pkg.dev/vertex-ai/prediction/sklearn-cpu.0-23:latest",  # noqa: E501
+        serving_container_uri="europe-docker.pkg.dev/vertex-ai/prediction/sklearn-cpu.0-24:latest",  # noqa: E501
         hparams=hparams,
+        requirements=["scikit-learn==0.24.0"],
     ).set_display_name("Train model")
 
     evaluation = import_model_evaluation(
