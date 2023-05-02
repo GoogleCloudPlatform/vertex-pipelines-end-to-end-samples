@@ -30,7 +30,7 @@ def load_dataset_to_bq(
     dataset_location: str = "EU",
 ) -> None:
     """
-    Load datasets in JSONL format (e.g. results of batch prediction) to bigquery
+    Load batch predictions in JSONL format to BigQuery.
 
     Args:
         bq_client_project_id (str): project id that will be used by the bq client
@@ -54,7 +54,7 @@ def load_dataset_to_bq(
     table_id = f"{destination_project_id}.{dataset_id}.{table_name}"
 
     # find predictions folder
-    parent = Path(gcs_source_uri.replace("gs://", "/gcs/"))
+    parent = Path("/gcs/" + gcs_source_uri[5:])
     children = list(parent.glob("prediction-*"))
     if len(children) != 1:
         raise RuntimeError(
