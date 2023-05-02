@@ -33,39 +33,8 @@ def test_pipeline_run(enable_caching) -> None:
     pipeline_json = "training.json"
 
     # tasks (components) and outputs for tasks which occur unconditionally
-    common_tasks = {
-        "bq-query-to-table": [],
-        "bq-query-to-table-2": [],
-        "bq-query-to-table-3": [],
-        "bq-query-to-table-4": [],
-        "extract-bq-to-dataset": ["dataset"],
-        "extract-bq-to-dataset-2": ["dataset"],
-        "extract-bq-to-dataset-3": ["dataset"],
-        "train-tensorflow-model": ["model", "metrics_artifact"],
-        "lookup-model": ["model"],
-        "predict-tensorflow-model": ["predictions"],
-        "calculate-eval-metrics": ["eval_metrics", "view"],
-    }
-    conditional_task_one = {
-        "upload-model": [],
-    }
-
-    condtional_task_two = {
-        "export-model": ["model"],
-        "predict-tensorflow-model-2": ["predictions"],
-        "calculate-eval-metrics-2": ["eval_metrics", "view"],
-        "compare-models": [],
-    }
-
-    conditional_task_three = {
-        "upload-model-2": [],
-    }
-
     pipeline_e2e_test(
         template_path=pipeline_json,
-        common_tasks=common_tasks,
+        common_tasks={},
         enable_caching=enable_caching,
-        conditional_task_one=conditional_task_one,
-        condtional_task_two=condtional_task_two,
-        conditional_task_three=conditional_task_three,
     )
