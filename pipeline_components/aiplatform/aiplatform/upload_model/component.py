@@ -66,8 +66,8 @@ def upload_model(
 
     logging.info("upload model...")
     model = Model.upload(
-        display_name,
-        serving_container_image_uri,
+        display_name=display_name,
+        serving_container_image_uri=serving_container_image_uri,
         artifact_uri=artifact_uri,
         description=description,
         project=project_id,

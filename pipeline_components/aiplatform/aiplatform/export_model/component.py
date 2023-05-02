@@ -58,5 +58,4 @@ def export_model(
     # model, so update the model path to include it
     model.path = result["artifactOutputUri"]
     model.metadata["resourceName"] = model_resource_name
-    model.metadata["model_labels"] = model_to_be_exported.labels["model_label"]
     logging.info(f"exported model to {model.path}")
