@@ -37,8 +37,7 @@ def test_pipeline_run(enable_caching) -> None:
         "bq-query-to-table": [],
         "extract-bq-to-dataset": ["dataset"],
         "lookup-model": ["model"],
-        "model-batch-predict": ["gcp_resources"],
-        "wait-gcp-resources": [],
+        "model-batch-predict": [],
         "load-dataset-to-bq": [],
     }
 

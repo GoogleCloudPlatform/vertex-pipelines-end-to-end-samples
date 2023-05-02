@@ -36,8 +36,7 @@ def test_pipeline_run(enable_caching) -> None:
     common_tasks = {
         "bq-query-to-table": [],
         "lookup-model": ["model"],
-        "model-batch-predict": ["gcp_resources"],
-        "wait-gcp-resources": [],
+        "model-batch-predict": [],
     }
 
     pipeline_e2e_test(
