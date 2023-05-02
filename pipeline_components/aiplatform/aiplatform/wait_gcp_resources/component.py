@@ -19,8 +19,8 @@ from pathlib import Path
 @component(
     base_image="python:3.7",
     packages_to_install=[
-        "google-cloud-aiplatform>=1.24.0",
-        "google_cloud_pipeline_components>=1.0.0",
+        "google-cloud-aiplatform==1.24.1",
+        "google_cloud_pipeline_components==1.0.33",
     ],
     output_component_file=str(Path(__file__).with_suffix(".yaml")),
 )

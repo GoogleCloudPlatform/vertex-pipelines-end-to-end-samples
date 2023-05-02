@@ -153,7 +153,7 @@ def tensorflow_pipeline(
             max_replica_count=batch_prediction_max_replicas,
         )
         .after(ingest)
-        .set_display_name("Vertex Batch Prediction for XGB model")
+        .set_display_name("Vertex Batch Prediction for TF model")
     )
 
     wait_op = wait_gcp_resources(

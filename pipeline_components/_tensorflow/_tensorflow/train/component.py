@@ -387,7 +387,7 @@ def train_tensorflow_model(
         train_files = list(Path(training_data.path).glob(file_pattern))
         if len(train_files) == 0:
             raise RuntimeError("No input files found!")
-        uris = [str(f).replace("/gcs/", "gs://") for f in train_files]
+        uris = ["gs://" + str(f)[5:] for f in train_files]
     else:
         uris = [training_data.uri]
 

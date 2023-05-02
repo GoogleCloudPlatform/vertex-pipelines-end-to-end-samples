@@ -225,7 +225,7 @@ def train_xgboost_model(
     logging.info(f"Save training dataset info for model monitoring: {path}")
 
     training_dataset_for_monitoring = {
-        "gcsSource": {"uris": [str(f).replace("/gcs/", "gs://") for f in train_files]},
+        "gcsSource": {"uris": ["gs://" + str(f)[5:] for f in train_files]},
         "dataFormat": "csv",
         "targetField": label_name,
     }
