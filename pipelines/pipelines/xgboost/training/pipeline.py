@@ -38,6 +38,7 @@ def xgboost_pipeline(
     dataset_location: str = os.environ.get("VERTEX_LOCATION"),
     ingestion_dataset_id: str = "chicago_taxi_trips",
     timestamp: str = "2022-12-01 00:00:00",
+    pipeline_files_gcs_path: str = os.environ.get("PIPELINE_FILES_GCS_PATH"),
 ):
     """
     XGB training pipeline which:
@@ -59,6 +60,7 @@ def xgboost_pipeline(
         timestamp (str): Optional. Empty or a specific timestamp in ISO 8601 format
             (YYYY-MM-DDThh:mm:ss.sss±hh:mm or YYYY-MM-DDThh:mm:ss).
             If any time part is missing, it will be regarded as zero.
+        pipeline_files_gcs_path (str): GCS path where the pipeline files are located
     """
 
     # Create variables to ensure the same arguments are passed
@@ -74,6 +76,7 @@ def xgboost_pipeline(
     test_table = "test_data" + table_suffix
     primary_metric = "rootMeanSquaredError"
     test_dataset_uri = None
+    task_uri = f"{pipeline_files_gcs_path}/training/assets/train_xgb_model.py"
 
     # generate sql queries which are used in ingestion and preprocessing
     # operations
@@ -214,7 +217,7 @@ def xgboost_pipeline(
     )
 
     task = importer_node.importer(
-        artifact_uri="gs://dt-turbo-templates-dev-pl-assets/training/assets/task.py",
+        artifact_uri=task_uri,
         artifact_class=dsl.Artifact,
     ).set_display_name("Import task")
 

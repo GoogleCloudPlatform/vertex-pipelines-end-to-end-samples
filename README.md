@@ -253,11 +253,11 @@ Below is a diagram of how the files are published in each environment in the `e2
 └── TAG_NAME or GIT COMMIT HASH <-- Git tag used for the release (release.yaml) OR git commit hash (e2e-test.yaml)
     ├── prediction
     │   ├── assets
-    │   │   └── example_count.py
+    │   │   └── some_useful_file.json
     │   └── prediction.json   <-- compiled prediction pipeline
     └── training
         ├── assets
-        │   └── example_count.py
+        │   └── training_task.py
         └── training.json   <-- compiled training pipeline
 ```
 

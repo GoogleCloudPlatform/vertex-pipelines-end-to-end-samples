@@ -30,6 +30,7 @@ def import_model_evaluation(
     test_dataset: Input[Dataset],
     pipeline_job_id: str,
     project_location: str,
+    evaluation_name: str = "Imported evaluation",
 ) -> NamedTuple("Outputs", [("model_evaluation", str)]):
     """Import an evaluation result for a model version.
 
@@ -41,6 +42,7 @@ def import_model_evaluation(
         test_dataset (Dataset): Input test dataset which will be linked to evaluation.
         pipeline_job_id (str): Pipeline job id which will be linked to evaluation.
         project_location (str): Location of the Google Cloud project.
+        evaluation_name (str): Display name of model evaluation.
     Returns:
         model_evaluation (str): Resource URI of imported model evaluation.
     """
@@ -59,7 +61,7 @@ def import_model_evaluation(
     )
     schema = schema_template % parsed_metrics.pop("problemType")
     evaluation = {
-        "displayName": "My model evaluation",
+        "displayName": evaluation_name,
         "metricsSchemaUri": schema,
         "metrics": parsed_metrics,
         "metadata": {

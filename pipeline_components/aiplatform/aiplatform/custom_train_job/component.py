@@ -17,13 +17,6 @@ from kfp.v2.dsl import Input, component, Metrics, Output, Artifact, Dataset
 from pathlib import Path
 
 
-# TODO change to prebuilt container
-# TODO update test data
-# TODO update pipeline id
-# TODO return gcp resources (as artifact maybe?)
-# TODO deal with cancellation
-
-
 @component(
     base_image="python:3.7",
     packages_to_install=["google-cloud-aiplatform==1.24.1"],
@@ -54,7 +47,7 @@ def custom_train_job(
     The provided task will be invoked by passing the following command-line arguments:
 
     ```
-    task.py \
+    train_xgb_model.py \
         --train_data <train_data.path> \
         --valid_data <valid_data.path> \
         --test_data <test_data.path> \
