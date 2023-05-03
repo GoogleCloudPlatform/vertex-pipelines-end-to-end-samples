@@ -53,7 +53,6 @@ def xgboost_pipeline(
             for ingestion. This can be the same as `project_id` if the source data is
             in the same project where the ML pipeline is executed.
         model_name (str): name of model
-        model_label (str): label of model
         dataset_id (str): id of BQ dataset used to store all staging data & predictions
         dataset_location (str): location of dataset
         ingestion_dataset_id (str): dataset id of ingestion data
@@ -139,22 +138,9 @@ def xgboost_pipeline(
     )
 
 
-def compile():
-    """
-    Uses the kfp compiler package to compile the pipeline function into a workflow yaml
-
-    Args:
-        None
-
-    Returns:
-        None
-    """
+if __name__ == "__main__":
     compiler.Compiler().compile(
         pipeline_func=xgboost_pipeline,
         package_path="prediction.json",
         type_check=False,
     )
-
-
-if __name__ == "__main__":
-    compile()

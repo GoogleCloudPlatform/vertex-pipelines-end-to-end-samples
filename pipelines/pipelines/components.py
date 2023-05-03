@@ -3,27 +3,6 @@ from pathlib import Path
 
 PIPELINE_COMPONENTS_DIR = Path(__file__).parents[2] / "pipeline_components"
 
-# _tensorflow components
-
-train_tensorflow_model = load_component_from_file(
-    str(
-        PIPELINE_COMPONENTS_DIR
-        / "_tensorflow"
-        / "_tensorflow"
-        / "train"
-        / "component.yaml"
-    )
-)
-
-predict_tensorflow_model = load_component_from_file(
-    str(
-        PIPELINE_COMPONENTS_DIR
-        / "_tensorflow"
-        / "_tensorflow"
-        / "predict"
-        / "component.yaml"
-    )
-)
 
 # aiplatform components
 
@@ -33,6 +12,16 @@ custom_train_job = load_component_from_file(
         / "aiplatform"
         / "aiplatform"
         / "custom_train_job"
+        / "component.yaml"
+    )
+)
+
+lookup_model = load_component_from_file(
+    str(
+        PIPELINE_COMPONENTS_DIR
+        / "aiplatform"
+        / "aiplatform"
+        / "lookup_model"
         / "component.yaml"
     )
 )

@@ -34,7 +34,6 @@ def tensorflow_pipeline(
     project_location: str = os.environ.get("VERTEX_LOCATION"),
     ingestion_project_id: str = os.environ.get("VERTEX_PROJECT_ID"),
     model_name: str = "tensorflow_with_preprocessing",
-    model_label: str = "label_name",
     dataset_id: str = "preprocessing",
     dataset_location: str = os.environ.get("VERTEX_LOCATION"),
     ingestion_dataset_id: str = "chicago_taxi_trips",
@@ -174,22 +173,9 @@ def tensorflow_pipeline(
     )
 
 
-def compile():
-    """
-    Uses the kfp compiler package to compile the pipeline function into a workflow yaml
-
-    Args:
-        None
-
-    Returns:
-        None
-    """
+if __name__ == "__main__":
     compiler.Compiler().compile(
         pipeline_func=tensorflow_pipeline,
         package_path="prediction.json",
         type_check=False,
     )
-
-
-if __name__ == "__main__":
-    compile()
