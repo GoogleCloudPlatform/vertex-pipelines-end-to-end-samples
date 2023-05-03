@@ -38,7 +38,6 @@ def tensorflow_pipeline(
     dataset_location: str = os.environ.get("VERTEX_LOCATION"),
     ingestion_dataset_id: str = "chicago_taxi_trips",
     timestamp: str = "2022-12-01 00:00:00",
-    test_dataset_uri: str = "",
 ):
     """
     Tensorflow Keras training pipeline which:
@@ -62,7 +61,6 @@ def tensorflow_pipeline(
         timestamp (str): Optional. Empty or a specific timestamp in ISO 8601 format
             (YYYY-MM-DDThh:mm:ss.sss±hh:mm or YYYY-MM-DDThh:mm:ss).
             If any time part is missing, it will be regarded as zero.
-        test_dataset_uri (str): Optional. GCS URI to static held-out test dataset.
     """
 
     # Create variables to ensure the same arguments are passed
@@ -77,6 +75,7 @@ def tensorflow_pipeline(
     valid_table = "valid_data" + table_suffix
     test_table = "test_data" + table_suffix
     primary_metric = "rootMeanSquaredError"
+    test_dataset_uri = None
 
     # generate sql queries which are used in ingestion and preprocessing
     # operations
@@ -169,9 +168,13 @@ def tensorflow_pipeline(
     )
 
     if test_dataset_uri:
-        test_dataset = importer_node.importer(
-            artifact_uri=test_dataset_uri, artifact_class=dsl.Dataset
-        ).outputs["artifact"]
+        test_dataset = (
+            importer_node.importer(
+                artifact_uri=test_dataset_uri, artifact_class=dsl.Dataset
+            )
+            .set_display_name("Import test data")
+            .outputs["artifact"]
+        )
     else:
         split_test_query = generate_query(
             queries_folder / "sample.sql",
