@@ -169,7 +169,11 @@ def xgboost_pipeline(
         .set_display_name("Extract validation data to storage")
     ).outputs["dataset"]
 
-    if test_dataset_uri is None:
+    if test_dataset_uri:
+        test_dataset = importer_node.importer(
+            artifact_uri=test_dataset_uri, artifact_class=dsl.Dataset
+        ).outputs["artifact"]
+    else:
         split_test_query = generate_query(
             queries_folder / "sample.sql",
             source_dataset=dataset_id,
@@ -194,10 +198,6 @@ def xgboost_pipeline(
             .after(split_test_data)
             .set_display_name("Extract test data to storage")
         ).outputs["dataset"]
-    else:
-        test_dataset = importer_node.importer(
-            artifact_uri=test_dataset_uri, artifact_class=dsl.Dataset
-        ).outputs["artifact"]
 
     hparams = dict(
         n_estimators=200,
