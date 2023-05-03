@@ -49,7 +49,49 @@ def custom_train_job(
     accelerator_type: str = "ACCELERATOR_TYPE_UNSPECIFIED",
     accelerator_count: int = 0,
 ) -> NamedTuple("Outputs", [("parent_model", str)]):
-    """"""
+    """Run a custom training job using a task (e.g. training) script.
+
+    The provided task will be invoked by passing the following command-line arguments:
+
+    ```
+    task.py \
+        --train_data <train_data.path> \
+        --valid_data <valid_data.path> \
+        --test_data <test_data.path> \
+        --metrics <metrics.path> \
+        --hparams json.dumps(<hparams>)
+    ```
+
+    Ensure that your task can read these arguments and outputs metrics to the provided
+    path and the model to the correct path based on:
+    https://cloud.google.com/vertex-ai/docs/training/code-requirements.
+
+    Args:
+        task (Artifact): Python task script. See:
+            https://cloud.google.com/vertex-ai/docs/training/code-requirements.
+        train_data (Dataset): Training data (passed as an argument to task script)
+        valid_data (Dataset): Validation data (passed as an argument to task script)
+        test_data (Dataset): Test data (passed as an argument to task script).
+        project_location (str): location of the Google Cloud project.
+        project_id (str): project id of the Google Cloud project.
+        model_display_name (str): Name of the new trained model version.
+        train_container_uri (str): Container URI for running task script.
+        serving_container_uri (str): Container URI for deploying the output model.
+        model (Model): Trained model output.
+        metrics (Metrics): Output metrics of trained model.
+        requirements (List[str]): Additional python dependencies for training script.
+        job_name (str): Name of training job.
+        hparams (Dict[str, str]): Hyperparameters (passed as a JSON serialised argument
+            to task script)
+        replica_count (int): Number of replicas (increase for distributed tasks).
+        machine_type (string): Machine type of compute.
+        accelerator_type (string): Accelerator type (change for GPU support).
+        accelerator_count (string): Accelerator count (increase for GPU cores).
+
+    Returns:
+        parent_model (str): Resource URI of the parent model (empty string if the
+            trained model is the first model version of its kind).
+    """
     import json
     import logging
     import time
@@ -58,6 +100,7 @@ def custom_train_job(
     logging.info(f"Checking if parent model with name {model_display_name} exists")
     models = aip.Model.list(filter=f"displayName={model_display_name}")
 
+    # check if a model with the same name already exists
     if len(models) == 0:
         logging.info("No parent model found.")
         parent_model = None
@@ -113,6 +156,7 @@ def custom_train_job(
         if type(v) is float:
             metrics.log_metric(k, v)
 
+    # KFP doesn't support type None
     if parent_model is None:
         parent_model = ""
 

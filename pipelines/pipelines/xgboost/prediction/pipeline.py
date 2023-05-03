@@ -42,9 +42,9 @@ def xgboost_pipeline(
 ):
     """
     XGB prediction pipeline which:
-     1. Extracts a dataset from BQ
-     2. Validates training/serving skew
-     3. Scores data to produce predictions in a BigQuery table
+     1. Looks up the default model version (champion) and
+        dataset which was used to the train model.
+     2. Runs a BatchPredictionJob with optional training-serving skew detection.
 
     Args:
         project_id (str): project id of the Google Cloud project

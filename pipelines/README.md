@@ -33,14 +33,9 @@ The sections below provide a general description of the ML pipelines (training a
 ## Training Pipeline
 ### Prerequisites for training pipeline
 
-- Optional: an existing champion model
-
-    ![tensorflow_component_championmodel](../docs/images/tensorflow_component_championmodel.png)
+Optional: an existing champion model
 
 ### Components in training pipeline
-As an example, the overall flow diagram for the TensorFlow training pipeline is shown below:
-
-![TensorFlow Training Pipeline Flow Diagram](../docs/images/training_pipeline_example.png)
 
 The training pipeline can be broken down into the following sequence of components at a high level:
 
@@ -63,9 +58,6 @@ Every component can be set with a display name using `.set_display_name({display
 ### Prerequisites for prediction pipeline
 
 - A champion model
-
-    ![tensorflow_prediction_component_championmodel](../docs/images/tensorflow_prediction_component_championmodel.png)
-
 - A successful run of the training pipeline
 
 ### Components in prediction pipeline

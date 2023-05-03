@@ -38,17 +38,14 @@ def tensorflow_pipeline(
     dataset_location: str = os.environ.get("VERTEX_LOCATION"),
     ingestion_dataset_id: str = "chicago_taxi_trips",
     timestamp: str = "2022-12-01 00:00:00",
+    test_dataset_uri: str = "",
 ):
     """
     Tensorflow Keras training pipeline which:
-     1. Extracts a dataset from BQ
-     2. Generates statistics
-     3. Performs the validation of it against a tfdv schema
-     4. Alert if there are any anomalies
-     5. Trains the model via Vertex AI CustomTrainJob
-     6. Evaluates the model against the current champion model
-     7. If better than the current champion model it pushes the model to
-     Vertex AI Models
+     1. Splits and extracts a dataset from BQ to GCS
+     2. Trains a model via Vertex AI CustomTrainingJob
+     3. Evaluates the model against the current champion model
+     4. If better the model becomes the new default model
 
     Args:
         project_id (str): project id of the Google Cloud project
@@ -65,9 +62,7 @@ def tensorflow_pipeline(
         timestamp (str): Optional. Empty or a specific timestamp in ISO 8601 format
             (YYYY-MM-DDThh:mm:ss.sss±hh:mm or YYYY-MM-DDThh:mm:ss).
             If any time part is missing, it will be regarded as zero.
-
-    Returns:
-        None
+        test_dataset_uri (str): Optional. GCS URI to static held-out test dataset.
     """
 
     # Create variables to ensure the same arguments are passed
@@ -82,7 +77,6 @@ def tensorflow_pipeline(
     valid_table = "valid_data" + table_suffix
     test_table = "test_data" + table_suffix
     primary_metric = "rootMeanSquaredError"
-    test_dataset_uri = None
 
     # generate sql queries which are used in ingestion and preprocessing
     # operations
@@ -247,7 +241,8 @@ def tensorflow_pipeline(
             challenger=train_model.outputs["model"],
             challenger_evaluation=evaluation.outputs["model_evaluation"],
             parent_model=train_model.outputs["parent_model"],
-            primary_metric=primary_metric,
+            eval_metric=primary_metric,
+            eval_lower_is_better=True,
             project_id=project_id,
             project_location=project_location,
         )

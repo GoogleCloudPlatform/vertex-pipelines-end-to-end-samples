@@ -31,13 +31,18 @@ def import_model_evaluation(
     pipeline_job_id: str,
     project_location: str,
 ) -> NamedTuple("Outputs", [("model_evaluation", str)]):
-    """
-    Trigger a batch prediction job and enable monitoring.
+    """Import an evaluation result for a model version.
 
     Args:
-        model (Input[Model]): Input model to use for calculating predictions.
+        model (Model): Input model version.
+        metrics (Metrics): Input metrics. The contents of the artifact are expected
+            to follow the evaluation schema linked in the docs:
+            https://cloud.google.com/vertex-ai/docs/evaluation/introduction#features.
+        test_dataset (Dataset): Input test dataset which will be linked to evaluation.
+        pipeline_job_id (str): Pipeline job id which will be linked to evaluation.
+        project_location (str): Location of the Google Cloud project.
     Returns:
-        NamedTuple: gcp_resources for Vertex AI UI integration.
+        model_evaluation (str): Resource URI of imported model evaluation.
     """
     import json
     import logging

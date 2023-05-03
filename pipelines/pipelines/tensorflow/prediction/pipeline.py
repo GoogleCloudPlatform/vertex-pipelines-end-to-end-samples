@@ -45,8 +45,9 @@ def tensorflow_pipeline(
     """
     Tensorflow prediction pipeline which:
      1. Extracts a dataset from BQ
-     2. Validates training/serving skew
-     3. Scores data to produce predictions
+     2. Looks up the default model version (champion) and
+        dataset which was used to the train model.
+     3. Runs a BatchPredictionJob with optional training-serving skew detection.
      4. Post-processes predictions
      5. Loads predictions into BQ
 

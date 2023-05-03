@@ -1,4 +1,5 @@
 # Copyright 2022 Google LLC
+from typing import NamedTuple
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -21,20 +22,25 @@ from pathlib import Path
     packages_to_install=["google-cloud-aiplatform>=1.24.1"],
     output_component_file=str(Path(__file__).with_suffix(".yaml")),
 )
-def update_model(
+def update_best_model(
     challenger: Input[Model],
     challenger_evaluation: str,
     parent_model: str,
-    primary_metric: str,
     project_id: str,
     project_location: str,
-):
+    eval_metric: str,
+    eval_lower_is_better: bool,
+) -> NamedTuple("Outputs", [("challenger_wins", bool)]):
     """
-    Fetch a model given a model name (display name) and export to GCS.
-
     Args:
-        display_name (str): Required. The display name of the Model. The name can
-        be up to 128 characters long and can be consist of any UTF-8 characters.
+        challenger (Model): Challenger model.
+        challenger_evaluation (str): Challenger evaluation.
+        parent_model (str): Resource URI of parent model.
+        eval_metric (str): Metric to compare champion and challenger on.
+        eval_lower_is_better (bool): Usually True for losses and
+            False for classification metrics.
+        project_id (str): project id of the Google Cloud project.
+        project_location (str): location of the Google Cloud project.
     """
 
     import logging
@@ -54,22 +60,34 @@ def update_model(
     eval_challenger = aip.model_evaluation.ModelEvaluation(challenger_evaluation)
     metrics_champion = MessageToDict(eval_champion._gca_resource._pb)["metrics"]
     metrics_challenger = MessageToDict(eval_challenger._gca_resource._pb)["metrics"]
-    metrics_challenger[primary_metric] -= 0.001  # TODO fake
+    metrics_challenger[eval_metric] -= 0.001  # TODO fake
 
-    logging.info(f"Comparing {primary_metric} of models")
+    logging.info(f"Comparing {eval_metric} of models")
     logging.debug(f"Champion metrics: {metrics_champion}")
     logging.debug(f"Challenger metrics: {metrics_challenger}")
 
     # TODO if eval with same test dataset doesn't exist for both models, what to do?
     logging.info(
-        f"Champion={metrics_champion[primary_metric]} "
-        f"Challenger={metrics_challenger[primary_metric]}"
+        f"Champion={metrics_champion[eval_metric]} "
+        f"Challenger={metrics_challenger[eval_metric]}"
     )
-    if metrics_champion[primary_metric] > metrics_challenger[primary_metric]:
+
+    if eval_lower_is_better:
+        challenger_wins = (
+            metrics_challenger[eval_metric] < metrics_champion[eval_metric]
+        )
+    else:
+        challenger_wins = (
+            metrics_champion[eval_metric] > metrics_challenger[eval_metric]
+        )
+
+    if challenger_wins:
         logging.info(f"Updating champion to version: {challenger.version_id}")
         model_registry = ModelRegistry(
             model=champion, project=project_id, location=project_location
         )
         model_registry.add_version_aliases(["default"], challenger.version_id)
-    else:
-        logging.info(f"Keeping current champion!")
+        return (True,)
+
+    logging.info(f"Keeping current champion!")
+    return (False,)
