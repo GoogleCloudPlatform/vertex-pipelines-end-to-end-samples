@@ -38,6 +38,7 @@ def xgboost_pipeline(
     dataset_location: str = os.environ.get("VERTEX_LOCATION"),
     ingestion_dataset_id: str = "chicago_taxi_trips",
     timestamp: str = "2022-12-01 00:00:00",
+    staging_bucket: str = os.environ.get("VERTEX_PIPELINE_ROOT"),
     pipeline_files_gcs_path: str = os.environ.get("PIPELINE_FILES_GCS_PATH"),
 ):
     """
@@ -60,6 +61,7 @@ def xgboost_pipeline(
         timestamp (str): Optional. Empty or a specific timestamp in ISO 8601 format
             (YYYY-MM-DDThh:mm:ss.sss±hh:mm or YYYY-MM-DDThh:mm:ss).
             If any time part is missing, it will be regarded as zero.
+        staging_bucket (str): Staging bucket for pipeline artifacts.
         pipeline_files_gcs_path (str): GCS path where the pipeline files are located
     """
 
@@ -216,13 +218,8 @@ def xgboost_pipeline(
         label=label_column_name,
     )
 
-    task = importer_node.importer(
-        artifact_uri=task_uri,
-        artifact_class=dsl.Artifact,
-    ).set_display_name("Import task")
-
     train_model = custom_train_job(
-        task=task.output,
+        task_uri=task_uri,
         train_data=train_dataset,
         valid_data=valid_dataset,
         test_data=test_dataset,
@@ -233,6 +230,7 @@ def xgboost_pipeline(
         serving_container_uri="europe-docker.pkg.dev/vertex-ai/prediction/sklearn-cpu.0-24:latest",  # noqa: E501
         hparams=hparams,
         requirements=["scikit-learn==0.24.0"],
+        staging_bucket=staging_bucket,
     ).set_display_name("Train model")
 
     evaluation = import_model_evaluation(

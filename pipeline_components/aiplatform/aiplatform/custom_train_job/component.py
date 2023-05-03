@@ -23,7 +23,7 @@ from pathlib import Path
     output_component_file=str(Path(__file__).with_suffix(".yaml")),
 )
 def custom_train_job(
-    task: Input[Artifact],
+    task_uri: str,
     train_data: Input[Dataset],
     valid_data: Input[Dataset],
     test_data: Input[Dataset],
@@ -34,6 +34,7 @@ def custom_train_job(
     serving_container_uri: str,
     model: Output[Artifact],
     metrics: Output[Metrics],
+    staging_bucket: str,
     requirements: List[str] = None,
     job_name: str = None,
     hparams: Dict[str, str] = None,
@@ -60,11 +61,12 @@ def custom_train_job(
     https://cloud.google.com/vertex-ai/docs/training/code-requirements.
 
     Args:
-        task (Artifact): Python task script. See:
+        task_uri (str): gs:// uri to python task script. See:
             https://cloud.google.com/vertex-ai/docs/training/code-requirements.
         train_data (Dataset): Training data (passed as an argument to task script)
         valid_data (Dataset): Validation data (passed as an argument to task script)
         test_data (Dataset): Test data (passed as an argument to task script).
+        staging_bucket (str): Staging bucket for CustomTrainingJob.
         project_location (str): location of the Google Cloud project.
         project_id (str): project id of the Google Cloud project.
         model_display_name (str): Name of the new trained model version.
@@ -87,6 +89,7 @@ def custom_train_job(
     """
     import json
     import logging
+    import os.path
     import time
     import google.cloud.aiplatform as aip
 
@@ -107,12 +110,20 @@ def custom_train_job(
             f"Multiple models with name {model_display_name} were found."
         )
 
+    logging.info(f"Using task: {task_uri}")
+    script_path = "/gcs/" + task_uri[5:]
+    if not os.path.exists(script_path):
+        logging.error("Task script was not found!")
+        raise ValueError(
+            f"Task script was not found. Check if the path is correct: {task_uri}"
+        )
+
     job = aip.CustomTrainingJob(
         project=project_id,
         location=project_location,
-        staging_bucket="gs://dt-turbo-templates-dev-pl-root",
+        staging_bucket=staging_bucket,
         display_name=job_name if job_name else f"Custom job {int(time.time())}",
-        script_path=task.path,
+        script_path=script_path,
         container_uri=train_container_uri,
         requirements=requirements,
         model_serving_container_image_uri=serving_container_uri,
