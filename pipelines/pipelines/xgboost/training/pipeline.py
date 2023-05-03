@@ -243,8 +243,7 @@ def xgboost_pipeline(
         model=train_model.outputs["model"],
         metrics=train_model.outputs["metrics"],
         test_dataset=test_dataset,
-        # TODO use "{{$.pipeline_job_name}}" instead
-        pipeline_job_id="xgboost-train-pipeline-20230501121155",
+        pipeline_job_id="{{$.pipeline_job_name}}",
         project_location=project_location,
     ).set_display_name("Import evaluation")
 

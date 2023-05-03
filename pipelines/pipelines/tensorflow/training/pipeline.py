@@ -17,25 +17,14 @@ import os
 import pathlib
 
 from kfp.v2 import compiler, dsl
-from google_cloud_pipeline_components.experimental.custom_job.utils import (
-    create_custom_training_job_op_from_component,
-)
+from kfp.v2.components import importer_node
 from pipelines import generate_query
 from pipelines.components import (
-    lookup_model,
-    export_model,
-    upload_model,
     extract_bq_to_dataset,
     bq_query_to_table,
-    train_tensorflow_model,
-    predict_tensorflow_model,
-    calculate_eval_metrics,
-    compare_models,
-)
-
-
-TF_SERVING_CONTAINER_IMAGE_URI = (
-    "europe-docker.pkg.dev/vertex-ai/prediction/tf2-cpu.2-6:latest"
+    update_best_model,
+    import_model_evaluation,
+    custom_train_job,
 )
 
 
@@ -43,7 +32,6 @@ TF_SERVING_CONTAINER_IMAGE_URI = (
 def tensorflow_pipeline(
     project_id: str = os.environ.get("VERTEX_PROJECT_ID"),
     project_location: str = os.environ.get("VERTEX_LOCATION"),
-    pipeline_files_gcs_path: str = os.environ.get("PIPELINE_FILES_GCS_PATH"),
     ingestion_project_id: str = os.environ.get("VERTEX_PROJECT_ID"),
     model_name: str = "tensorflow_with_preprocessing",
     dataset_id: str = "preprocessing",
@@ -85,16 +73,6 @@ def tensorflow_pipeline(
     # Create variables to ensure the same arguments are passed
     # into different components of the pipeline
     label_column_name = "total_fare"
-    pred_column_name = "predictions"
-    metrics_names = ["MeanSquaredError"]
-    custom_metrics = {
-        "SquaredPearson": "squared_pearson",
-    }
-    # Define path to TFMA custom metric modules. Set to None if no custom metric used
-    tfma_custom_metrics_path = (
-        f"{pipeline_files_gcs_path}/training/assets/tfma_custom_metrics"
-    )
-    file_pattern = ""  # e.g. "files-*.csv", used as file pattern on storage
     time_column = "trip_start_timestamp"
     ingestion_table = "taxi_trips"
     table_suffix = "_tf_training"  # suffix to table names
@@ -103,6 +81,8 @@ def tensorflow_pipeline(
     train_table = "train_data" + table_suffix
     valid_table = "valid_data" + table_suffix
     test_table = "test_data" + table_suffix
+    primary_metric = "rootMeanSquaredError"
+    test_dataset_uri = None
 
     # generate sql queries which are used in ingestion and preprocessing
     # operations
@@ -130,13 +110,6 @@ def tensorflow_pipeline(
         source_table=ingested_table,
         num_lots=10,
         lots="(8)",
-    )
-    split_test_query = generate_query(
-        queries_folder / "sample.sql",
-        source_dataset=dataset_id,
-        source_table=ingested_table,
-        num_lots=10,
-        lots="(9)",
     )
     data_cleaning_query = generate_query(
         queries_folder / "engineer_features.sql",
@@ -168,11 +141,6 @@ def tensorflow_pipeline(
         .after(ingest)
         .set_display_name("Split validation data")
     )
-    split_test_data = (
-        bq_query_to_table(query=split_test_query, table_id=test_table, **kwargs)
-        .after(ingest)
-        .set_display_name("Split test data")
-    )
     data_cleaning = (
         bq_query_to_table(
             query=data_cleaning_query, table_id=preprocessed_table, **kwargs
@@ -190,7 +158,6 @@ def tensorflow_pipeline(
             dataset_id=dataset_id,
             table_name=preprocessed_table,
             dataset_location=dataset_location,
-            file_pattern=file_pattern,
         )
         .after(data_cleaning)
         .set_display_name("Extract train data to storage")
@@ -202,210 +169,93 @@ def tensorflow_pipeline(
             dataset_id=dataset_id,
             table_name=valid_table,
             dataset_location=dataset_location,
-            file_pattern=file_pattern,
         )
         .after(split_valid_data)
         .set_display_name("Extract validation data to storage")
     )
-    test_dataset = (
-        extract_bq_to_dataset(
-            bq_client_project_id=project_id,
-            source_project_id=project_id,
-            dataset_id=dataset_id,
-            table_name=test_table,
-            dataset_location=dataset_location,
-            file_pattern=file_pattern,
+
+    if test_dataset_uri is None:
+        split_test_query = generate_query(
+            queries_folder / "sample.sql",
+            source_dataset=dataset_id,
+            source_table=ingested_table,
+            num_lots=10,
+            lots="(9)",
         )
-        .after(split_test_data)
-        .set_display_name("Extract test data to storage")
-    )
+        split_test_data = (
+            bq_query_to_table(query=split_test_query, table_id=test_table, **kwargs)
+            .after(ingest)
+            .set_display_name("Split test data")
+        )
+        test_dataset = (
+            extract_bq_to_dataset(
+                bq_client_project_id=project_id,
+                source_project_id=project_id,
+                dataset_id=dataset_id,
+                table_name=test_table,
+                dataset_location=dataset_location,
+                file_pattern="",
+            )
+            .after(split_test_data)
+            .set_display_name("Extract test data to storage")
+        ).outputs["dataset"]
+    else:
+        test_dataset = importer_node.importer(
+            artifact_uri=test_dataset_uri, artifact_class=dsl.Dataset
+        ).outputs["artifact"]
 
     # train tensorflow model
-    model_params = dict(
+    hparams = dict(
         batch_size=100,
         epochs=5,
         loss_fn="MeanSquaredError",
         optimizer="Adam",
-        metrics=metrics_names,
         learning_rate=0.01,
         hidden_units=[(64, "relu"), (32, "relu")],
         distribute_strategy="single",
         early_stopping_epochs=5,
     )
 
-    train_model = (
-        custom_train_job(
-            training_data=train_dataset.outputs["dataset"],
-            validation_data=valid_dataset.outputs["dataset"],
-            file_pattern=file_pattern,
-            label_name=label_column_name,
-            model_params=json.dumps(model_params),
-            # Training wrapper specific parameters
-            project=project_id,
-            location=project_location,
-        )
-        .after(train_dataset)
-        .set_display_name("Vertex Training for TF model")
-    )
+    task = importer_node.importer(
+        artifact_uri="gs://dt-turbo-templates-dev-pl-assets/training/assets/task_tf.py",
+        artifact_class=dsl.Artifact,
+    ).set_display_name("Import task")
 
-    model = train_model.outputs["model"]
-    metrics_artifact = train_model.outputs["metrics_artifact"]
-
-    # predict test dataset using trained model
-    challenger_predictions = predict_tensorflow_model(
-        test_dataset.outputs["dataset"],
-        model,
-        label_column_name=label_column_name,
-        predictions_column_name=pred_column_name,
-        file_pattern=file_pattern,
-    ).set_display_name("Predict test data")
-
-    # Calculate evaluation metrics of challenger model
-    challenger_eval_metrics = calculate_eval_metrics(
-        # Generic inputs
-        csv_file=challenger_predictions.output,
-        metrics_names=json.dumps(metrics_names),
-        label_column_name=label_column_name,
-        pred_column_name=pred_column_name,
-        # Custom metric config
+    train_model = custom_train_job(
+        task=task.output,
+        train_data=train_dataset.outputs["dataset"],
+        valid_data=valid_dataset.outputs["dataset"],
+        test_data=test_dataset,
         project_id=project_id,
-        custom_metrics=json.dumps(custom_metrics),
-        custom_metrics_path=tfma_custom_metrics_path,
-        # Slicing config
-        slicing_specs=[
-            'feature_keys: ["payment_type"]',
-            'feature_keys: ["payment_type", "company"]',
-            'feature_values: [{key: "payment_type", value: "Cash"}]',
-            'feature_keys: ["company", "dayofweek"] '  # Note this is the same line
-            + 'feature_values: [{key: "payment_type", value: "Cash"}]',
-        ],
-    ).set_display_name("Evaluate test metrics for challenger model")
-
-    # Lookup champion model
-    champion_model_lookup = lookup_model(
-        model_name=model_name,
         project_location=project_location,
-        project_id=project_id,
-        fail_on_model_not_found=False,
-    ).set_display_name("Lookup champion model")
+        model_display_name=model_name,
+        train_container_uri="europe-docker.pkg.dev/vertex-ai/training/tf-cpu.2-6:latest",  # noqa: E501
+        serving_container_uri="europe-docker.pkg.dev/vertex-ai/prediction/tf2-cpu.2-6:latest",  # noqa: E501
+        hparams=hparams,
+    ).set_display_name("Vertex Training for TF model")
 
-    champion_model_resource_name = champion_model_lookup.outputs["model_resource_name"]
+    evaluation = import_model_evaluation(
+        model=train_model.outputs["model"],
+        metrics=train_model.outputs["metrics"],
+        test_dataset=test_dataset,
+        pipeline_job_id="{{$.pipeline_job_name}}",
+        project_location=project_location,
+    ).set_display_name("Import evaluation")
 
-    # If there is no champion model, upload challenger model
-    with dsl.Condition(
-        name="champion-model-not-exists",
-        condition=(champion_model_resource_name == ""),
-    ):
-
-        # Upload model
-        upload_model(
-            display_name=model_name,
-            serving_container_image_uri=TF_SERVING_CONTAINER_IMAGE_URI,
-            model=model,
+    with dsl.Condition(train_model.outputs["parent_model"] != "", "champion-exists"):
+        update_best_model(
+            challenger=train_model.outputs["model"],
+            challenger_evaluation=evaluation.outputs["model_evaluation"],
+            parent_model=train_model.outputs["parent_model"],
+            primary_metric=primary_metric,
             project_id=project_id,
             project_location=project_location,
-            description="",
-            labels=json.dumps(
-                dict(
-                    pipeline_job_uuid="{{$.pipeline_job_uuid}}",
-                    pipeline_job_name="{{$.pipeline_job_name}}",
-                )
-            ),
-        ).set_display_name("Upload challenger model")
-
-    with dsl.Condition(
-        name="champion-model-exists",
-        condition=(champion_model_resource_name != ""),
-    ):
-
-        exported_champion_model = export_model(
-            model_resource_name=champion_model_resource_name,
-        ).set_display_name("Export champion model")
-
-        champion_model = exported_champion_model.outputs["model"]
-
-        champion_predictions = predict_tensorflow_model(
-            test_dataset.outputs["dataset"],
-            champion_model,
-            label_column_name=label_column_name,
-            predictions_column_name=pred_column_name,
-            file_pattern=file_pattern,
-        ).set_display_name("Predict test data")
-
-        # Calculate evaluation metrics of champion model
-        champion_eval_metrics = calculate_eval_metrics(
-            # Generic inputs
-            csv_file=champion_predictions.output,
-            metrics_names=json.dumps(metrics_names),
-            label_column_name=label_column_name,
-            pred_column_name=pred_column_name,
-            # Custom metric config
-            project_id=project_id,
-            custom_metrics=json.dumps(custom_metrics),
-            custom_metrics_path=tfma_custom_metrics_path,
-            # Slicing config
-            slicing_specs=[
-                'feature_keys: ["payment_type"]',
-                'feature_keys: ["payment_type", "company"]',
-                'feature_values: [{key: "payment_type", value: "Cash"}]',
-                'feature_keys: ["company", "dayofweek"] '  # Note this is the same line
-                + 'feature_values: [{key: "payment_type", value: "Cash"}]',
-            ],
-        ).set_display_name("Evaluate test metrics for the champion model")
-
-        # Determine if challenger model is better than champion model
-        compare_champion_challenger_models = compare_models(
-            metrics=champion_eval_metrics.outputs["eval_metrics"],
-            other_metrics=challenger_eval_metrics.outputs["eval_metrics"],
-            evaluation_metric="mean_squared_error",
-            higher_is_better=False,
-            absolute_difference=0.0,
-        ).set_display_name("Compare champion and challenger models")
-
-        # Upload challenger model if it is better than champion model
-        with dsl.Condition(
-            name="challenger-better-than-champion",
-            condition=(compare_champion_challenger_models.output == "true"),
-        ):
-
-            # Upload model
-            upload_model(
-                display_name=model_name,
-                serving_container_image_uri=TF_SERVING_CONTAINER_IMAGE_URI,
-                model=model,
-                project_id=project_id,
-                project_location=project_location,
-                description="",
-                labels=json.dumps(
-                    dict(
-                        pipeline_job_uuid="{{$.pipeline_job_uuid}}",
-                        pipeline_job_name="{{$.pipeline_job_name}}",
-                    )
-                ),
-            ).set_display_name("Upload challenger model")
+        )
 
 
-def compile():
-    """
-    Uses the kfp compiler package to compile the pipeline function into a workflow yaml
-
-    Args:
-        None
-
-    Returns:
-        None
-    """
+if __name__ == "__main__":
     compiler.Compiler().compile(
         pipeline_func=tensorflow_pipeline,
         package_path="training.json",
         type_check=False,
     )
-
-
-if __name__ == "__main__":
-    custom_train_job = create_custom_training_job_op_from_component(
-        component_spec=train_tensorflow_model,
-        replica_count=1,
-        machine_type="n1-standard-4",
-    )
-    compile()
