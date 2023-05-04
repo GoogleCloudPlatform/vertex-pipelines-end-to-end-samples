@@ -31,7 +31,7 @@ def extract_bq_to_dataset(
     dataset_location: str = "EU",
     extract_job_config: dict = None,
     file_pattern: str = None,
-) -> NamedTuple("Outputs", [("dataset_gcs_prefix", str), ("dataset_gcs_uri", list)]):
+) -> NamedTuple("Outputs", [("dataset_gcs_prefix", str), ("dataset_gcs_uri", str)]):
     """
     Extract BQ table in GCS.
     Args:
@@ -92,4 +92,4 @@ def extract_bq_to_dataset(
         logging.error(extract_job.errors)
         raise e
 
-    return (dataset_directory, [dataset_uri])
+    return (dataset_directory, dataset_uri)

@@ -25,6 +25,7 @@ from pipelines.components import (
     update_best_model,
     import_model_evaluation,
     custom_train_job,
+    lookup_model,
 )
 
 
@@ -80,7 +81,7 @@ def tensorflow_pipeline(
     test_table = "test_data" + table_suffix
     primary_metric = "rootMeanSquaredError"
     test_dataset_uri = None
-    task_uri = f"{pipeline_files_gcs_path}/training/assets/train_tf_model.py"
+    train_script_uri = f"{pipeline_files_gcs_path}/training/assets/train_tf_model.py"
 
     # generate sql queries which are used in ingestion and preprocessing
     # operations
@@ -159,7 +160,7 @@ def tensorflow_pipeline(
         )
         .after(data_cleaning)
         .set_display_name("Extract train data to storage")
-    )
+    ).outputs["dataset"]
     valid_dataset = (
         extract_bq_to_dataset(
             bq_client_project_id=project_id,
@@ -170,7 +171,7 @@ def tensorflow_pipeline(
         )
         .after(split_valid_data)
         .set_display_name("Extract validation data to storage")
-    )
+    ).outputs["dataset"]
 
     if test_dataset_uri:
         test_dataset = (
@@ -206,7 +207,13 @@ def tensorflow_pipeline(
             .set_display_name("Extract test data to storage")
         ).outputs["dataset"]
 
-    # train tensorflow model
+    existing_model = lookup_model(
+        model_name=model_name,
+        project_location=project_location,
+        project_id=project_id,
+        fail_on_model_not_found=False,
+    ).outputs["model_resource_name"]
+
     hparams = dict(
         batch_size=100,
         epochs=5,
@@ -219,9 +226,9 @@ def tensorflow_pipeline(
     )
 
     train_model = custom_train_job(
-        task_uri=task_uri,
-        train_data=train_dataset.outputs["dataset"],
-        valid_data=valid_dataset.outputs["dataset"],
+        train_script_uri=train_script_uri,
+        train_data=train_dataset,
+        valid_data=valid_dataset,
         test_data=test_dataset,
         project_id=project_id,
         project_location=project_location,
@@ -230,6 +237,7 @@ def tensorflow_pipeline(
         serving_container_uri="europe-docker.pkg.dev/vertex-ai/prediction/tf2-cpu.2-6:latest",  # noqa: E501
         hparams=hparams,
         staging_bucket=staging_bucket,
+        parent_model=existing_model,
     ).set_display_name("Vertex Training for TF model")
 
     evaluation = import_model_evaluation(
@@ -240,11 +248,11 @@ def tensorflow_pipeline(
         project_location=project_location,
     ).set_display_name("Import evaluation")
 
-    with dsl.Condition(train_model.outputs["parent_model"] != "", "champion-exists"):
+    with dsl.Condition(existing_model != "", "champion-exists"):
         update_best_model(
             challenger=train_model.outputs["model"],
             challenger_evaluation=evaluation.outputs["model_evaluation"],
-            parent_model=train_model.outputs["parent_model"],
+            parent_model=existing_model,
             eval_metric=primary_metric,
             eval_lower_is_better=True,
             project_id=project_id,

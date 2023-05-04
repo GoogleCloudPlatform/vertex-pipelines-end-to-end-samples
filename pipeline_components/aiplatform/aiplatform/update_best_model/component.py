@@ -30,17 +30,20 @@ def update_best_model(
     project_location: str,
     eval_metric: str,
     eval_lower_is_better: bool,
+    model_alias: str = "default",
 ) -> NamedTuple("Outputs", [("challenger_wins", bool)]):
     """
     Args:
         challenger (Model): Challenger model.
-        challenger_evaluation (str): Challenger evaluation.
+        challenger_evaluation (str): Resource URI of challenger model evaluation e.g.
+            `projects/.../locations/.../models/.../evaluations/...`
         parent_model (str): Resource URI of parent model.
         eval_metric (str): Metric to compare champion and challenger on.
         eval_lower_is_better (bool): Usually True for losses and
             False for classification metrics.
         project_id (str): project id of the Google Cloud project.
         project_location (str): location of the Google Cloud project.
+        model_alias (str): alias of the parent model.
     """
 
     import logging
@@ -49,7 +52,9 @@ def update_best_model(
     from google.protobuf.json_format import MessageToDict
 
     logging.info("Get models...")
-    champion = aip.Model(f"{parent_model}@default")
+    if model_alias:
+        parent_model += "@" + model_alias
+    champion = aip.Model(parent_model)
     challenger = aip.Model(challenger.metadata["resourceName"])
     logging.info(
         f"Model default version {champion.version_id} "
@@ -67,20 +72,13 @@ def update_best_model(
     logging.debug(f"Challenger metrics: {metrics_challenger}")
 
     # TODO if eval with same test dataset doesn't exist for both models, what to do?
-    logging.info(
-        f"Champion={metrics_champion[eval_metric]} "
-        f"Challenger={metrics_challenger[eval_metric]}"
+    m_champ = metrics_champion[eval_metric]
+    m_chall = metrics_challenger[eval_metric]
+    logging.info(f"Champion={m_champ} Challenger={m_chall}")
+
+    challenger_wins = (
+        (m_chall < m_champ) if eval_lower_is_better else (m_chall > m_champ)
     )
-
-    if eval_lower_is_better:
-        challenger_wins = (
-            metrics_challenger[eval_metric] < metrics_champion[eval_metric]
-        )
-    else:
-        challenger_wins = (
-            metrics_champion[eval_metric] > metrics_challenger[eval_metric]
-        )
-
     if challenger_wins:
         logging.info(f"Updating champion to version: {challenger.version_id}")
         model_registry = ModelRegistry(

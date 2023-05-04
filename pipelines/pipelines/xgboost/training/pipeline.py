@@ -25,6 +25,7 @@ from pipelines.components import (
     update_best_model,
     import_model_evaluation,
     custom_train_job,
+    lookup_model,
 )
 
 
@@ -78,7 +79,7 @@ def xgboost_pipeline(
     test_table = "test_data" + table_suffix
     primary_metric = "rootMeanSquaredError"
     test_dataset_uri = None
-    task_uri = f"{pipeline_files_gcs_path}/training/assets/train_xgb_model.py"
+    train_script_uri = f"{pipeline_files_gcs_path}/training/assets/train_xgb_model.py"
 
     # generate sql queries which are used in ingestion and preprocessing
     # operations
@@ -207,6 +208,13 @@ def xgboost_pipeline(
             .set_display_name("Extract test data to storage")
         ).outputs["dataset"]
 
+    existing_model = lookup_model(
+        model_name=model_name,
+        project_location=project_location,
+        project_id=project_id,
+        fail_on_model_not_found=False,
+    ).outputs["model_resource_name"]
+
     hparams = dict(
         n_estimators=200,
         early_stopping_rounds=10,
@@ -219,7 +227,7 @@ def xgboost_pipeline(
     )
 
     train_model = custom_train_job(
-        task_uri=task_uri,
+        train_script_uri=train_script_uri,
         train_data=train_dataset,
         valid_data=valid_dataset,
         test_data=test_dataset,
@@ -231,6 +239,7 @@ def xgboost_pipeline(
         hparams=hparams,
         requirements=["scikit-learn==0.24.0"],
         staging_bucket=staging_bucket,
+        parent_model=existing_model,
     ).set_display_name("Train model")
 
     evaluation = import_model_evaluation(
@@ -241,11 +250,11 @@ def xgboost_pipeline(
         project_location=project_location,
     ).set_display_name("Import evaluation")
 
-    with dsl.Condition(train_model.outputs["parent_model"] != "", "champion-exists"):
+    with dsl.Condition(existing_model != "", "champion-exists"):
         update_best_model(
             challenger=train_model.outputs["model"],
             challenger_evaluation=evaluation.outputs["model_evaluation"],
-            parent_model=train_model.outputs["parent_model"],
+            parent_model=existing_model,
             eval_metric=primary_metric,
             eval_lower_is_better=True,
             project_id=project_id,
