@@ -110,7 +110,7 @@ def xgboost_pipeline(
         project_location=project_location,
         project_id=project_id,
         fail_on_model_not_found=True,
-    ).set_display_name("Lookup champion model")
+    ).set_display_name("Look up champion model")
 
     # batch predict from BigQuery to BigQuery
     bigquery_source_input_uri = f"bq://{project_id}.{dataset_id}.{ingested_table}"
@@ -134,7 +134,7 @@ def xgboost_pipeline(
             monitoring_skew_config=monitoring_skew_config,
         )
         .after(ingest)
-        .set_display_name("Vertex Batch Prediction for XGB model")
+        .set_display_name("Batch prediction job")
     )
 
 

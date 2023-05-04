@@ -144,7 +144,7 @@ def xgboost_pipeline(
             query=data_cleaning_query, table_id=preprocessed_table, **kwargs
         )
         .after(split_train_data)
-        .set_display_name("Data Cleansing")
+        .set_display_name("Clean data")
     )
 
     # data extraction to gcs
@@ -208,12 +208,16 @@ def xgboost_pipeline(
             .set_display_name("Extract test data to storage")
         ).outputs["dataset"]
 
-    existing_model = lookup_model(
-        model_name=model_name,
-        project_location=project_location,
-        project_id=project_id,
-        fail_on_model_not_found=False,
-    ).outputs["model_resource_name"]
+    existing_model = (
+        lookup_model(
+            model_name=model_name,
+            project_location=project_location,
+            project_id=project_id,
+            fail_on_model_not_found=False,
+        )
+        .set_display_name("Lookup past model")
+        .outputs["model_resource_name"]
+    )
 
     hparams = dict(
         n_estimators=200,
@@ -259,7 +263,7 @@ def xgboost_pipeline(
             eval_lower_is_better=True,
             project_id=project_id,
             project_location=project_location,
-        )
+        ).set_display_name("Update best model")
 
 
 if __name__ == "__main__":

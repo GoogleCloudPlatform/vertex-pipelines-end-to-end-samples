@@ -126,7 +126,7 @@ def tensorflow_pipeline(
             ),
         )
         .after(ingest)
-        .set_display_name("Extract data to storage for prediction")
+        .set_display_name("Extract data to storage")
     )
 
     # lookup champion model
@@ -135,7 +135,7 @@ def tensorflow_pipeline(
         project_location=project_location,
         project_id=project_id,
         fail_on_model_not_found=True,
-    ).set_display_name("Lookup champion model")
+    ).set_display_name("Look up champion model")
 
     # predict data
     batch_prediction = (
@@ -156,7 +156,7 @@ def tensorflow_pipeline(
             monitoring_skew_config=monitoring_skew_config,
         )
         .after(ingest)
-        .set_display_name("Vertex Batch Prediction for TF model")
+        .set_display_name("Batch prediction job")
     )
 
     # load predictions into bigquery
@@ -170,7 +170,7 @@ def tensorflow_pipeline(
             dataset_location=dataset_location,
         )
         .after(batch_prediction)
-        .set_display_name("Load predictions into Bigquery")
+        .set_display_name("Load predictions to BigQuery")
     )
 
 
