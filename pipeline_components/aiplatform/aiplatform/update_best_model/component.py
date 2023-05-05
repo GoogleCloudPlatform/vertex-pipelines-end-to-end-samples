@@ -19,7 +19,7 @@ from pathlib import Path
 
 @component(
     base_image="python:3.7",
-    packages_to_install=["google-cloud-aiplatform>=1.24.1"],
+    packages_to_install=["google-cloud-aiplatform==1.24.1"],
     output_component_file=str(Path(__file__).with_suffix(".yaml")),
 )
 def update_best_model(
@@ -65,13 +65,11 @@ def update_best_model(
     eval_challenger = aip.model_evaluation.ModelEvaluation(challenger_evaluation)
     metrics_champion = MessageToDict(eval_champion._gca_resource._pb)["metrics"]
     metrics_challenger = MessageToDict(eval_challenger._gca_resource._pb)["metrics"]
-    metrics_challenger[eval_metric] -= 0.001  # TODO fake
 
     logging.info(f"Comparing {eval_metric} of models")
     logging.debug(f"Champion metrics: {metrics_champion}")
     logging.debug(f"Challenger metrics: {metrics_challenger}")
 
-    # TODO if eval with same test dataset doesn't exist for both models, what to do?
     m_champ = metrics_champion[eval_metric]
     m_chall = metrics_challenger[eval_metric]
     logging.info(f"Champion={m_champ} Challenger={m_chall}")

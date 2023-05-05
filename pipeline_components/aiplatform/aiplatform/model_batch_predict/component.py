@@ -131,14 +131,10 @@ def model_batch_predict(
         input_config["gcsSource"] = {"uris": [source_uri]}
         output_config["gcsDestination"] = {"outputUriPrefix": destination_uri}
 
-    if instance_config is None:
-        instance_config = {"instanceType": "array"}
-
     message = {
         "displayName": job_display_name,
         "model": model.metadata["resourceName"],
         "inputConfig": input_config,
-        "instanceConfig": instance_config,
         "outputConfig": output_config,
         "dedicatedResources": {
             "machineSpec": {"machineType": machine_type},
@@ -146,6 +142,9 @@ def model_batch_predict(
             "maxReplicaCount": max_replica_count,
         },
     }
+
+    if instance_config:
+        message["instanceConfig"] = instance_config
 
     if monitoring_training_dataset and monitoring_skew_config:
         logging.info("Adding monitoring config to request")
