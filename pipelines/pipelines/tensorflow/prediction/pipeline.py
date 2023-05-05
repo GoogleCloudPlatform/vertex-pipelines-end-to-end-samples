@@ -21,9 +21,7 @@ from kfp.v2 import compiler, dsl
 from pipelines import generate_query
 from pipelines.components import (
     lookup_model,
-    extract_bq_to_dataset,
     bq_query_to_table,
-    load_dataset_to_bq,
     model_batch_predict,
 )
 
@@ -73,7 +71,6 @@ def tensorflow_pipeline(
         batch_prediction_max_replicas (int): Maximum no of machines to distribute the
             Vertex Batch Prediction job for horizontal scalability.
 
-
     Returns:
         None
 
@@ -113,22 +110,6 @@ def tensorflow_pipeline(
         query=ingest_query, table_id=ingested_table, **kwargs
     ).set_display_name("Ingest data")
 
-    # data extraction to gcs
-    data_for_prediction = (
-        extract_bq_to_dataset(
-            bq_client_project_id=project_id,
-            source_project_id=project_id,
-            dataset_id=dataset_id,
-            table_name=ingested_table,
-            dataset_location=dataset_location,
-            extract_job_config=json.dumps(
-                dict(destination_format="NEWLINE_DELIMITED_JSON")
-            ),
-        )
-        .after(ingest)
-        .set_display_name("Extract data to storage")
-    )
-
     # lookup champion model
     champion_model = lookup_model(
         model_name=model_name,
@@ -137,6 +118,11 @@ def tensorflow_pipeline(
         fail_on_model_not_found=True,
     ).set_display_name("Look up champion model")
 
+    # batch predict from BigQuery to BigQuery
+    bigquery_source_input_uri = f"bq://{project_id}.{dataset_id}.{ingested_table}"
+    bigquery_destination_output_uri = f"bq://{project_id}.{dataset_id}"
+    instance_config = {"instanceType": "object"}
+
     # predict data
     batch_prediction = (
         model_batch_predict(
@@ -144,33 +130,20 @@ def tensorflow_pipeline(
             job_display_name="my-tensorflow-batch-prediction-job",
             project_location=project_location,
             project_id=project_id,
-            source_uri=data_for_prediction.outputs["dataset_gcs_uri"],
-            destination_uri=data_for_prediction.outputs["dataset_gcs_prefix"],
-            source_format="jsonl",
-            destination_format="jsonl",
+            source_uri=bigquery_source_input_uri,
+            destination_uri=bigquery_destination_output_uri,
+            source_format="bigquery",
+            destination_format="bigquery",
             machine_type=batch_prediction_machine_type,
             starting_replica_count=batch_prediction_min_replicas,
             max_replica_count=batch_prediction_max_replicas,
             monitoring_training_dataset=champion_model.outputs["training_dataset"],
             monitoring_alert_email_addresses=monitoring_alert_email_addresses,
             monitoring_skew_config=monitoring_skew_config,
+            instance_config=instance_config,
         )
         .after(ingest)
         .set_display_name("Batch prediction job")
-    )
-
-    # load predictions into bigquery
-    loaded_data = (
-        load_dataset_to_bq(
-            bq_client_project_id=project_id,
-            destination_project_id=project_id,
-            dataset_id=dataset_id,
-            table_name="tensorflow_staging_predictions",
-            gcs_source_uri=data_for_prediction.outputs["dataset_gcs_prefix"],
-            dataset_location=dataset_location,
-        )
-        .after(batch_prediction)
-        .set_display_name("Load predictions to BigQuery")
     )
 
 

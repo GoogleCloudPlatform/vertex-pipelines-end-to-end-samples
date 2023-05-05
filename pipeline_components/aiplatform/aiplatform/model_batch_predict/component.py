@@ -40,6 +40,7 @@ def model_batch_predict(
     monitoring_training_dataset: dict = None,
     monitoring_alert_email_addresses: List[str] = None,
     monitoring_skew_config: dict = None,
+    instance_config: dict = None,
 ) -> NamedTuple("Outputs", [("gcp_resources", str)]):
     """
     Trigger a batch prediction job and enable monitoring.
@@ -51,19 +52,22 @@ def model_batch_predict(
         project_id (str): project id of the Google Cloud project. Defaults to None.
         source_uri (str): bq:// URI or a list of gcs:// URIs to read input instances.
         destination_uri (str): bq:// or gs:// URI to store output predictions.
-        source_format (str): E.g. "bigquery", "jsonl", "csv". Reference:
+        source_format (str): E.g. "bigquery", "jsonl", "csv". See:
             https://cloud.google.com/python/docs/reference/aiplatform/latest/google.cloud.aiplatform_v1beta1.types.BatchPredictionJob.InputConfig
-        destination_format (str): E.g. "bigquery", "jsonl", "csv". Reference:
+        destination_format (str): E.g. "bigquery", "jsonl", "csv". See:
             https://cloud.google.com/python/docs/reference/aiplatform/latest/google.cloud.aiplatform_v1beta1.types.BatchPredictionJob.OutputConfig
         machine_type (str): Machine type.
         starting_replica_count (int): Starting replica count.
         max_replica_count (int): Max replicat count.
-        monitoring_skew_config (dict): Configuration of training-serving skew.
+        monitoring_skew_config (dict): Configuration of training-serving skew. See:
             https://cloud.google.com/python/docs/reference/aiplatform/latest/google.cloud.aiplatform_v1beta1.types.ModelMonitoringObjectiveConfig.TrainingPredictionSkewDetectionConfig
         monitoring_alert_email_addresses (List[str]):
             Email addresses to send alerts to (optional).
-        monitoring_training_dataset (dict): Metadata of training dataset.
+        monitoring_training_dataset (dict): Metadata of training dataset. See:
             https://cloud.google.com/python/docs/reference/aiplatform/latest/google.cloud.aiplatform_v1beta1.types.ModelMonitoringObjectiveConfig.TrainingDataset
+        instance_config (dict): Configuration defining how to transform batch prediction
+            input instances to the instances that the Model accepts. See:
+            https://cloud.google.com/vertex-ai/docs/reference/rest/v1beta1/projects.locations.batchPredictionJobs#instanceconfig
     Returns:
         NamedTuple: gcp_resources for Vertex AI UI integration.
     """
@@ -127,10 +131,14 @@ def model_batch_predict(
         input_config["gcsSource"] = {"uris": [source_uri]}
         output_config["gcsDestination"] = {"outputUriPrefix": destination_uri}
 
+    if instance_config is None:
+        instance_config = {"instanceType": "array"}
+
     message = {
         "displayName": job_display_name,
         "model": model.metadata["resourceName"],
         "inputConfig": input_config,
+        "instanceConfig": instance_config,
         "outputConfig": output_config,
         "dedicatedResources": {
             "machineSpec": {"machineType": machine_type},

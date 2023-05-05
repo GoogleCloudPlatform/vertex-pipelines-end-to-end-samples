@@ -77,13 +77,3 @@ bq_query_to_table = load_component_from_file(
         / "component.yaml"
     )
 )
-
-load_dataset_to_bq = load_component_from_file(
-    str(
-        PIPELINE_COMPONENTS_DIR
-        / "bigquery"
-        / "bigquery"
-        / "upload_prediction"
-        / "component.yaml"
-    )
-)
