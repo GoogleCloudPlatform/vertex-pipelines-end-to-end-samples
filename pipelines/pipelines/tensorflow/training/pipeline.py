@@ -17,7 +17,6 @@ import os
 import pathlib
 
 from kfp.v2 import compiler, dsl
-from kfp.v2.components import importer_node
 from pipelines import generate_query
 from pipelines.components import (
     extract_bq_to_dataset,
@@ -41,6 +40,7 @@ def tensorflow_pipeline(
     timestamp: str = "2022-12-01 00:00:00",
     staging_bucket: str = os.environ.get("VERTEX_PIPELINE_ROOT"),
     pipeline_files_gcs_path: str = os.environ.get("PIPELINE_FILES_GCS_PATH"),
+    test_dataset_uri: str = "",
 ):
     """
     Tensorflow Keras training pipeline which:
@@ -66,6 +66,7 @@ def tensorflow_pipeline(
             If any time part is missing, it will be regarded as zero.
         staging_bucket (str): Staging bucket for pipeline artifacts.
         pipeline_files_gcs_path (str): GCS path where the pipeline files are located
+        test_dataset_uri (str): Optional. GCS URI of statis held-out test dataset.
     """
 
     # Create variables to ensure the same arguments are passed
@@ -82,6 +83,16 @@ def tensorflow_pipeline(
     primary_metric = "rootMeanSquaredError"
     test_dataset_uri = None
     train_script_uri = f"{pipeline_files_gcs_path}/training/assets/train_tf_model.py"
+    hparams = dict(
+        batch_size=100,
+        epochs=5,
+        loss_fn="MeanSquaredError",
+        optimizer="Adam",
+        learning_rate=0.01,
+        hidden_units=[(64, "relu"), (32, "relu")],
+        distribute_strategy="single",
+        early_stopping_epochs=5,
+    )
 
     # generate sql queries which are used in ingestion and preprocessing
     # operations
@@ -109,6 +120,13 @@ def tensorflow_pipeline(
         source_table=ingested_table,
         num_lots=10,
         lots="(8)",
+    )
+    split_test_query = generate_query(
+        queries_folder / "sample.sql",
+        source_dataset=dataset_id,
+        source_table=ingested_table,
+        num_lots=10,
+        lots="(9)",
     )
     data_cleaning_query = generate_query(
         queries_folder / "engineer_features.sql",
@@ -139,6 +157,11 @@ def tensorflow_pipeline(
         bq_query_to_table(query=split_valid_query, table_id=valid_table, **kwargs)
         .after(ingest)
         .set_display_name("Split validation data")
+    )
+    split_test_data = (
+        bq_query_to_table(query=split_test_query, table_id=test_table, **kwargs)
+        .after(ingest)
+        .set_display_name("Split test data")
     )
     data_cleaning = (
         bq_query_to_table(
@@ -172,40 +195,19 @@ def tensorflow_pipeline(
         .after(split_valid_data)
         .set_display_name("Extract validation data to storage")
     ).outputs["dataset"]
-
-    if test_dataset_uri:
-        test_dataset = (
-            importer_node.importer(
-                artifact_uri=test_dataset_uri, artifact_class=dsl.Dataset
-            )
-            .set_display_name("Import test data")
-            .outputs["artifact"]
+    test_dataset = (
+        extract_bq_to_dataset(
+            bq_client_project_id=project_id,
+            source_project_id=project_id,
+            dataset_id=dataset_id,
+            table_name=test_table,
+            dataset_location=dataset_location,
+            destination_gcs_uri=test_dataset_uri,
         )
-    else:
-        split_test_query = generate_query(
-            queries_folder / "sample.sql",
-            source_dataset=dataset_id,
-            source_table=ingested_table,
-            num_lots=10,
-            lots="(9)",
-        )
-        split_test_data = (
-            bq_query_to_table(query=split_test_query, table_id=test_table, **kwargs)
-            .after(ingest)
-            .set_display_name("Split test data")
-        )
-        test_dataset = (
-            extract_bq_to_dataset(
-                bq_client_project_id=project_id,
-                source_project_id=project_id,
-                dataset_id=dataset_id,
-                table_name=test_table,
-                dataset_location=dataset_location,
-                file_pattern="",
-            )
-            .after(split_test_data)
-            .set_display_name("Extract test data to storage")
-        ).outputs["dataset"]
+        .after(split_test_data)
+        .set_display_name("Extract test data to storage")
+        .set_caching_options(False)
+    ).outputs["dataset"]
 
     existing_model = (
         lookup_model(
@@ -216,17 +218,6 @@ def tensorflow_pipeline(
         )
         .set_display_name("Lookup past model")
         .outputs["model_resource_name"]
-    )
-
-    hparams = dict(
-        batch_size=100,
-        epochs=5,
-        loss_fn="MeanSquaredError",
-        optimizer="Adam",
-        learning_rate=0.01,
-        hidden_units=[(64, "relu"), (32, "relu")],
-        distribute_strategy="single",
-        early_stopping_epochs=5,
     )
 
     train_model = custom_train_job(

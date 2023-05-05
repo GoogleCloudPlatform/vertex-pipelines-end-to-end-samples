@@ -191,7 +191,6 @@ def xgboost_pipeline(
         .after(split_valid_data)
         .set_display_name("Extract validation data to storage")
     ).outputs["dataset"]
-
     test_dataset = (
         extract_bq_to_dataset(
             bq_client_project_id=project_id,
