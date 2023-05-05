@@ -27,37 +27,31 @@ setup: ## Set up local environment for Python development on pipelines
 	cd pipelines && \
 	pipenv install --dev
 
+setup-components: ## Setup unit tests for a component group
+	@cd pipelines/pipelines/kfp_components/${GROUP} && \
+	pipenv install --dev
+
+setup-all-components: ## Setup unit tests for all pipeline components
+	@set -e && \
+	for component_group in pipelines/pipelines/kfp_components/*/ ; do \
+		$(MAKE) setup-components GROUP=$$(basename $$component_group) ; \
+	done
+
 test-trigger: ## Runs unit tests for the pipeline trigger code
 	@cd pipelines && \
-	pipenv install --dev && \
 	pipenv run python -m pytest tests/trigger
 
 compile-pipeline: ## Compile the pipeline to training.json or prediction.json. Must specify pipeline=<training|prediction>
 	@cd pipelines && \
 	pipenv run python -m pipelines.${PIPELINE_TEMPLATE}.${pipeline}.pipeline
 
-compile-components: ## Compile all the components in a component group
-	@cd pipeline_components/${GROUP} && \
-	pipenv install && \
-	for component in ${GROUP}/*/component.py ; do \
-		pipenv run python $$component ; \
-	done
-
-compile-all-components: ## Compile all pipeline components
-	@set -e && \
-	for component_group in pipeline_components/*/ ; do \
-		echo "Compiling components under $$component_group" && \
-		$(MAKE) compile-components GROUP=$$(basename $$component_group) ; \
-	done
-
 test-components: ## Run unit tests for a component group
-	@cd pipeline_components/${GROUP} && \
-	pipenv install --dev && \
-	pipenv run pytest
+	@cd pipelines/pipelines/kfp_components/${GROUP} && \
+	pipenv run python -m pytest
 
 test-all-components: ## Run unit tests for all pipeline components
 	@set -e && \
-	for component_group in pipeline_components/*/ ; do \
+	for component_group in pipelines/pipelines/kfp_components/*/ ; do \
 		echo "Running unit tests for components under $$component_group" && \
 		$(MAKE) test-components GROUP=$$(basename $$component_group) ; \
 	done

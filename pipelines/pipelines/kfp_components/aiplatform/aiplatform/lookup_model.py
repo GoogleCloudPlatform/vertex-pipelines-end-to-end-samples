@@ -13,14 +13,12 @@
 # limitations under the License.
 
 from kfp.v2.dsl import component, Output, Model
-from pathlib import Path
 from typing import NamedTuple
 
 
 @component(
     base_image="python:3.7",
     packages_to_install=["google-cloud-aiplatform==1.24.1"],
-    output_component_file=str(Path(__file__).with_suffix(".yaml")),
 )
 def lookup_model(
     model_name: str,

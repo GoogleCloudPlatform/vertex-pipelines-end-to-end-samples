@@ -19,7 +19,7 @@ import pathlib
 from kfp.v2 import compiler, dsl
 
 from pipelines import generate_query
-from pipelines.components import (
+from pipelines.kfp_components import (
     lookup_model,
     bq_query_to_table,
     model_batch_predict,

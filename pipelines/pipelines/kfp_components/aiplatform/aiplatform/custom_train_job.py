@@ -14,13 +14,11 @@ from typing import List, Dict
 # limitations under the License.
 
 from kfp.v2.dsl import Input, component, Metrics, Output, Artifact, Dataset
-from pathlib import Path
 
 
 @component(
     base_image="python:3.7",
     packages_to_install=["google-cloud-aiplatform==1.24.1"],
-    output_component_file=str(Path(__file__).with_suffix(".yaml")),
 )
 def custom_train_job(
     train_script_uri: str,
