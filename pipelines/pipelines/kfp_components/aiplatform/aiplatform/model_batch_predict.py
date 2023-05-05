@@ -13,7 +13,6 @@
 # limitations under the License.
 
 from kfp.v2.dsl import Input, Model, component
-from pathlib import Path
 from typing import List, NamedTuple
 
 
@@ -23,7 +22,6 @@ from typing import List, NamedTuple
         "google-cloud-aiplatform==1.24.1",
         "google-cloud-pipeline-components==1.0.33",
     ],
-    output_component_file=str(Path(__file__).with_suffix(".yaml")),
 )
 def model_batch_predict(
     model: Input[Model],

@@ -30,7 +30,7 @@ def test_lookup_model(tmpdir):
         None
     """
 
-    from aiplatform.lookup_model.component import lookup_model
+    from aiplatform.lookup_model import lookup_model
 
     with mock.patch("google.cloud.aiplatform.Model") as mock_model:
 
@@ -74,7 +74,7 @@ def test_lookup_model_when_no_models(tmpdir):
         None
     """
 
-    from aiplatform.lookup_model.component import lookup_model
+    from aiplatform.lookup_model import lookup_model
 
     with mock.patch("google.cloud.aiplatform.Model") as mock_model:
         mock_model.list.return_value = []
@@ -102,7 +102,7 @@ def test_lookup_model_when_no_models_fail(tmpdir):
         None
     """
 
-    from aiplatform.lookup_model.component import lookup_model
+    from aiplatform.lookup_model import lookup_model
 
     with mock.patch("google.cloud.aiplatform.Model") as mock_model:
         mock_model.list.return_value = []

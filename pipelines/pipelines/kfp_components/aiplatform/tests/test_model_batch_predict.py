@@ -49,7 +49,7 @@ def test_model_batch_predict(
     Asserts model_batch_predict successfully creates requests given different arguments.
     """
 
-    from aiplatform.model_batch_predict.component import model_batch_predict
+    from aiplatform.model_batch_predict import model_batch_predict
     from google.cloud.aiplatform_v1beta1.types.job_state import JobState
 
     mock_resource_name = "mock-batch-job"
