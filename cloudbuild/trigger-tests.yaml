@@ -17,7 +17,7 @@ steps:
     args:
       - '-c'
       - |
-        pip install pipenv && \
+        make setup && \
         make test-trigger
     entrypoint: /bin/sh
 
