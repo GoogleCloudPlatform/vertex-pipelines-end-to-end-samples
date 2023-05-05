@@ -81,7 +81,6 @@ def tensorflow_pipeline(
     valid_table = "valid_data" + table_suffix
     test_table = "test_data" + table_suffix
     primary_metric = "rootMeanSquaredError"
-    test_dataset_uri = None
     train_script_uri = f"{pipeline_files_gcs_path}/training/assets/train_tf_model.py"
     hparams = dict(
         batch_size=100,
