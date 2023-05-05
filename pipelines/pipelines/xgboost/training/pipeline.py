@@ -17,7 +17,6 @@ import os
 import pathlib
 
 from kfp.v2 import compiler, dsl
-from kfp.v2.components import importer_node
 from pipelines import generate_query
 from pipelines.components import (
     extract_bq_to_dataset,
@@ -41,6 +40,7 @@ def xgboost_pipeline(
     timestamp: str = "2022-12-01 00:00:00",
     staging_bucket: str = os.environ.get("VERTEX_PIPELINE_ROOT"),
     pipeline_files_gcs_path: str = os.environ.get("PIPELINE_FILES_GCS_PATH"),
+    test_dataset_uri: str = "",
 ):
     """
     XGB training pipeline which:
@@ -63,7 +63,8 @@ def xgboost_pipeline(
             (YYYY-MM-DDThh:mm:ss.sss±hh:mm or YYYY-MM-DDThh:mm:ss).
             If any time part is missing, it will be regarded as zero.
         staging_bucket (str): Staging bucket for pipeline artifacts.
-        pipeline_files_gcs_path (str): GCS path where the pipeline files are located
+        pipeline_files_gcs_path (str): GCS path where the pipeline files are located.
+        test_dataset_uri (str): Optional. GCS URI of statis held-out test dataset.
     """
 
     # Create variables to ensure the same arguments are passed
@@ -78,8 +79,17 @@ def xgboost_pipeline(
     valid_table = "valid_data" + table_suffix
     test_table = "test_data" + table_suffix
     primary_metric = "rootMeanSquaredError"
-    test_dataset_uri = None
     train_script_uri = f"{pipeline_files_gcs_path}/training/assets/train_xgb_model.py"
+    hparams = dict(
+        n_estimators=200,
+        early_stopping_rounds=10,
+        objective="reg:squarederror",
+        booster="gbtree",
+        learning_rate=0.3,
+        min_split_loss=0,
+        max_depth=6,
+        label=label_column_name,
+    )
 
     # generate sql queries which are used in ingestion and preprocessing
     # operations
@@ -113,6 +123,13 @@ def xgboost_pipeline(
         source_dataset=dataset_id,
         source_table=train_table,
     )
+    split_test_query = generate_query(
+        queries_folder / "sample.sql",
+        source_dataset=dataset_id,
+        source_table=ingested_table,
+        num_lots=10,
+        lots="(9)",
+    )
 
     # data ingestion and preprocessing operations
 
@@ -127,8 +144,6 @@ def xgboost_pipeline(
         query=ingest_query, table_id=ingested_table, **kwargs
     ).set_display_name("Ingest data")
 
-    # exporting data to GCS from BQ
-
     split_train_data = (
         bq_query_to_table(query=split_train_query, table_id=train_table, **kwargs)
         .after(ingest)
@@ -138,6 +153,11 @@ def xgboost_pipeline(
         bq_query_to_table(query=split_valid_query, table_id=valid_table, **kwargs)
         .after(ingest)
         .set_display_name("Split validation data")
+    )
+    split_test_data = (
+        bq_query_to_table(query=split_test_query, table_id=test_table, **kwargs)
+        .after(ingest)
+        .set_display_name("Split test data")
     )
     data_cleaning = (
         bq_query_to_table(
@@ -156,7 +176,6 @@ def xgboost_pipeline(
             dataset_id=dataset_id,
             table_name=preprocessed_table,
             dataset_location=dataset_location,
-            file_pattern="",
         )
         .after(data_cleaning)
         .set_display_name("Extract train data to storage")
@@ -168,45 +187,24 @@ def xgboost_pipeline(
             dataset_id=dataset_id,
             table_name=valid_table,
             dataset_location=dataset_location,
-            file_pattern="",
         )
         .after(split_valid_data)
         .set_display_name("Extract validation data to storage")
     ).outputs["dataset"]
 
-    if test_dataset_uri:
-        test_dataset = (
-            importer_node.importer(
-                artifact_uri=test_dataset_uri, artifact_class=dsl.Dataset
-            )
-            .set_display_name("Import test data")
-            .outputs["artifact"]
+    test_dataset = (
+        extract_bq_to_dataset(
+            bq_client_project_id=project_id,
+            source_project_id=project_id,
+            dataset_id=dataset_id,
+            table_name=test_table,
+            dataset_location=dataset_location,
+            destination_gcs_uri=test_dataset_uri,
         )
-    else:
-        split_test_query = generate_query(
-            queries_folder / "sample.sql",
-            source_dataset=dataset_id,
-            source_table=ingested_table,
-            num_lots=10,
-            lots="(9)",
-        )
-        split_test_data = (
-            bq_query_to_table(query=split_test_query, table_id=test_table, **kwargs)
-            .after(ingest)
-            .set_display_name("Split test data")
-        )
-        test_dataset = (
-            extract_bq_to_dataset(
-                bq_client_project_id=project_id,
-                source_project_id=project_id,
-                dataset_id=dataset_id,
-                table_name=test_table,
-                dataset_location=dataset_location,
-                file_pattern="",
-            )
-            .after(split_test_data)
-            .set_display_name("Extract test data to storage")
-        ).outputs["dataset"]
+        .after(split_test_data)
+        .set_display_name("Extract test data to storage")
+        .set_caching_options(False)
+    ).outputs["dataset"]
 
     existing_model = (
         lookup_model(
@@ -217,17 +215,6 @@ def xgboost_pipeline(
         )
         .set_display_name("Lookup past model")
         .outputs["model_resource_name"]
-    )
-
-    hparams = dict(
-        n_estimators=200,
-        early_stopping_rounds=10,
-        objective="reg:squarederror",
-        booster="gbtree",
-        learning_rate=0.3,
-        min_split_loss=0,
-        max_depth=6,
-        label=label_column_name,
     )
 
     train_model = custom_train_job(

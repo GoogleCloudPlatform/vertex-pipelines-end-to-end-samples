@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import NamedTuple
 from kfp.v2.dsl import Dataset, Output, component
 from pathlib import Path
 
@@ -28,10 +27,11 @@ def extract_bq_to_dataset(
     dataset_id: str,
     table_name: str,
     dataset: Output[Dataset],
+    destination_gcs_uri: str = None,
     dataset_location: str = "EU",
     extract_job_config: dict = None,
-    file_pattern: str = None,
-) -> NamedTuple("Outputs", [("dataset_gcs_prefix", str), ("dataset_gcs_uri", str)]):
+    skip_if_exists: bool = True,
+):
     """
     Extract BQ table in GCS.
     Args:
@@ -46,40 +46,40 @@ def extract_bq_to_dataset(
             required by the bq extract operation. Defaults to None.
             See available parameters here
             https://googleapis.dev/python/bigquery/latest/generated/google.cloud.bigquery.job.ExtractJobConfig.html # noqa
-        file_pattern (str): Exporting data into one or more files. If empty, then table data
-            is exported to a single file. For multiple files and allowed pattern, see:
-            https://cloud.google.com/bigquery/docs/exporting-data#exporting_data_into_one_or_more_files # noqa
+        destination_gcs_uri (str): GCS URI to use for saving query results (optional).
 
     Returns:
         Outputs (NamedTuple (str, list)): Output dataset directory and its  GCS uri.
     """
 
     import logging
-    import os
+    from pathlib import Path
     from google.cloud.exceptions import GoogleCloudError
     from google.cloud import bigquery
 
+    # set uri of output dataset if destination_gcs_uri is provided
+    if destination_gcs_uri:
+        dataset.uri = destination_gcs_uri
+
+    logging.info(f"Checking if destination exists: {dataset.path}")
+    if Path(dataset.path).exists() and skip_if_exists:
+        logging.info("Destination already exists, skipping table extraction!")
+        return
+
     full_table_id = f"{source_project_id}.{dataset_id}.{table_name}"
+    table = bigquery.table.Table(table_ref=full_table_id)
 
     if extract_job_config is None:
         extract_job_config = {}
-
-    table = bigquery.table.Table(table_ref=full_table_id)
     job_config = bigquery.job.ExtractJobConfig(**extract_job_config)
+
+    logging.info(f"Extract table {table} to {dataset.uri}")
     client = bigquery.client.Client(
         project=bq_client_project_id, location=dataset_location
     )
-
-    # if file_pattern is provided, join dataset.uri with file_pattern
-    dataset_uri = dataset.uri
-    if file_pattern:
-        dataset_uri = os.path.join(dataset.uri, file_pattern)
-    dataset_directory = os.path.dirname(dataset_uri)
-
-    logging.info(f"Extract table {table} to {dataset_uri}")
     extract_job = client.extract_table(
         table,
-        dataset_uri,
+        dataset.uri,
         job_config=job_config,
     )
 
@@ -91,5 +91,3 @@ def extract_bq_to_dataset(
         logging.error(extract_job.error_result)
         logging.error(extract_job.errors)
         raise e
-
-    return (dataset_directory, dataset_uri)
