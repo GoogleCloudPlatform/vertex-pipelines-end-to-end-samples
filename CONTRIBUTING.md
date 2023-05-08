@@ -116,7 +116,7 @@ We use End-to-end (E2E) pipeline tests to ensure that our pipelines are running 
 - That common tasks(components), which are stored in a dictionary object (`common_tasks`), occurred in the pipeline
 - That if any task in a conditional tasks dictionary object occurred in the pipeline, the remaining tasks based on that condition should have all occurred as well
 - That these pipeline tasks output the correct artifacts, by checking whether they have been saved to a GCS URI or have been generated successfully in Vertex AI.
-  
+
 Note:
 These dictionary objects (`common_tasks`, `conditional_tasks`) are defined in `test_e2e.py` in each pipeline folder e.g (`./pipelines/tests/xgboost/training/test_e2e.py`). 
 The E2E test only allows one common tasks group but the number of conditional tasks group is not limited. To define the correct task group, 
@@ -124,8 +124,7 @@ please go to pipeline job on Vertex AI for more information.
 For example, in the XGBoost training pipeline, we have two conditional tasks groups that are bounded in the dashed frame. 
 Thus, in `./pipelines/tests/xgboost/training/test_e2e.py`, there are two dictionaries of two conditional tasks group.
 
-
-![Conditional tasks in XGB](docs/images/conditional_tasks_snippet.png)
+- Optionally check for executed tasks and created output artifacts.
 
 #### How to run end-to-end (E2E) pipeline tests
 E2E tests are run on each PR that is merged to the main branch. You can also run them on your local machine: 
@@ -282,6 +281,3 @@ To make sure that assets are available while running the ML pipelines, `make run
 ### Common assets
 
 Within the [assets](./assets/) folder, there are common files stored which need to be uploaded to Google Cloud Storage so that the pipelines running Vertex AI can consume such assets, namely:
-
-- TFDV schema for [detecting input data anomalies](https://www.tensorflow.org/tfx/guide/tfdv#schema_based_example_validation): This schema file can be created using a [sample notebook](pipelines/schema_creation.ipynb) to ensure that new training data complies with our data assumptions and constraints as part of the training pipeline. 
-- TFDV schema for [detecting data skew](https://www.tensorflow.org/tfx/guide/tfdv#training-serving_skew_detection): This schema file is used to detect training-serving skew in the prediction pipeline. It can be created similarly to other schema files. However, it will need to include [skew detection settings](https://www.tensorflow.org/tfx/data_validation/get_started#checking_data_skew_and_drift).

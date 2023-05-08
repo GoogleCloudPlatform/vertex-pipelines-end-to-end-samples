@@ -191,7 +191,6 @@ When triggering ad hoc runs in your dev/sandbox environment, or when running the
 ### Assets
 
 In each pipeline folder, there is an `assets` directory (`pipelines/pipelines/<xgboost|tensorflow>/<training|prediction>/assets/`). This can be used for any additional files that may be needed during execution of the pipelines. 
-For the example pipelines, it may contain data schemata (for Data Validation) or training scripts. This [notebook](pipelines/schema_creation.ipynb) gives an example on schema generation. 
 This directory is rsync'd to Google Cloud Storage when running a pipeline in the sandbox environment or as part of the CD pipeline (see [CI/CD setup](cloudbuild/README.md)).
 
 ## Testing
@@ -254,11 +253,11 @@ Below is a diagram of how the files are published in each environment in the `e2
 └── TAG_NAME or GIT COMMIT HASH <-- Git tag used for the release (release.yaml) OR git commit hash (e2e-test.yaml)
     ├── prediction
     │   ├── assets
-    │   │   └── tfdv_schema_prediction.pbtxt
+    │   │   └── some_useful_file.json
     │   └── prediction.json   <-- compiled prediction pipeline
     └── training
         ├── assets
-        │   └── tfdv_schema_training.pbtxt
+        │   └── training_task.py
         └── training.json   <-- compiled training pipeline
 ```
 
@@ -268,9 +267,3 @@ Below is a diagram of how the files are published in each environment in the `e2
 For more details on setting up CI/CD, see the [separate README](cloudbuild/README.md).
 
 For a full walkthrough of the journey from changing the ML pipeline code to having it scheduled and running in production, please see the guide [here](docs/PRODUCTION.md).
-
-### Using Dataflow
-
-The `generate_statistics` pipeline component generates statistics about a given dataset (using the [`generate_statistics_from_csv`](https://www.tensorflow.org/tfx/data_validation/api_docs/python/tfdv/generate_statistics_from_csv) function in the [TensorFlow Data Validation](https://www.tensorflow.org/tfx/guide/tfdv) package) can optionally be run using [DataFlow](https://cloud.google.com/dataflow/) to scale to huge datasets.
-
-For instructions on how to do this, see the [README](pipeline_components/_tfdv/generate_statistics.md) for this component.

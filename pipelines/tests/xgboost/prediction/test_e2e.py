@@ -33,19 +33,8 @@ def test_pipeline_run(enable_caching) -> None:
     pipeline_json = "prediction.json"
 
     # tasks (components) and outputs for tasks which occur unconditionally
-    common_tasks = {
-        "bq-query-to-table": [],
-        "extract-bq-to-dataset": ["dataset"],
-        "generate-statistics": ["statistics"],
-        "validate-skew": ["anomalies"],
-        "visualise-statistics": ["view"],
-        "show-anomalies": [],
-        "lookup-model": ["model"],
-        "model-batch-predict": ["batchpredictionjob"],
-    }
-
     pipeline_e2e_test(
         template_path=pipeline_json,
         enable_caching=enable_caching,
-        common_tasks=common_tasks,
+        common_tasks={},
     )

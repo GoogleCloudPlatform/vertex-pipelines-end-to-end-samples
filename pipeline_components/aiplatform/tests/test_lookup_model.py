@@ -36,27 +36,26 @@ def test_lookup_model(tmpdir):
 
         # Mock attribute and method
 
+        mock_path = tmpdir
         mock_model.resource_name = "my-model-resource-name"
-        mock_model.labels = {"model_label": "my_label"}
+        mock_model.uri = mock_path
         mock_model.list.return_value = [mock_model]
 
         # Invoke the model look up
-        found_model_resource_name = lookup_model(
+        found_model_resource_name, _ = lookup_model(
             model_name="my-model",
-            model_label="my_label",
             project_location="europe-west4",
             project_id="my-project-id",
             order_models_by="create_time desc",
             fail_on_model_not_found=False,
-            model=Model(uri=str(tmpdir)),
+            model=Model(uri=mock_path),
         )
 
         assert found_model_resource_name == "my-model-resource-name"
 
         # Check the list method was called once with the correct arguments
         mock_model.list.assert_called_once_with(
-            filter='labels.model_label="my_label" \
-            AND display_name="my-model"',
+            filter='display_name="my-model"',
             order_by="create_time desc",
             location="europe-west4",
             project="my-project-id",
@@ -79,9 +78,8 @@ def test_lookup_model_when_no_models(tmpdir):
 
     with mock.patch("google.cloud.aiplatform.Model") as mock_model:
         mock_model.list.return_value = []
-        exported_model_resource_name = lookup_model(
+        exported_model_resource_name, _ = lookup_model(
             model_name="my-model",
-            model_label="my_label",
             project_location="europe-west4",
             project_id="my-project-id",
             order_models_by="create_time desc",
@@ -113,7 +111,6 @@ def test_lookup_model_when_no_models_fail(tmpdir):
         with pytest.raises(RuntimeError):
             lookup_model(
                 model_name="my-model",
-                model_label="my_label",
                 project_location="europe-west4",
                 project_id="my-project-id",
                 order_models_by="create_time desc",

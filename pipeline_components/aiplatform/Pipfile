@@ -5,7 +5,8 @@ name = "pypi"
 
 [packages]
 kfp = "==1.8.9"
-google-cloud-aiplatform = "==1.10.0"
+google-cloud-pipeline-components = ">=1.0.0,<2.0.0"
+google-cloud-aiplatform = ">=1.24.1,<2.0.0"
 
 [dev-packages]
 pytest = ">=6.2.4,<7.0.0"

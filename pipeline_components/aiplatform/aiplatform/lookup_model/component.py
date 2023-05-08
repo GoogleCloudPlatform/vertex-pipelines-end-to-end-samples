@@ -14,22 +14,22 @@
 
 from kfp.v2.dsl import component, Output, Model
 from pathlib import Path
+from typing import NamedTuple
 
 
 @component(
     base_image="python:3.7",
-    packages_to_install=["google-cloud-aiplatform==1.10.0"],
+    packages_to_install=["google-cloud-aiplatform==1.24.1"],
     output_component_file=str(Path(__file__).with_suffix(".yaml")),
 )
 def lookup_model(
     model_name: str,
     project_location: str,
     project_id: str,
-    model_label: str,
     model: Output[Model],
     order_models_by: str = "create_time desc",
     fail_on_model_not_found: bool = False,
-) -> str:
+) -> NamedTuple("Outputs", [("model_resource_name", str), ("training_dataset", dict)]):
     """
     Fetch a model given a model name (display name) and export to GCS.
 
@@ -51,37 +51,51 @@ def lookup_model(
         str: Resource name of the found model. Empty string if model not found.
     """
 
+    import json
     import logging
+    import os
+    from pathlib import Path
     from google.cloud.aiplatform import Model
+
+    TRAINING_DATASET_INFO = "training_dataset.json"
 
     logging.info(f"listing models with display name {model_name}")
     models = Model.list(
-        filter=f'labels.model_label="{model_label}" \
-            AND display_name="{model_name}"',
+        filter=f'display_name="{model_name}"',
         order_by=order_models_by,
         location=project_location,
         project=project_id,
     )
-
     logging.info(f"found {len(models)} models")
 
+    training_dataset = {}
     model_resource_name = ""
     if len(models) == 0:
-        model.uri = None
-        logging.warning(
+        logging.error(
             f"No model found with name {model_name}"
             + f"(project: {project_id} location: {project_location})"
         )
         if fail_on_model_not_found:
-            raise RuntimeError(f"Failed as model not found")
-    else:
+            raise RuntimeError(f"Failed as model was not found")
+    elif len(models) == 1:
         target_model = models[0]
         model_resource_name = target_model.resource_name
         logging.info(f"choosing model by order ({order_models_by})")
         logging.info(f"model display name: {target_model.display_name}")
         logging.info(f"model resource name: {target_model.resource_name}")
         logging.info(f"model uri: {target_model.uri}")
-        model.uri = model_resource_name
-        model.metadata["resourceName"] = model_resource_name
+        model.uri = target_model.uri
+        model.metadata["resourceName"] = target_model.resource_name
 
-    return model_resource_name
+        path = Path(model.path) / TRAINING_DATASET_INFO
+        logging.info(f"Reading training dataset metadata: {path}")
+
+        if os.path.exists(path):
+            with open(path, "r") as fp:
+                training_dataset = json.load(fp)
+        else:
+            logging.warning("Training dataset metadata doesn't exist!")
+    else:
+        raise RuntimeError(f"Multiple models with name {model_name} were found.")
+
+    return model_resource_name, training_dataset
