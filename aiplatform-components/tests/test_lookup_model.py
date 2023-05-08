@@ -17,6 +17,8 @@ from kfp.v2.dsl import Model
 from unittest import mock
 import pytest
 
+from aiplatform_components import lookup_model
+
 
 def test_lookup_model(tmpdir):
     """
@@ -29,8 +31,6 @@ def test_lookup_model(tmpdir):
     Returns:
         None
     """
-
-    from aiplatform.lookup_model import lookup_model
 
     with mock.patch("google.cloud.aiplatform.Model") as mock_model:
 
@@ -74,8 +74,6 @@ def test_lookup_model_when_no_models(tmpdir):
         None
     """
 
-    from aiplatform.lookup_model import lookup_model
-
     with mock.patch("google.cloud.aiplatform.Model") as mock_model:
         mock_model.list.return_value = []
         exported_model_resource_name, _ = lookup_model(
@@ -101,8 +99,6 @@ def test_lookup_model_when_no_models_fail(tmpdir):
     Returns:
         None
     """
-
-    from aiplatform.lookup_model import lookup_model
 
     with mock.patch("google.cloud.aiplatform.Model") as mock_model:
         mock_model.list.return_value = []

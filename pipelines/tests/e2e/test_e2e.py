@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import logging
-from trigger.main import trigger_pipeline_from_payload
+from pipelines.trigger.main import trigger_pipeline_from_payload
 import pytest
 import os
 from google.cloud import storage

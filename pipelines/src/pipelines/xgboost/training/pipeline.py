@@ -18,22 +18,21 @@ import pathlib
 
 from kfp.v2 import compiler, dsl
 from pipelines import generate_query
-from pipelines.kfp_components import (
-    extract_bq_to_dataset,
-    bq_query_to_table,
-    update_best_model,
-    import_model_evaluation,
-    custom_train_job,
+from bigquery_components import bq_query_to_table, extract_bq_to_dataset
+from aiplatform_components import (
     lookup_model,
+    custom_train_job,
+    import_model_evaluation,
+    update_best_model,
 )
 
 
-@dsl.pipeline(name="tensorflow-train-pipeline")
-def tensorflow_pipeline(
+@dsl.pipeline(name="xgboost-train-pipeline")
+def xgboost_pipeline(
     project_id: str = os.environ.get("VERTEX_PROJECT_ID"),
     project_location: str = os.environ.get("VERTEX_LOCATION"),
     ingestion_project_id: str = os.environ.get("VERTEX_PROJECT_ID"),
-    model_name: str = "simple_tensorflow",
+    model_name: str = "simple_xgboost",
     dataset_id: str = "preprocessing",
     dataset_location: str = os.environ.get("VERTEX_LOCATION"),
     ingestion_dataset_id: str = "chicago_taxi_trips",
@@ -43,7 +42,7 @@ def tensorflow_pipeline(
     test_dataset_uri: str = "",
 ):
     """
-    Tensorflow Keras training pipeline which:
+    XGB training pipeline which:
      1. Splits and extracts a dataset from BQ to GCS
      2. Trains a model via Vertex AI CustomTrainingJob
      3. Evaluates the model against the current champion model
@@ -52,12 +51,10 @@ def tensorflow_pipeline(
     Args:
         project_id (str): project id of the Google Cloud project
         project_location (str): location of the Google Cloud project
-        pipeline_files_gcs_path (str): GCS path where the pipeline files are located
         ingestion_project_id (str): project id containing the source bigquery data
             for ingestion. This can be the same as `project_id` if the source data is
             in the same project where the ML pipeline is executed.
         model_name (str): name of model
-        model_label (str): label of model
         dataset_id (str): id of BQ dataset used to store all staging data & predictions
         dataset_location (str): location of dataset
         ingestion_dataset_id (str): dataset id of ingestion data
@@ -65,7 +62,7 @@ def tensorflow_pipeline(
             (YYYY-MM-DDThh:mm:ss.sss±hh:mm or YYYY-MM-DDThh:mm:ss).
             If any time part is missing, it will be regarded as zero.
         staging_bucket (str): Staging bucket for pipeline artifacts.
-        pipeline_files_gcs_path (str): GCS path where the pipeline files are located
+        pipeline_files_gcs_path (str): GCS path where the pipeline files are located.
         test_dataset_uri (str): Optional. GCS URI of statis held-out test dataset.
     """
 
@@ -74,23 +71,23 @@ def tensorflow_pipeline(
     label_column_name = "total_fare"
     time_column = "trip_start_timestamp"
     ingestion_table = "taxi_trips"
-    table_suffix = "_tf_training"  # suffix to table names
+    table_suffix = "_xgb_training"  # suffix to table names
     ingested_table = "ingested_data" + table_suffix
     preprocessed_table = "preprocessed_data" + table_suffix
     train_table = "train_data" + table_suffix
     valid_table = "valid_data" + table_suffix
     test_table = "test_data" + table_suffix
     primary_metric = "rootMeanSquaredError"
-    train_script_uri = f"{pipeline_files_gcs_path}/training/assets/train_tf_model.py"
+    train_script_uri = f"{pipeline_files_gcs_path}/training/assets/train_xgb_model.py"
     hparams = dict(
-        batch_size=100,
-        epochs=5,
-        loss_fn="MeanSquaredError",
-        optimizer="Adam",
-        learning_rate=0.01,
-        hidden_units=[(64, "relu"), (32, "relu")],
-        distribute_strategy="single",
-        early_stopping_epochs=5,
+        n_estimators=200,
+        early_stopping_rounds=10,
+        objective="reg:squarederror",
+        booster="gbtree",
+        learning_rate=0.3,
+        min_split_loss=0,
+        max_depth=6,
+        label=label_column_name,
     )
 
     # generate sql queries which are used in ingestion and preprocessing
@@ -120,17 +117,17 @@ def tensorflow_pipeline(
         num_lots=10,
         lots="(8)",
     )
+    data_cleaning_query = generate_query(
+        queries_folder / "engineer_features.sql",
+        source_dataset=dataset_id,
+        source_table=train_table,
+    )
     split_test_query = generate_query(
         queries_folder / "sample.sql",
         source_dataset=dataset_id,
         source_table=ingested_table,
         num_lots=10,
         lots="(9)",
-    )
-    data_cleaning_query = generate_query(
-        queries_folder / "engineer_features.sql",
-        source_dataset=dataset_id,
-        source_table=train_table,
     )
 
     # data ingestion and preprocessing operations
@@ -146,7 +143,6 @@ def tensorflow_pipeline(
         query=ingest_query, table_id=ingested_table, **kwargs
     ).set_display_name("Ingest data")
 
-    # exporting data to GCS from BQ
     split_train_data = (
         bq_query_to_table(query=split_train_query, table_id=train_table, **kwargs)
         .after(ingest)
@@ -227,9 +223,10 @@ def tensorflow_pipeline(
         project_id=project_id,
         project_location=project_location,
         model_display_name=model_name,
-        train_container_uri="europe-docker.pkg.dev/vertex-ai/training/tf-cpu.2-6:latest",  # noqa: E501
-        serving_container_uri="europe-docker.pkg.dev/vertex-ai/prediction/tf2-cpu.2-6:latest",  # noqa: E501
+        train_container_uri="europe-docker.pkg.dev/vertex-ai/training/scikit-learn-cpu.0-23:latest",  # noqa: E501
+        serving_container_uri="europe-docker.pkg.dev/vertex-ai/prediction/sklearn-cpu.0-24:latest",  # noqa: E501
         hparams=hparams,
+        requirements=["scikit-learn==0.24.0"],
         staging_bucket=staging_bucket,
         parent_model=existing_model,
     ).set_display_name("Train model")
@@ -256,7 +253,7 @@ def tensorflow_pipeline(
 
 if __name__ == "__main__":
     compiler.Compiler().compile(
-        pipeline_func=tensorflow_pipeline,
+        pipeline_func=xgboost_pipeline,
         package_path="training.json",
         type_check=False,
     )
