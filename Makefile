@@ -35,9 +35,16 @@ compile-pipeline: ## Compile the pipeline to training.json or prediction.json. M
 	@cd pipelines/src && \
 	pipenv run python -m pipelines.${PIPELINE_TEMPLATE}.${pipeline}.pipeline
 
+setup-components: ## Run unit tests for a component group
+	@cd "${GROUP}-components" && \
+	pipenv install --dev
+
+setup-all-components: ## Run unit tests for all pipeline components
+	$(MAKE) setup-components GROUP=aiplatform && \
+	$(MAKE) setup-components GROUP=bigquery
+
 test-components: ## Run unit tests for a component group
 	@cd "${GROUP}-components" && \
-	pipenv install --dev && \
 	pipenv run pytest
 
 test-all-components: ## Run unit tests for all pipeline components

@@ -39,8 +39,8 @@ steps:
         make compile-pipeline pipeline=training && \
         make compile-pipeline pipeline=prediction && \
         cd pipelines && \
-        pipenv run python -m pytest --log-cli-level=INFO tests/${_PIPELINE_TEMPLATE}/training --enable_caching=${_TEST_ENABLE_PIPELINE_CACHING} && \
-        pipenv run python -m pytest --log-cli-level=INFO tests/${_PIPELINE_TEMPLATE}/prediction --enable_caching=${_TEST_ENABLE_PIPELINE_CACHING}
+        pipenv run pytest --log-cli-level=INFO tests/${_PIPELINE_TEMPLATE}/training --enable_caching=${_TEST_ENABLE_PIPELINE_CACHING} && \
+        pipenv run pytest --log-cli-level=INFO tests/${_PIPELINE_TEMPLATE}/prediction --enable_caching=${_TEST_ENABLE_PIPELINE_CACHING}
     env:
       - VERTEX_LOCATION=${_TEST_VERTEX_LOCATION}
       - VERTEX_PROJECT_ID=${_TEST_VERTEX_PROJECT_ID}
