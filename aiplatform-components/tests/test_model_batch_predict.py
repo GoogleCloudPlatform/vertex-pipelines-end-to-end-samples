@@ -17,8 +17,6 @@ from unittest.mock import Mock, patch
 from kfp.v2.dsl import Model
 from google.cloud.aiplatform_v1beta1.types.job_state import JobState
 
-from aiplatform_components import model_batch_predict
-
 
 SKEW_THRESHOLD = {"defaultSkewThreshold": {"value": 0.001}}
 TRAIN_DATASET = {
@@ -52,6 +50,7 @@ def test_model_batch_predict(
     """
     Asserts model_batch_predict successfully creates requests given different arguments.
     """
+    from aiplatform_components import model_batch_predict
 
     mock_resource_name = "mock-batch-job"
 
