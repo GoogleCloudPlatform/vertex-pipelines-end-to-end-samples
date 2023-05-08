@@ -13,10 +13,14 @@
 # limitations under the License.
 
 import logging
-from pipelines.trigger.main import trigger_pipeline_from_payload
+from typing import Callable
+
 import pytest
 import os
 from google.cloud import storage
+from kfp.v2 import compiler
+
+from pipelines.trigger.main import trigger_pipeline_from_payload
 
 project_id = os.environ["VERTEX_PROJECT_ID"]
 project_location = os.environ["VERTEX_LOCATION"]
@@ -147,9 +151,10 @@ def test_batch_prediction_job_uri(
 
 
 def pipeline_e2e_test(
-    template_path: str,
+    pipeline_func: Callable,
     common_tasks: dict,
     enable_caching: bool = None,
+    pipeline_json: str = None,
     **kwargs: dict,
 ):
     """
@@ -158,14 +163,24 @@ def pipeline_e2e_test(
     2. Check if these tasks output the correct artifacts and they are all accessible
 
     Args:
-        template_path (str): path (relative to repository) of the compiled KFP
-            pipeline to test
-        common_tasks (dict): tasks in pipline that are excuted everytime
-        **kwargs (dict): conditioanal tasks groups in dictionary
+        pipeline_func (Callable): KFP pipeline function to test
+        pipeline_json (str): output path of compiled pipeline
+        enable_caching (bool): enable pipeline caching
+        common_tasks (dict): tasks in pipline that are executed everytime
+        **kwargs (dict): conditional tasks groups in dictionary
     """
 
+    if pipeline_json is None:
+        pipeline_json = f"{pipeline_func.__name__}.json"
+
+    compiler.Compiler().compile(
+        pipeline_func=pipeline_func,
+        package_path=pipeline_json,
+        type_check=False,
+    )
+
     payload = {
-        "attributes": {"template_path": template_path, "enable_caching": enable_caching}
+        "attributes": {"template_path": pipeline_func, "enable_caching": enable_caching}
     }
 
     try:
