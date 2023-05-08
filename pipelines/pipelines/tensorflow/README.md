@@ -16,7 +16,7 @@ limitations under the License.
 # TensorFlow Pipelines
 
 ## Training pipeline
-The TensorFlow training pipeline can be found in [`training/pipeline.py`](training/pipeline.py). The training component [`train_tensorflow_model`](../kfp_components/tensorflow/train.py) is the main training component which contains the implementation of a TensorFlow Keras model.
+The TensorFlow training pipeline can be found in [`training/pipeline.py`](training/pipeline.py). The training component [`train_tensorflow_model`](../../../pipeline_components/_tensorflow/_tensorflow/train/component.py) is the main training component which contains the implementation of a TensorFlow Keras model.
 This component can then be wrapped in a custom kfp ContainerOp from [`google-cloud-pipeline-components`](https://github.com/kubeflow/pipelines/blob/master/components/google-cloud/google_cloud_pipeline_components/experimental/custom_job/utils.py) which submits a Vertex Training job with added flexibility for `machine_type`, `replica_count`, `accelerator_type` among other machine configurations. 
 
 ### Data
@@ -61,7 +61,7 @@ You can specify different hyperparameters through the `model_params` argument of
 - Evaluation metrics
 - Whether you want early stopping
 
-For a comprehensive list of options for the above hyperparameters, see the docstring in [`train.py`](../kfp_components/tensorflow/train.py). 
+For a comprehensive list of options for the above hyperparameters, see the docstring in [`train.py`](../../../pipeline_components/_tensorflow/_tensorflow/train/component.py). 
 
 ### Model artifacts
 A number of different model artifacts/objects are created by the training of the TensorFlow model. With these files, you can load the model into a new script (without any of the original training code) and run it or resume training from exactly where you left off. For more information, see [this](https://www.tensorflow.org/api_docs/python/tf/keras/models/save_model). 

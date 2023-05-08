@@ -27,8 +27,8 @@ Further useful documentation:
 - [Vertex AI](https://cloud.google.com/vertex-ai)
 
 The sections below provide a general description of the ML pipelines (training and prediction) for both the TensorFlow template and XGBoost template. These two templates are similar in most ways and a complete overview of their key differences are given in their own README files:
-- [TensorFlow pipelines README](tensorflow/README.md)
-- [XGBoost pipelines README](xgboost/README.md)
+- [TensorFlow pipelines README](pipelines/tensorflow/README.md)
+- [XGBoost pipelines README](pipelines/xgboost/README.md)
 
 ## Training Pipeline
 ### Prerequisites for training pipeline
