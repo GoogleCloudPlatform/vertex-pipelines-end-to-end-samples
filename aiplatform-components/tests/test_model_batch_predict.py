@@ -12,9 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import json
+import pytest
 from unittest.mock import Mock, patch
 from kfp.v2.dsl import Model
-import pytest
+from google.cloud.aiplatform_v1beta1.types.job_state import JobState
+
+from aiplatform_components import model_batch_predict
+
 
 SKEW_THRESHOLD = {"defaultSkewThreshold": {"value": 0.001}}
 TRAIN_DATASET = {
@@ -48,9 +52,6 @@ def test_model_batch_predict(
     """
     Asserts model_batch_predict successfully creates requests given different arguments.
     """
-
-    from aiplatform.model_batch_predict import model_batch_predict
-    from google.cloud.aiplatform_v1beta1.types.job_state import JobState
 
     mock_resource_name = "mock-batch-job"
 

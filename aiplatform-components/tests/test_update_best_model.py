@@ -14,14 +14,13 @@
 from unittest.mock import patch
 from kfp.v2.dsl import Model
 
+from aiplatform_components import update_best_model
+
 
 def test_model_batch_predict(tmpdir):
     """
     Asserts model_batch_predict successfully creates requests given different arguments.
     """
-
-    from aiplatform.update_best_model import update_best_model
-
     mock_model = Model(uri=tmpdir, metadata={"resourceName": ""})
     mock_message = {"metrics": {"rmse": 0.01}}
 
