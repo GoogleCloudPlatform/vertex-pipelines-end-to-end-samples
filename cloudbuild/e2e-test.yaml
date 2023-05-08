@@ -24,8 +24,8 @@ steps:
       - |
         mkdir -p ${COMMIT_SHA}/training/assets && \
         mkdir -p ${COMMIT_SHA}/prediction/assets && \
-        cp -r pipelines/pipelines/${_PIPELINE_TEMPLATE}/training/assets ${COMMIT_SHA}/training/ && \
-        cp -r pipelines/pipelines/${_PIPELINE_TEMPLATE}/prediction/assets ${COMMIT_SHA}/prediction/ && \
+        cp -r pipelines/src/pipelines/${_PIPELINE_TEMPLATE}/training/assets ${COMMIT_SHA}/training/ && \
+        cp -r pipelines/src/pipelines/${_PIPELINE_TEMPLATE}/prediction/assets ${COMMIT_SHA}/prediction/ && \
         gsutil cp -r ${COMMIT_SHA} ${_PIPELINE_PUBLISH_GCS_PATH}/${COMMIT_SHA}
 
   # Install Python deps
