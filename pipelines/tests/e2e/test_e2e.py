@@ -180,7 +180,7 @@ def pipeline_e2e_test(
     )
 
     payload = {
-        "attributes": {"template_path": pipeline_func, "enable_caching": enable_caching}
+        "attributes": {"template_path": pipeline_json, "enable_caching": enable_caching}
     }
 
     try:
