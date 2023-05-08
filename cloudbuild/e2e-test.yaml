@@ -36,9 +36,8 @@ steps:
       - -c
       - |
         make setup && \
-        cd pipelines && \
-        pipenv run pytest --log-cli-level=INFO tests/${_PIPELINE_TEMPLATE}/training --enable_caching=${_TEST_ENABLE_PIPELINE_CACHING} && \
-        pipenv run pytest --log-cli-level=INFO tests/${_PIPELINE_TEMPLATE}/prediction --enable_caching=${_TEST_ENABLE_PIPELINE_CACHING}
+        make e2e-tests pipeline=training enable_pipeline_caching=False && \
+        make e2e-tests pipeline=prediction enable_pipeline_caching=False
     env:
       - VERTEX_LOCATION=${_TEST_VERTEX_LOCATION}
       - VERTEX_PROJECT_ID=${_TEST_VERTEX_PROJECT_ID}
