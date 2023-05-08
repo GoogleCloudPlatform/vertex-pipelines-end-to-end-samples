@@ -35,6 +35,15 @@ compile-pipeline: ## Compile the pipeline to training.json or prediction.json. M
 	@cd pipelines/src && \
 	pipenv run python -m pipelines.${PIPELINE_TEMPLATE}.${pipeline}.pipeline
 
+test-components: ## Run unit tests for a component group
+	@cd "${GROUP}-components" && \
+	pipenv install --dev && \
+	pipenv run pytest
+
+test-all-components: ## Run unit tests for all pipeline components
+	$(MAKE) test-components GROUP=aiplatform && \
+	$(MAKE) test-components GROUP=bigquery
+
 sync-assets: ## Sync assets folder to GCS. Must specify pipeline=<training|prediction>
 	if [ -d "./pipelines/pipelines/${PIPELINE_TEMPLATE}/$(pipeline)/assets/" ] ; then \
 		gsutil -m rsync -r -d ./pipelines/pipelines/${PIPELINE_TEMPLATE}/$(pipeline)/assets ${PIPELINE_FILES_GCS_PATH}/$(pipeline)/assets ; \

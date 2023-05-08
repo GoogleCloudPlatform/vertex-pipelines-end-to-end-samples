@@ -7,8 +7,8 @@ name = "pypi"
 kfp = "==1.8.21"
 
 [dev-packages]
-pytest = ">=6.2.4,<7.0.0"
 google-cloud-bigquery = "==2.30.0"
+pytest = "==7.3.1"
 
 [requires]
 python_version = "3.7"

@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from typing import Optional, Callable
 
 import pytest
 import kfp.v2.dsl
@@ -30,21 +31,23 @@ def patch_kfp_component_decorator(monkeypatch):
         None
     """
 
-    def primitive_decorator(*args, **kwargs):
+    def primitive_decorator(func: Optional[Callable] = None, *args, **kwargs):
         """
         A decorator which replaces @component, so that @component will not have any
         effect on any functions.
 
         Args:
-            Accepts any arguments
+            func (Callable): Optional. The python function to create a component from.
 
         Returns:
             func: A decorator which simply returns the input function unchanged.
         """
-        return lambda func: func
+        return func
 
     # patch the KFP decorator
-    monkeypatch.setattr(kfp.v2.dsl, "component", primitive_decorator)
+    monkeypatch.setattr(
+        kfp.v2.components.component_decorator, "component", primitive_decorator
+    )
 
 
 @pytest.fixture(autouse=True)
