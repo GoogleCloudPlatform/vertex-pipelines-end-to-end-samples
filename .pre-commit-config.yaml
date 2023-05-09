@@ -28,6 +28,7 @@ repos:
       - id: check-added-large-files
       - id: check-merge-conflict
       - id: end-of-file-fixer
+      - id: check-yaml
       - id: no-commit-to-branch
         args: [--branch, main]
 
@@ -35,6 +36,12 @@ repos:
     rev: 1.11.0
     hooks:
       - id: git-dirty
+
+  - repo: https://github.com/adrienverge/yamllint.git
+    rev: v1.26.3
+    hooks:
+      - id: yamllint
+        args: [--format, parsable, --strict]
 
   - repo: https://github.com/psf/black
     rev: 22.3.0
