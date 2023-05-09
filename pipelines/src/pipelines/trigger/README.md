@@ -31,7 +31,7 @@ This command compiles the pipeline, copies assets to GCS, and then triggers the 
 Before you run the pipeline, if you have made any changes to pipeline components, make sure to re-compile the pipeline components to their YAML format with:
 
 ```bash
-make compile-components GROUP=<component group e.g. vertex_components>
+make compile-components GROUP=<component group e.g. vertex-components>
 ```
 
 Or to re-compile all pipeline components to YAML:
