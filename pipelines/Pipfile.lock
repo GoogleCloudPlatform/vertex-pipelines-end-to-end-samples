@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "6a20de9e83d85cc5d96c198fc0205786b7e7d67e670b23c3d6540c0f69f40b73"
+            "sha256": "8dfb3775390f8989416596c9ce7b656457c71472275bce52f3567c27a807452f"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -26,7 +26,7 @@
         },
         "aiplatform-components": {
             "editable": true,
-            "path": "./../aiplatform-components"
+            "path": "./../components/aiplatform-components"
         },
         "attrs": {
             "hashes": [
@@ -38,7 +38,7 @@
         },
         "bigquery-components": {
             "editable": true,
-            "path": "./../bigquery-components"
+            "path": "./../components/bigquery-components"
         },
         "cachetools": {
             "hashes": [

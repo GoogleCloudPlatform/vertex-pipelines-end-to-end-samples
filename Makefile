@@ -36,20 +36,26 @@ compile-pipeline: ## Compile the pipeline to training.json or prediction.json. M
 	pipenv run python -m pipelines.${PIPELINE_TEMPLATE}.${pipeline}.pipeline
 
 setup-components: ## Run unit tests for a component group
-	@cd "${GROUP}-components" && \
+	@cd "components/${GROUP}" && \
 	pipenv install --dev
 
 setup-all-components: ## Run unit tests for all pipeline components
-	$(MAKE) setup-components GROUP=aiplatform && \
-	$(MAKE) setup-components GROUP=bigquery
+	@set -e && \
+	for component_group in components/*/ ; do \
+		echo "Setup components under $$component_group" && \
+		$(MAKE) setup-components GROUP=$$(basename $$component_group) ; \
+	done
 
 test-components: ## Run unit tests for a component group
-	@cd "${GROUP}-components" && \
+	@cd "components/${GROUP}" && \
 	pipenv run pytest
 
 test-all-components: ## Run unit tests for all pipeline components
-	$(MAKE) test-components GROUP=aiplatform && \
-	$(MAKE) test-components GROUP=bigquery
+	@set -e && \
+	for component_group in components/*/ ; do \
+		echo "Test components under $$component_group" && \
+		$(MAKE) test-components GROUP=$$(basename $$component_group) ; \
+	done
 
 sync-assets: ## Sync assets folder to GCS. Must specify pipeline=<training|prediction>
 	if [ -d "./pipelines/pipelines/${PIPELINE_TEMPLATE}/$(pipeline)/assets/" ] ; then \
