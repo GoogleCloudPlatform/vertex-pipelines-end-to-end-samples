@@ -52,7 +52,6 @@ When we test a function that makes an external API call (for example to a servic
 
 We do mocking/patching in two different ways:
 1. [`monkeypatch`](https://docs.pytest.org/en/6.2.x/monkeypatch.html): this built-in `pytest` fixture allows you to modify an attribute (such as an instance method in a class). We use `monkeypatch` only in the relevant `conftest.py` file for the fixtures that are applied before every unit test. We have used `monkeypatch` in the following fixtures:
-    - `patch_kfp_component_decorator`: used to patch the decorator `@component` in `kfp.v2.dsl`. This allows us to test each KFP component as an untouched Python function. Importantly, when testing KFP components, you must import the component inside the unit test function, otherwise the monkeypatch of the `@component` decorator will fail.
     - `mock_kfp_artifact`: used to mock the `Artifact` object (and thus any derived classes such as `Dataset`, `Model`, etc.) in `kfp.v2.dsl` to return the URI as
     the path. This lets us create mock Artifact objects locally for our unit tests.
 2. `unittest.mock.patch`: this object in the `unittest` library enables us to mock classes (and its associated attributes and methods) within a context manager. We use `mock.patch` inside the individual test scripts to mock object(s) that are used in the function being tested. This allows us to replace the target class/object with a Mock object, ultimately allowing us to make assertions on how this Mock object has been used. For example, the `assert_called_once_with` method allows us to check that a specific method of a Mock object was called once with specific arguments. Alternatively, we can set the attributes of our Mock objects to specific values, and assert that the component logic being tested handles these cases correctly (e.g. by raising a `ValueError`). An example of using the `mock.patch` context manager is in [`test_lookup_model.py`](tests/kfp_components/aiplatform/test_lookup_model.py) for [`lookup_model.py`](./pipeline_components/aiplatform/aiplatform/lookup_model/component.py), where there is an API call to list models (in Vertex AI) based on a filter, namely `google.cloud.aiplatform.Model.list`. When we test this KFP component, we are not interested in actually making this API call, so instead we mock it. We do this by mocking the `google.cloud.aiplatform.Model` class:
@@ -107,7 +106,7 @@ make test-all-components
 
 Or to just run the unit tests for a given component group (e.g. `aiplatform`):
 ```
-make test-components GROUP=aiplatform
+make test-components GROUP=aiplatform-components
 ```
 
 ### End-to-end (E2E) pipeline tests
