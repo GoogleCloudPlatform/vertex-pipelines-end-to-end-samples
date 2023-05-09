@@ -106,7 +106,7 @@ make test-all-components
 
 Or to just run the unit tests for a given component group (e.g. `aiplatform`):
 ```
-make test-components GROUP=aiplatform-components
+make test-components GROUP=vertex-components
 ```
 
 ### End-to-end (E2E) pipeline tests

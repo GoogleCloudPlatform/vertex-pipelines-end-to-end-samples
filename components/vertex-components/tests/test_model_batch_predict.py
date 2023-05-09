@@ -18,9 +18,9 @@ from kfp.v2.dsl import Model
 from google.cloud.aiplatform_v1beta1.types.job_state import JobState
 
 
-import aiplatform_components
+import vertex_components
 
-model_batch_predict = aiplatform_components.model_batch_predict.python_func
+model_batch_predict = vertex_components.model_batch_predict.python_func
 
 
 SKEW_THRESHOLD = {"defaultSkewThreshold": {"value": 0.001}}

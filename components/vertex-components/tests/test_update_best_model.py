@@ -16,9 +16,9 @@ from unittest.mock import patch
 from kfp.v2.dsl import Model
 
 
-import aiplatform_components
+import vertex_components
 
-update_best_model = aiplatform_components.update_best_model.python_func
+update_best_model = vertex_components.update_best_model.python_func
 
 
 def test_model_batch_predict(tmpdir):

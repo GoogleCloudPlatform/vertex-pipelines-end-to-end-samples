@@ -1,9 +1,9 @@
 [project]
-name = "aiplatform-components"
+name = "vertex-components"
 authors = [
     {name = "Example User", email = "user@example.com"},
 ]
-description = "AI Platform components"
+description = "Vertex AI components"
 readme = "README.md"
 classifiers = [
     "Development Status :: 3 - Alpha",

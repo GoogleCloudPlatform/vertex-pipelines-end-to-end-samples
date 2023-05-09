@@ -19,7 +19,7 @@ import pathlib
 from kfp.v2 import compiler, dsl
 from pipelines import generate_query
 from bigquery_components import bq_query_to_table, extract_bq_to_dataset
-from aiplatform_components import (
+from vertex_components import (
     lookup_model,
     custom_train_job,
     import_model_evaluation,

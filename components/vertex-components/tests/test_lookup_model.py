@@ -17,9 +17,9 @@ from kfp.v2.dsl import Model
 from unittest import mock
 import pytest
 
-import aiplatform_components
+import vertex_components
 
-lookup_model = aiplatform_components.lookup_model.python_func
+lookup_model = vertex_components.lookup_model.python_func
 
 
 def test_lookup_model(tmpdir):

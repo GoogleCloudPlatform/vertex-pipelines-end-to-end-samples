@@ -194,8 +194,8 @@ make test-all-components
 
 Alternatively, only setup and install one of the components groups by running:
 ```
-make setup-components GROUP=aiplatform-components
-make test-components GROUP=aiplatform-components
+make setup-components GROUP=vertex-components
+make test-components GROUP=vertex-components
 ```
 
 To run end-to-end tests of a single pipeline, you can use:

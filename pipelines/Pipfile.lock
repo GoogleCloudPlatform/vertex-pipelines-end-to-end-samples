@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "273dd3705a9223b8c0d89962060829e5a83730e79609fbfcaf1dfbacea9b7517"
+            "sha256": "c889b828537547fe3e76c0ca6f812f331bffdf13bfd8c72104145db94eb555e0"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -23,10 +23,6 @@
             ],
             "markers": "python_version >= '3.6'",
             "version": "==1.4.0"
-        },
-        "aiplatform-components": {
-            "editable": true,
-            "path": "./../components/aiplatform-components"
         },
         "attrs": {
             "hashes": [
@@ -903,6 +899,10 @@
             ],
             "markers": "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3, 3.4, 3.5'",
             "version": "==1.26.15"
+        },
+        "vertex-components": {
+            "editable": true,
+            "path": "./../components/vertex-components"
         },
         "websocket-client": {
             "hashes": [

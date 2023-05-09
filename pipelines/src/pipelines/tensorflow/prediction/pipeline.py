@@ -20,7 +20,7 @@ from kfp.v2 import compiler, dsl
 
 from pipelines import generate_query
 from bigquery_components import bq_query_to_table
-from aiplatform_components import lookup_model, model_batch_predict
+from vertex_components import lookup_model, model_batch_predict
 
 
 @dsl.pipeline(name="tensorflow-prediction-pipeline")
