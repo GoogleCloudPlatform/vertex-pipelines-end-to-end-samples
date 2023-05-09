@@ -36,8 +36,8 @@ steps:
       - -c
       - |
         make setup && \
-        make e2e-tests pipeline=training enable_pipeline_caching=False && \
-        make e2e-tests pipeline=prediction enable_pipeline_caching=False
+        make e2e-tests pipeline=training enable_pipeline_caching=False sync_assets=false && \
+        make e2e-tests pipeline=prediction enable_pipeline_caching=False sync_assets=false
     env:
       - VERTEX_LOCATION=${_TEST_VERTEX_LOCATION}
       - VERTEX_PROJECT_ID=${_TEST_VERTEX_PROJECT_ID}

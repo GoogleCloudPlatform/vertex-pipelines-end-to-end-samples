@@ -201,7 +201,7 @@ make test-components GROUP=aiplatform-components
 To run end-to-end tests of a single pipeline, you can use:
 
 ```
-make e2e-tests pipeline=<training|prediction> [ enable_caching=<true|false> ]
+make e2e-tests pipeline=<training|prediction> [ enable_caching=<true|false> ] [ sync_assets=<true|false> ]
 ```
 
 There are also unit tests for the pipeline triggering code. 

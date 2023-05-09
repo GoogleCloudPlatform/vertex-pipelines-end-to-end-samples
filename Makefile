@@ -58,8 +58,11 @@ test-all-components: ## Run unit tests for all pipeline components
 	done
 
 sync-assets: ## Sync assets folder to GCS. Must specify pipeline=<training|prediction>
-	if [ -d "./pipelines/pipelines/${PIPELINE_TEMPLATE}/$(pipeline)/assets/" ] ; then \
-		gsutil -m rsync -r -d ./pipelines/pipelines/${PIPELINE_TEMPLATE}/$(pipeline)/assets ${PIPELINE_FILES_GCS_PATH}/$(pipeline)/assets ; \
+	@if [ -d "./pipelines/src/pipelines/${PIPELINE_TEMPLATE}/$(pipeline)/assets/" ] ; then \
+		echo "Syncing assets to GCS" && \
+		gsutil -m rsync -r -d ./pipelines/src/pipelines/${PIPELINE_TEMPLATE}/$(pipeline)/assets ${PIPELINE_FILES_GCS_PATH}/$(pipeline)/assets ; \
+	else \
+		echo "No assets folder found for pipeline $(pipeline)" ; \
 	fi ;
 
 run: ## Compile pipeline, copy assets to GCS, and run pipeline in sandbox environment. Must specify pipeline=<training|prediction>. Optionally specify enable_pipeline_caching=<true|false> (defaults to default Vertex caching behaviour)
@@ -68,7 +71,13 @@ run: ## Compile pipeline, copy assets to GCS, and run pipeline in sandbox enviro
 	cd pipelines/src && \
 	pipenv run python -m pipelines.trigger --template_path=./$(pipeline).json --enable_caching=$(enable_pipeline_caching)
 
-e2e-tests: ## Compile pipeline, copy assets to GCS, and perform end-to-end (E2E) pipeline tests. Must specify pipeline=<training|prediction>. Optionally specify enable_pipeline_caching=<true|false> (defaults to default Vertex caching behaviour)
+sync_assets ?= true
+e2e-tests: ## (Optionally) copy assets to GCS, and perform end-to-end (E2E) pipeline tests. Must specify pipeline=<training|prediction>. Optionally specify enable_pipeline_caching=<true|false> (defaults to default Vertex caching behaviour). Optionally specify sync_assets=<true|false> (defaults to true)
+	@if [ $$sync_assets = true ] ; then \
+        $(MAKE) sync-assets; \
+	else \
+		echo "Skipping syncing assets to GCS"; \
+    fi && \
 	cd pipelines && \
 	pipenv run pytest --log-cli-level=INFO tests/${PIPELINE_TEMPLATE}/$(pipeline) --enable_caching=$(enable_pipeline_caching)
 

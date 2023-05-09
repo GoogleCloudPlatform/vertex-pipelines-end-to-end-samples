@@ -176,6 +176,10 @@ def pipeline_e2e_test(
         type_check=False,
     )
 
+    # If empty value for enable_caching provided on commandline default to None
+    if enable_caching == "":
+        enable_caching = None
+
     payload = {
         "attributes": {"template_path": pipeline_json, "enable_caching": enable_caching}
     }
