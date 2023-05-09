@@ -1,7 +1,7 @@
 [project]
 name = "bigquery-components"
 authors = [
-    {name = "Felix Schaumann", email = "felix.schaumann@datatonic.com"},
+    {name = "Example User", email = "user@example.com"},
 ]
 description = "BigQuery components"
 readme = "README.md"
