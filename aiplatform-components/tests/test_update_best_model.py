@@ -12,15 +12,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from unittest.mock import patch
+
+import pytest
 from kfp.v2.dsl import Model
 
 
-def test_model_batch_predict(tmpdir):
+@pytest.fixture
+def update_best_model():
+    import aiplatform_components
+
+    return aiplatform_components.update_best_model.python_func
+
+
+def test_model_batch_predict(tmpdir, update_best_model):
     """
     Asserts model_batch_predict successfully creates requests given different arguments.
     """
-    from aiplatform_components import update_best_model
-
     mock_model = Model(uri=tmpdir, metadata={"resourceName": ""})
     mock_message = {"metrics": {"rmse": 0.01}}
 

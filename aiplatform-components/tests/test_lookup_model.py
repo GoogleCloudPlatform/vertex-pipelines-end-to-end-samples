@@ -18,7 +18,14 @@ from unittest import mock
 import pytest
 
 
-def test_lookup_model(tmpdir):
+@pytest.fixture
+def lookup_model():
+    import aiplatform_components
+
+    return aiplatform_components.lookup_model.python_func
+
+
+def test_lookup_model(tmpdir, lookup_model):
     """
     Assert lookup_model produces expected resource name, and that list method is
     called with the correct arguemnts
@@ -29,8 +36,6 @@ def test_lookup_model(tmpdir):
     Returns:
         None
     """
-    from aiplatform_components import lookup_model
-
     with mock.patch("google.cloud.aiplatform.Model") as mock_model:
 
         # Mock attribute and method
@@ -61,7 +66,7 @@ def test_lookup_model(tmpdir):
         )
 
 
-def test_lookup_model_when_no_models(tmpdir):
+def test_lookup_model_when_no_models(tmpdir, lookup_model):
     """
     Checks that when there are no models and fail_on_model_found = False,
     lookup_model returns an empty string.
@@ -72,8 +77,6 @@ def test_lookup_model_when_no_models(tmpdir):
     Returns:
         None
     """
-    from aiplatform_components import lookup_model
-
     with mock.patch("google.cloud.aiplatform.Model") as mock_model:
         mock_model.list.return_value = []
         exported_model_resource_name, _ = lookup_model(
@@ -88,7 +91,7 @@ def test_lookup_model_when_no_models(tmpdir):
     assert exported_model_resource_name == ""
 
 
-def test_lookup_model_when_no_models_fail(tmpdir):
+def test_lookup_model_when_no_models_fail(tmpdir, lookup_model):
     """
     Checks that when there are no models and fail_on_model_found = True,
     lookup_model raises a RuntimeError.
@@ -99,8 +102,6 @@ def test_lookup_model_when_no_models_fail(tmpdir):
     Returns:
         None
     """
-    from aiplatform_components import lookup_model
-
     with mock.patch("google.cloud.aiplatform.Model") as mock_model:
         mock_model.list.return_value = []
 

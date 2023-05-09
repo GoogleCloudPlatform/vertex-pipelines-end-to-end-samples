@@ -26,6 +26,13 @@ TRAIN_DATASET = {
 }
 
 
+@pytest.fixture
+def model_batch_predict():
+    import aiplatform_components
+
+    return aiplatform_components.model_batch_predict.python_func
+
+
 @pytest.mark.parametrize(
     (
         "source_format,destination_format,source_uri,monitoring_training_dataset,"
@@ -40,6 +47,7 @@ TRAIN_DATASET = {
 )
 def test_model_batch_predict(
     tmpdir,
+    model_batch_predict,
     source_format,
     destination_format,
     source_uri,
@@ -50,8 +58,6 @@ def test_model_batch_predict(
     """
     Asserts model_batch_predict successfully creates requests given different arguments.
     """
-    from aiplatform_components import model_batch_predict
-
     mock_resource_name = "mock-batch-job"
 
     mock_job1 = Mock()
