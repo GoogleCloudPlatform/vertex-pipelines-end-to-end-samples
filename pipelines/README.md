@@ -27,8 +27,8 @@ Further useful documentation:
 - [Vertex AI](https://cloud.google.com/vertex-ai)
 
 The sections below provide a general description of the ML pipelines (training and prediction) for both the TensorFlow template and XGBoost template. These two templates are similar in most ways and a complete overview of their key differences are given in their own README files:
-- [TensorFlow pipelines README](pipelines/tensorflow/README.md)
-- [XGBoost pipelines README](pipelines/xgboost/README.md)
+- [TensorFlow pipelines README](src/pipelines/tensorflow/README.md)
+- [XGBoost pipelines README](src/pipelines/xgboost/README.md)
 
 ## Training Pipeline
 ### Prerequisites for training pipeline
@@ -102,8 +102,11 @@ When triggering ad hoc runs in your dev/sandbox environment, or when running the
 You can specify the Python base image and packages required for KFP components in the `@component` decorator using the `base_image` and `packages_to_install` arguments respectively.
 
 ### Compute resources configuration in pipeline
-In general there are two methods to configure compute resources in each pipeline. Firstly, by setting the `machine_type` variable in [XGboost training pipeline](src/pipelines/pipelines/xgboost/training/pipeline.py), [XGboost prediction pipeline](src/pipelines/pipelines/xgboost/prediction/pipeline.py), [Tensorflow training pipeline](src/pipelines/pipelines/tensorflow/training/pipeline.py), [Tensorflow prediction pipeline](src/pipelines/pipelines/tensorflow//pipeline.py). The default value is `n1-standard-4` with 4 core CPUs and 15GB memory.
-Secondly, in order to manage the requirements of each step in your pipeline, you can set up machine type on the pipeline steps. This is because some steps might need more computational resources than others. For example, when you run [`calculate_eval_metrics`](../pipeline_components/evaluation/evaluation/evaluation_metrics_tfma/component.py) with a large input data, you can increase CPU and memory limits by applying `.set_cpu_limit({CPU_LIMIT})` and `.set_memory_limit('MEMORY_LIMIT')` for that component. 
+In general there are two methods to configure compute resources in each pipeline. 
+Firstly, by setting the `machine_type` variable in [XGBoost training pipeline](src/pipelines/xgboost/training/pipeline.py), [XGBoost prediction pipeline](src/pipelines/xgboost/prediction/pipeline.py), [TensorFlow training pipeline](src/pipelines/tensorflow/training/pipeline.py), [TensorFlow prediction pipeline](src/pipelines/tensorflow/prediction/pipeline.py). The default value is `n1-standard-4` with 4 core CPUs and 15GB memory.
+Secondly, in order to manage the requirements of each step in your pipeline, you can set up machine type on the pipeline steps. 
+This is because some steps might need more computational resources than others. 
+You can increase CPU and memory limits by applying `.set_cpu_limit({CPU_LIMIT})` and `.set_memory_limit('MEMORY_LIMIT')` for any component. 
 - CPU_LIMIT: The maximum CPU limit for this operator. This string value can be a number (integer value for number of CPUs), or a number followed by "m", which means 1/1000. You can specify at most 96 CPUs.
 - MEMORY_LIMIT: The maximum memory limit for this operator. This string value can be a number, or a number followed by "K" (kilobyte), "M" (megabyte), or "G" (gigabyte). At most 624GB is supported.
 
