@@ -13,18 +13,15 @@
 # limitations under the License.
 from unittest.mock import patch
 
-import pytest
 from kfp.v2.dsl import Model
 
 
-@pytest.fixture
-def update_best_model():
-    import aiplatform_components
+import aiplatform_components
 
-    return aiplatform_components.update_best_model.python_func
+update_best_model = aiplatform_components.update_best_model.python_func
 
 
-def test_model_batch_predict(tmpdir, update_best_model):
+def test_model_batch_predict(tmpdir):
     """
     Asserts model_batch_predict successfully creates requests given different arguments.
     """

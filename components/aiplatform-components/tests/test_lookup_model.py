@@ -17,15 +17,12 @@ from kfp.v2.dsl import Model
 from unittest import mock
 import pytest
 
+import aiplatform_components
 
-@pytest.fixture
-def lookup_model():
-    import aiplatform_components
-
-    return aiplatform_components.lookup_model.python_func
+lookup_model = aiplatform_components.lookup_model.python_func
 
 
-def test_lookup_model(tmpdir, lookup_model):
+def test_lookup_model(tmpdir):
     """
     Assert lookup_model produces expected resource name, and that list method is
     called with the correct arguemnts
@@ -66,7 +63,7 @@ def test_lookup_model(tmpdir, lookup_model):
         )
 
 
-def test_lookup_model_when_no_models(tmpdir, lookup_model):
+def test_lookup_model_when_no_models(tmpdir):
     """
     Checks that when there are no models and fail_on_model_found = False,
     lookup_model returns an empty string.
@@ -91,7 +88,7 @@ def test_lookup_model_when_no_models(tmpdir, lookup_model):
     assert exported_model_resource_name == ""
 
 
-def test_lookup_model_when_no_models_fail(tmpdir, lookup_model):
+def test_lookup_model_when_no_models_fail(tmpdir):
     """
     Checks that when there are no models and fail_on_model_found = True,
     lookup_model raises a RuntimeError.

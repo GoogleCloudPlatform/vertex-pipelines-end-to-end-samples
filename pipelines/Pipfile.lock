@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "8dfb3775390f8989416596c9ce7b656457c71472275bce52f3567c27a807452f"
+            "sha256": "273dd3705a9223b8c0d89962060829e5a83730e79609fbfcaf1dfbacea9b7517"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -176,6 +176,9 @@
             "version": "==0.5.0"
         },
         "google-api-core": {
+            "extras": [
+                "grpc"
+            ],
             "hashes": [
                 "sha256:4b9bb5d5a380a0befa0573b302651b8a9a89262c1730e37bf423cec511804c22",
                 "sha256:ce222e27b0de0d7bc63eb043b956996d6dccab14cc3b690aaea91c9cc99dc16e"

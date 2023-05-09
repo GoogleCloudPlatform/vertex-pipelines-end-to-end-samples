@@ -18,19 +18,17 @@ from kfp.v2.dsl import Model
 from google.cloud.aiplatform_v1beta1.types.job_state import JobState
 
 
+import aiplatform_components
+
+model_batch_predict = aiplatform_components.model_batch_predict.python_func
+
+
 SKEW_THRESHOLD = {"defaultSkewThreshold": {"value": 0.001}}
 TRAIN_DATASET = {
     "gcsSource": {"uris": ["gs://file.csv"]},
     "dataFormat": "csv",
     "targetField": "col",
 }
-
-
-@pytest.fixture
-def model_batch_predict():
-    import aiplatform_components
-
-    return aiplatform_components.model_batch_predict.python_func
 
 
 @pytest.mark.parametrize(
@@ -47,7 +45,6 @@ def model_batch_predict():
 )
 def test_model_batch_predict(
     tmpdir,
-    model_batch_predict,
     source_format,
     destination_format,
     source_uri,

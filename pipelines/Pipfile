@@ -5,8 +5,8 @@ name = "pypi"
 
 [packages]
 kfp = "==1.8.21"
-google-cloud-pipeline-components = ">=1.0.0,<2.0.0"
-google-cloud-aiplatform = ">=1.24.1,<2.0.0"
+google-cloud-aiplatform = "==1.24.1"
+google-cloud-pipeline-components = "==1.0.42"
 Jinja2 = ">=3.0.1,<4.0.0"
 aiplatform-components = {editable = true, path = "./../components/aiplatform-components"}
 bigquery-components = {editable = true, path = "./../components/bigquery-components"}
