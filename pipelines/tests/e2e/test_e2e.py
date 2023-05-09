@@ -154,7 +154,6 @@ def pipeline_e2e_test(
     pipeline_func: Callable,
     common_tasks: dict,
     enable_caching: bool = None,
-    pipeline_json: str = None,
     **kwargs: dict,
 ):
     """
@@ -164,14 +163,12 @@ def pipeline_e2e_test(
 
     Args:
         pipeline_func (Callable): KFP pipeline function to test
-        pipeline_json (str): output path of compiled pipeline
         enable_caching (bool): enable pipeline caching
         common_tasks (dict): tasks in pipline that are executed everytime
         **kwargs (dict): conditional tasks groups in dictionary
     """
 
-    if pipeline_json is None:
-        pipeline_json = f"{pipeline_func.__name__}.json"
+    pipeline_json = f"{pipeline_func.__name__}.json"
 
     compiler.Compiler().compile(
         pipeline_func=pipeline_func,
