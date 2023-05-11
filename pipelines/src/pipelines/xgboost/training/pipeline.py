@@ -212,6 +212,7 @@ def xgboost_pipeline(
             fail_on_model_not_found=False,
         )
         .set_display_name("Lookup past model")
+        .set_caching_options(False)
         .outputs["model_resource_name"]
     )
 
