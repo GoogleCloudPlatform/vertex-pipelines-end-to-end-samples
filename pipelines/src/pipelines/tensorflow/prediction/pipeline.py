@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import json
 import os
 import pathlib
 
@@ -29,9 +28,10 @@ def tensorflow_pipeline(
     project_location: str = os.environ.get("VERTEX_LOCATION"),
     ingestion_project_id: str = os.environ.get("VERTEX_PROJECT_ID"),
     model_name: str = "simple_tensorflow",
-    dataset_id: str = "preprocessing",
+    preprocessing_dataset_id: str = "preprocessing",
     dataset_location: str = os.environ.get("VERTEX_LOCATION"),
     ingestion_dataset_id: str = "chicago_taxi_trips",
+    prediction_dataset_id: str = "prediction",
     timestamp: str = "2022-12-01 00:00:00",
     batch_prediction_machine_type: str = "n1-standard-4",
     batch_prediction_min_replicas: int = 3,
@@ -49,13 +49,14 @@ def tensorflow_pipeline(
     Args:
         project_id (str): project id of the Google Cloud project
         project_location (str): location of the Google Cloud project
-        pipeline_files_gcs_path (str): GCS path where the pipeline files are located
         ingestion_project_id (str): project id containing the source bigquery data
             for ingestion. This can be the same as `project_id` if the source data is
             in the same project where the ML pipeline is executed.
         model_name (str): name of model
-        model_label (str): label of model
-        dataset_id (str): id of BQ dataset used to store all staging data & predictions
+         preprocessing_dataset_id (str): id of BQ dataset used to
+            store all staging data .
+        prediction_dataset_id (str): id of BQ dataset used to
+            store all predictions.
         dataset_location (str): location of dataset
         ingestion_dataset_id (str): dataset id of ingestion data
         timestamp (str): Optional. Empty or a specific timestamp in ISO 8601 format
@@ -91,6 +92,10 @@ def tensorflow_pipeline(
         queries_folder / "ingest.sql",
         source_dataset=f"{ingestion_project_id}.{ingestion_dataset_id}",
         source_table=ingestion_table,
+        prediction_dataset=f"{ingestion_project_id}.{prediction_dataset_id}",
+        preprocessing_dataset=f"{ingestion_project_id}.{preprocessing_dataset_id}",
+        ingested_table=ingested_table,
+        dataset_region=project_location,
         filter_column=time_column,
         filter_start_value=timestamp,
     )
@@ -98,14 +103,11 @@ def tensorflow_pipeline(
     # data ingestion and preprocessing operations
     kwargs = dict(
         bq_client_project_id=project_id,
-        destination_project_id=project_id,
-        dataset_id=dataset_id,
         dataset_location=dataset_location,
-        query_job_config=json.dumps(dict(write_disposition="WRITE_TRUNCATE")),
     )
-    ingest = bq_query_to_table(
-        query=ingest_query, table_id=ingested_table, **kwargs
-    ).set_display_name("Ingest data")
+    ingest = bq_query_to_table(query=ingest_query, **kwargs).set_display_name(
+        "Ingest data"
+    )
 
     # lookup champion model
     champion_model = (
@@ -120,8 +122,10 @@ def tensorflow_pipeline(
     )
 
     # batch predict from BigQuery to BigQuery
-    bigquery_source_input_uri = f"bq://{project_id}.{dataset_id}.{ingested_table}"
-    bigquery_destination_output_uri = f"bq://{project_id}.{dataset_id}"
+    bigquery_source_input_uri = (
+        f"bq://{project_id}.{preprocessing_dataset_id}.{ingested_table}"
+    )
+    bigquery_destination_output_uri = f"bq://{project_id}.{prediction_dataset_id}"
     instance_config = {"instanceType": "object"}
 
     # predict data

@@ -14,8 +14,16 @@
 
 -- Treat "filter_start_value" as the current time, unless it is empty then use CURRENT_DATETIME() instead
 -- This allows us to set the filter_start_value to a specific time for testing or for backfill
+CREATE SCHEMA IF NOT EXISTS `{{ prediction_dataset }}`
+  OPTIONS (
+    description = 'Prediction Dataset',
+    location = "{{ dataset_region }}");
+
+DROP TABLE IF EXISTS `{{ preprocessing_dataset }}.{{ ingested_table }}`;
+
+CREATE TABLE `{{ preprocessing_dataset }}.{{ ingested_table }}` AS (
 with filter_start_values as (
-    SELECT 
+    SELECT
     IF("{{ filter_start_value }}" = '', CURRENT_DATETIME(), CAST("{{ filter_start_value }}" AS DATETIME)) as filter_start_value
 )
 -- Ingest data between 2 and 3 months ago
@@ -43,7 +51,7 @@ SELECT
     trip_miles,
     CAST( CASE WHEN trip_seconds is NULL then m.avg_trip_seconds
                WHEN trip_seconds <= 0 then m.avg_trip_seconds
-               ELSE trip_seconds 
+               ELSE trip_seconds
                END AS FLOAT64) AS trip_seconds,
     payment_type,
     company,
@@ -54,3 +62,4 @@ WHERE
                 "pickup_latitude", "dropoff_longitude", "dropoff_latitude","payment_type","company"] %}
         AND `{{ field }}` IS NOT NULL
     {% endfor %}
+    );

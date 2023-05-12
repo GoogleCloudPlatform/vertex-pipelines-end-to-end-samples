@@ -14,26 +14,36 @@
 
 -- Treat "filter_start_value" as the current time, unless it is empty then use CURRENT_DATETIME() instead
 -- This allows us to set the filter_start_value to a specific time for testing or for backfill
-with filter_start_values as (
-    SELECT 
-    IF("{{ filter_start_value }}" = '', CURRENT_DATETIME(), CAST("{{ filter_start_value }}" AS DATETIME)) as filter_start_value
+
+CREATE SCHEMA IF NOT EXISTS `{{ preprocessing_dataset }}`
+  OPTIONS (
+    description = 'Preprocessing Dataset',
+    location = "{{ dataset_region }}");
+
+DROP TABLE IF EXISTS `{{ preprocessing_dataset }}.{{ ingested_table }}`;
+
+CREATE TABLE `{{ preprocessing_dataset }}.{{ ingested_table }}` AS (
+WITH filter_start_values AS (
+SELECT
+	IF("{{ filter_start_value }}" = '',
+	CURRENT_DATETIME(),
+	CAST("{{ filter_start_value }}" AS DATETIME)) AS filter_start_value
 )
 -- Ingest data between 2 and 3 months ago
-,filtered_data as (
+,filtered_data AS (
     SELECT
     *
     FROM `{{ source_dataset }}.{{ source_table }}`, filter_start_values
     WHERE
          DATE({{ filter_column }}) BETWEEN
-         DATE_SUB(DATE(CAST(filter_start_values.filter_start_value as DATETIME)), INTERVAL 3 MONTH) AND
+         DATE_SUB(DATE(CAST(filter_start_values.filter_start_value AS DATETIME)), INTERVAL 3 MONTH) AND
          DATE_SUB(DATE(filter_start_value), INTERVAL 2 MONTH)
 )
 -- Use the average trip_seconds as a replacement for NULL or 0 values
-,mean_time as (
+,mean_time AS (
     SELECT CAST(avg(trip_seconds) AS INT64) as avg_trip_seconds
     FROM filtered_data
 )
-
 SELECT
     CAST(EXTRACT(DAYOFWEEK FROM trip_start_timestamp) AS FLOAT64) AS dayofweek,
     CAST(EXTRACT(HOUR FROM trip_start_timestamp) AS FLOAT64) AS hourofday,
@@ -48,10 +58,11 @@ SELECT
     payment_type,
     company,
     (fare + tips + tolls + extras) AS `{{ target_column }}`,
-FROM filtered_data as t, mean_time as m
+FROM filtered_data AS t, mean_time AS m
 WHERE
     trip_miles > 0 AND fare > 0 AND fare < 1500
     {% for field in ["fare", "trip_start_timestamp", "pickup_longitude",
                 "pickup_latitude", "dropoff_longitude", "dropoff_latitude","payment_type","company"] %}
         AND `{{ field }}` IS NOT NULL
     {% endfor %}
+);
