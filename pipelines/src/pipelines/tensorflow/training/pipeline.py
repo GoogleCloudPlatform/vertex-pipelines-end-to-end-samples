@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import json
 import os
 import pathlib
 
@@ -101,6 +100,9 @@ def tensorflow_pipeline(
         queries_folder / "ingest.sql",
         source_dataset=f"{ingestion_project_id}.{ingestion_dataset_id}",
         source_table=ingestion_table,
+        preprocessing_dataset=f"{ingestion_project_id}.{dataset_id}",
+        ingested_table=ingested_table,
+        dataset_region=project_location,
         filter_column=time_column,
         target_column=label_column_name,
         filter_start_value=timestamp,
@@ -109,6 +111,8 @@ def tensorflow_pipeline(
         queries_folder / "sample.sql",
         source_dataset=dataset_id,
         source_table=ingested_table,
+        preprocessing_dataset=f"{ingestion_project_id}.{dataset_id}",
+        target_table=train_table,
         num_lots=10,
         lots=tuple(range(8)),
     )
@@ -116,6 +120,8 @@ def tensorflow_pipeline(
         queries_folder / "sample.sql",
         source_dataset=dataset_id,
         source_table=ingested_table,
+        preprocessing_dataset=f"{ingestion_project_id}.{dataset_id}",
+        target_table=valid_table,
         num_lots=10,
         lots="(8)",
     )
@@ -123,50 +129,33 @@ def tensorflow_pipeline(
         queries_folder / "sample.sql",
         source_dataset=dataset_id,
         source_table=ingested_table,
+        preprocessing_dataset=f"{ingestion_project_id}.{dataset_id}",
+        target_table=test_table,
         num_lots=10,
         lots="(9)",
-    )
-    data_cleaning_query = generate_query(
-        queries_folder / "engineer_features.sql",
-        source_dataset=dataset_id,
-        source_table=train_table,
     )
 
     # data ingestion and preprocessing operations
 
-    kwargs = dict(
-        bq_client_project_id=project_id,
-        destination_project_id=project_id,
-        dataset_id=dataset_id,
-        dataset_location=dataset_location,
-        query_job_config=json.dumps(dict(write_disposition="WRITE_TRUNCATE")),
+    kwargs = dict(bq_client_project_id=project_id, dataset_location=dataset_location)
+    ingest = bq_query_to_table(query=ingest_query, **kwargs).set_display_name(
+        "Ingest data"
     )
-    ingest = bq_query_to_table(
-        query=ingest_query, table_id=ingested_table, **kwargs
-    ).set_display_name("Ingest data")
 
-    # exporting data to GCS from BQ
     split_train_data = (
-        bq_query_to_table(query=split_train_query, table_id=train_table, **kwargs)
+        bq_query_to_table(query=split_train_query, **kwargs)
         .after(ingest)
         .set_display_name("Split train data")
     )
     split_valid_data = (
-        bq_query_to_table(query=split_valid_query, table_id=valid_table, **kwargs)
+        bq_query_to_table(query=split_valid_query, **kwargs)
         .after(ingest)
         .set_display_name("Split validation data")
     )
     split_test_data = (
-        bq_query_to_table(query=split_test_query, table_id=test_table, **kwargs)
+        bq_query_to_table(query=split_test_query, **kwargs)
         .after(ingest)
         .set_display_name("Split test data")
-    )
-    data_cleaning = (
-        bq_query_to_table(
-            query=data_cleaning_query, table_id=preprocessed_table, **kwargs
-        )
-        .after(split_train_data)
-        .set_display_name("Clean data")
     )
 
     # data extraction to gcs
@@ -176,10 +165,10 @@ def tensorflow_pipeline(
             bq_client_project_id=project_id,
             source_project_id=project_id,
             dataset_id=dataset_id,
-            table_name=preprocessed_table,
+            table_name=train_table,
             dataset_location=dataset_location,
         )
-        .after(data_cleaning)
+        .after(split_train_data)
         .set_display_name("Extract train data to storage")
     ).outputs["dataset"]
     valid_dataset = (
