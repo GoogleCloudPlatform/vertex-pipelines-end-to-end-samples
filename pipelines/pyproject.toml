@@ -1,20 +1,21 @@
-[project]
+[tool.poetry]
 name = "turbo-template"
-authors = [
-    {name = "Example User", email = "user@example.com"},
-]
-description = "Turbo Template"
+version = "0.1.0"
+authors = ["roberta nwokonko <roberta.nwokonko@datatonic.com>"]
+description = "Turbo Template developed at Datatonic"
 readme = "README.md"
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
-    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.9",
 ]
-requires-python = ">=3.7"
-dynamic = ["version"]
-dependencies = [
-    "kfp == 1.8.21",
-]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+Jinja2 = ">=3.0.1,<4.0.0"
+google-cloud-aiplatform = "1.24.1"
+google-cloud-pipeline-components = "1.0.42"
+
 
 [project.optional-dependencies]
 tests = [
