@@ -35,10 +35,12 @@ steps:
     args:
       - -c
       - |
-        mkdir -p ${TAG_NAME}/assets && \
-        cp pipelines/training.json ${TAG_NAME}/training.json && \
-        cp pipelines/prediction.json ${TAG_NAME}/prediction.json && \
-        cp -r pipelines/assets ${TAG_NAME} && \
+        mkdir -p ${TAG_NAME}/training/assets && \
+        mkdir -p ${TAG_NAME}/prediction/assets && \
+        cp pipelines/training.json ${TAG_NAME}/training/training.json && \
+        cp pipelines/prediction.json ${TAG_NAME}/prediction/prediction.json && \
+        cp -r pipelines/assets ${TAG_NAME}/training/ && \
+        cp -r pipelines/assets ${TAG_NAME}/prediction/ && \
         for dest in ${_PIPELINE_PUBLISH_GCS_PATHS} ; do \
           gsutil cp -r ${TAG_NAME} $$dest ; \
         done

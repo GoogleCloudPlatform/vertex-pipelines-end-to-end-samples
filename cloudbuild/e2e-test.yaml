@@ -22,8 +22,10 @@ steps:
     args:
       - -c
       - |
-        mkdir -p ${COMMIT_SHA}/assets && \
-        cp -r pipelines/assets && \
+        mkdir -p ${COMMIT_SHA}/training/assets && \
+        mkdir -p ${COMMIT_SHA}/prediction/assets && \
+        cp -r pipelines/assets ${COMMIT_SHA}/training/ && \
+        cp -r pipelines/assets ${COMMIT_SHA}/prediction/ && \
         gsutil cp -r ${COMMIT_SHA} ${_PIPELINE_PUBLISH_GCS_PATH}/${COMMIT_SHA}
 
   # Install Python deps
