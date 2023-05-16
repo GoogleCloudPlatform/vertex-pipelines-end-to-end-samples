@@ -62,9 +62,9 @@ test-all-components: ## Run unit tests for all pipeline components
 		$(MAKE) test-components GROUP=$$(basename $$component_group) ; \
 	done
 
-sync-assets: ## Sync assets folder to GCS. Must specify pipeline=<training|prediction>
-	if [ -d "./pipelines/pipelines/${PIPELINE_TEMPLATE}/$(pipeline)/assets/" ] ; then \
-		gsutil -m rsync -r -d ./pipelines/pipelines/${PIPELINE_TEMPLATE}/$(pipeline)/assets ${PIPELINE_FILES_GCS_PATH}/$(pipeline)/assets ; \
+sync-assets: ## Sync assets folder to GCS.
+	if [ -d "./pipelines/assets" ] ; then \
+		gsutil -m rsync -r -d ./pipelines/assets ${PIPELINE_FILES_GCS_PATH}/assets ; \
 	fi ;
 
 run: ## Compile pipeline, copy assets to GCS, and run pipeline in sandbox environment. Must specify pipeline=<training|prediction>. Optionally specify enable_pipeline_caching=<true|false> (defaults to default Vertex caching behaviour)
