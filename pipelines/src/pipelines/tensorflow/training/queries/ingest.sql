@@ -1,20 +1,3 @@
--- Copyright 2022 Google LLC
-
--- Licensed under the Apache License, Version 2.0 (the "License");
--- you may not use this file except in compliance with the License.
--- You may obtain a copy of the License at
-
---     https://www.apache.org/licenses/LICENSE-2.0
-
--- Unless required by applicable law or agreed to in writing, software
--- distributed under the License is distributed on an "AS IS" BASIS,
--- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
--- See the License for the specific language governing permissions and
--- limitations under the License.
-
--- Treat "filter_start_value" as the current time, unless it is empty then use CURRENT_DATETIME() instead
--- This allows us to set the filter_start_value to a specific time for testing or for backfill
-
 CREATE SCHEMA IF NOT EXISTS `{{ preprocessing_dataset }}`
   OPTIONS (
     description = 'Preprocessing Dataset',
@@ -66,3 +49,36 @@ WHERE
         AND `{{ field }}` IS NOT NULL
     {% endfor %}
 );
+
+DROP TABLE IF EXISTS `{{ preprocessing_dataset }}.{{ train_table }}`;
+
+CREATE TABLE `{{ preprocessing_dataset }}.{{ train_table }}` AS (
+SELECT
+	*
+FROM
+	`{{ preprocessing_dataset }}.{{ ingested_table }}` AS t
+WHERE
+	MOD(ABS(FARM_FINGERPRINT(TO_JSON_STRING(t))),
+	10) IN (0, 1, 2, 3, 4, 5, 6, 7));
+
+DROP TABLE IF EXISTS `{{ preprocessing_dataset }}.{{ validation_table }}`;
+
+CREATE TABLE `{{ preprocessing_dataset }}.{{ validation_table }}` AS (
+SELECT
+	*
+FROM
+	`{{ preprocessing_dataset }}.{{ ingested_table }}` AS t
+WHERE
+	MOD(ABS(FARM_FINGERPRINT(TO_JSON_STRING(t))),
+	10) IN (8));
+
+DROP TABLE IF EXISTS `{{ preprocessing_dataset }}.{{ test_table }}`;
+
+CREATE TABLE `{{ preprocessing_dataset }}.{{ test_table }}` AS (
+SELECT
+	*
+FROM
+	`{{ preprocessing_dataset }}.{{ ingested_table }}` AS t
+WHERE
+	MOD(ABS(FARM_FINGERPRINT(TO_JSON_STRING(t))),
+	10) IN (9));
