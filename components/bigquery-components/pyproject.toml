@@ -1,8 +1,10 @@
 [tool.poetry]
 name = "bigquery-components"
 version = "0.1.0"
-authors = ["roberta nwokonko <roberta.nwokonko@datatonic.com>"]
-description = "BigQuery components created by Datatonic"
+authors = [
+    {name = "Example User", email = "user@example.com"},
+]
+description = "Bigquery components for vertex pipelines"
 readme = "README.md"
 classifiers = [
     "Development Status :: 3 - Alpha",

@@ -1,7 +1,9 @@
 [tool.poetry]
 name = "pipelines"
 version = "0.1.0"
-authors = ["roberta nwokonko <roberta.nwokonko@datatonic.com>"]
+authors = [
+    {name = "Example User", email = "user@example.com"},
+]
 description = "Turbo Template developed at Datatonic"
 readme = "README.md"
 classifiers = [

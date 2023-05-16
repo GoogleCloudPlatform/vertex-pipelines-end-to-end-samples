@@ -1,8 +1,10 @@
 [tool.poetry]
 name = "vertex-components"
 version = "0.1.0"
-authors = ["roberta nwokonko <roberta.nwokonko@datatonic.com>"]
-description = "Vertex AI components made by Datatonic"
+authors = [
+    {name = "Example User", email = "user@example.com"},
+]
+description = "Vertex components for training and prediction using the Chicago Taxi Dataset"
 readme = "README.md"
 classifiers = [
     "Development Status :: 3 - Alpha",
