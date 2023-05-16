@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "turbo-template"
+name = "pipelines"
 version = "0.1.0"
 authors = ["roberta nwokonko <roberta.nwokonko@datatonic.com>"]
 description = "Turbo Template developed at Datatonic"
