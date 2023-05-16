@@ -21,8 +21,8 @@ limitations under the License.
 There are five CI/CD pipelines
 
 1. `pr-checks.yaml` - runs pre-commit checks and unit tests on the custom KFP components, and checks that the ML pipelines (training and prediction) can compile.
-1. `e2e-test.yaml` - copies the "assets" folders to the chosen GCS destination (versioned by git commit hash) and runs end-to-end tests of the training and prediction pipeline.
-1. `release.yaml` - compiles training and prediction pipelines, then copies the compiled pipelines and their respective "assets" folders to the chosen GCS destination (versioned by git tag).
+1. `e2e-test.yaml` - copies the "assets" folder to the chosen GCS destination (versioned by git commit hash) and runs end-to-end tests of the training and prediction pipeline.
+1. `release.yaml` - compiles training and prediction pipelines, then copies the compiled pipelines and "assets" folder to the chosen GCS destination (versioned by git tag).
 1. `terraform-plan.yaml` - Checks the Terraform configuration under `terraform/envs/<env>` (e.g. `terraform/envs/test`), and produces a summary of any proposed changes that will be applied on merge to the main branch.
 1. `terraform-apply.yaml` - Applies the Terraform configuration under `terraform/envs/<env>` (e.g. `terraform/envs/test`).
 
