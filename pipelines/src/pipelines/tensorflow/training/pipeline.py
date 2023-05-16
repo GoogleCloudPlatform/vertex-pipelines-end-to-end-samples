@@ -15,9 +15,10 @@
 import os
 import pathlib
 
+from google_cloud_pipeline_components.v1.bigquery import BigqueryQueryJobOp
 from kfp.v2 import compiler, dsl
 from pipelines import generate_query
-from bigquery_components import bq_query_to_table, extract_bq_to_dataset
+from bigquery_components import extract_bq_to_dataset
 from vertex_components import (
     lookup_model,
     custom_train_job,
@@ -106,57 +107,14 @@ def tensorflow_pipeline(
         filter_column=time_column,
         target_column=label_column_name,
         filter_start_value=timestamp,
-    )
-    split_train_query = generate_query(
-        queries_folder / "sample.sql",
-        source_dataset=dataset_id,
-        source_table=ingested_table,
-        preprocessing_dataset=f"{ingestion_project_id}.{dataset_id}",
-        target_table=train_table,
-        num_lots=10,
-        lots=tuple(range(8)),
-    )
-    split_valid_query = generate_query(
-        queries_folder / "sample.sql",
-        source_dataset=dataset_id,
-        source_table=ingested_table,
-        preprocessing_dataset=f"{ingestion_project_id}.{dataset_id}",
-        target_table=valid_table,
-        num_lots=10,
-        lots="(8)",
-    )
-    split_test_query = generate_query(
-        queries_folder / "sample.sql",
-        source_dataset=dataset_id,
-        source_table=ingested_table,
-        preprocessing_dataset=f"{ingestion_project_id}.{dataset_id}",
-        target_table=test_table,
-        num_lots=10,
-        lots="(9)",
+        train_table=train_table,
+        validation_table=valid_table,
+        test_table=test_table,
     )
 
-    # data ingestion and preprocessing operations
-
-    kwargs = dict(bq_client_project_id=project_id, dataset_location=dataset_location)
-    ingest = bq_query_to_table(query=ingest_query, **kwargs).set_display_name(
-        "Ingest data"
-    )
-
-    split_train_data = (
-        bq_query_to_table(query=split_train_query, **kwargs)
-        .after(ingest)
-        .set_display_name("Split train data")
-    )
-    split_valid_data = (
-        bq_query_to_table(query=split_valid_query, **kwargs)
-        .after(ingest)
-        .set_display_name("Split validation data")
-    )
-    split_test_data = (
-        bq_query_to_table(query=split_test_query, **kwargs)
-        .after(ingest)
-        .set_display_name("Split test data")
-    )
+    ingest = BigqueryQueryJobOp(
+        project=project_id, location=dataset_location, query=ingest_query
+    ).set_display_name("Ingest data")
 
     # data extraction to gcs
 
@@ -168,8 +126,9 @@ def tensorflow_pipeline(
             table_name=train_table,
             dataset_location=dataset_location,
         )
-        .after(split_train_data)
+        .after(ingest)
         .set_display_name("Extract train data to storage")
+        .set_caching_options(False)
     ).outputs["dataset"]
     valid_dataset = (
         extract_bq_to_dataset(
@@ -179,8 +138,9 @@ def tensorflow_pipeline(
             table_name=valid_table,
             dataset_location=dataset_location,
         )
-        .after(split_valid_data)
+        .after(ingest)
         .set_display_name("Extract validation data to storage")
+        .set_caching_options(False)
     ).outputs["dataset"]
     test_dataset = (
         extract_bq_to_dataset(
@@ -191,7 +151,7 @@ def tensorflow_pipeline(
             dataset_location=dataset_location,
             destination_gcs_uri=test_dataset_uri,
         )
-        .after(split_test_data)
+        .after(ingest)
         .set_display_name("Extract test data to storage")
         .set_caching_options(False)
     ).outputs["dataset"]

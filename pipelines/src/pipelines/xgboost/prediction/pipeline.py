@@ -15,10 +15,10 @@
 import os
 import pathlib
 
+from google_cloud_pipeline_components.v1.bigquery import BigqueryQueryJobOp
 from kfp.v2 import compiler, dsl
 
 from pipelines import generate_query
-from bigquery_components import bq_query_to_table
 from vertex_components import lookup_model, model_batch_predict
 
 
@@ -96,14 +96,9 @@ def xgboost_pipeline(
         filter_start_value=timestamp,
     )
 
-    # data ingestion and preprocessing operations
-    kwargs = dict(
-        bq_client_project_id=project_id,
-        dataset_location=dataset_location,
-    )
-    ingest = bq_query_to_table(query=ingest_query, **kwargs).set_display_name(
-        "Ingest data"
-    )
+    ingest = BigqueryQueryJobOp(
+        project=project_id, location=dataset_location, query=ingest_query
+    ).set_display_name("Ingest data")
 
     # lookup champion model
     champion_model = (

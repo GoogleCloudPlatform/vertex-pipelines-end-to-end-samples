@@ -30,4 +30,10 @@ def generate_query(input_file: Path, **replacements) -> str:
     with open(input_file, "r") as f:
         query_template = f.read()
 
-    return Template(query_template).render(**replacements)
+    # Render the template with the provided replacements
+    query = Template(query_template).render(**replacements)
+
+    # Escape double quotes, newline and tab characters
+    query = query.replace('"', '\\"').replace("\n", "\\n").replace("\t", "\\t")
+
+    return query
