@@ -1,0 +1,14 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+kfp = "==1.8.21"
+
+[dev-packages]
+google-cloud-bigquery = "==2.30.0"
+pytest = ">=7.3.1,<8.0.0"
+
+[requires]
+python_version = "3.7"
