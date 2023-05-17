@@ -219,6 +219,9 @@ parser.add_argument("--metrics", type=str, required=True)
 parser.add_argument("--hparams", default={}, type=json.loads)
 args = parser.parse_args()
 
+if args.model.startswith("gs://"):
+    args.model = Path("/gcs/" + args.model[5:])
+
 # merge dictionaries by overwriting default_model_params if provided in model_params
 hparams = {**DEFAULT_HPARAMS, **args.hparams}
 logging.info(f"Using model hyper-parameters: {hparams}")
@@ -261,9 +264,9 @@ if not _is_chief(strategy):
     logging.info("not chief node, exiting now")
     sys.exit()
 
-os.makedirs(args.model, exist_ok=True)
 logging.info(f"Save model to: {args.model}")
-tf_model.save(args.model, save_format="tf")
+args.model.mkdir(parents=True)
+tf_model.save(str(args.model), save_format="tf")
 
 logging.info(f"Save metrics to: {args.metrics}")
 eval_metrics = dict(zip(tf_model.metrics_names, tf_model.evaluate(test_ds)))
@@ -281,11 +284,13 @@ with open(args.metrics, "w") as fp:
     json.dump(metrics, fp)
 
 # Persist URIs of training file(s) for model monitoring in batch predictions
-path = Path(args.model) / TRAINING_DATASET_INFO
+# See https://cloud.google.com/python/docs/reference/aiplatform/latest/google.cloud.aiplatform_v1beta1.types.ModelMonitoringObjectiveConfig.TrainingDataset  # noqa: E501
+# for the expected schema.
+path = args.model / TRAINING_DATASET_INFO
 training_dataset_for_monitoring = {
     "gcsSource": {"uris": [args.train_data]},
     "dataFormat": "csv",
-    "targetField": hparams["label"],
+    "targetField": label,
 }
 logging.info(f"Save training dataset info for model monitoring: {path}")
 logging.info(f"Training dataset: {training_dataset_for_monitoring}")
