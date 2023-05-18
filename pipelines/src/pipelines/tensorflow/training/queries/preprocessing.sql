@@ -1,8 +1,11 @@
+-- If preprocessing dataset don't exist, create it
 CREATE SCHEMA IF NOT EXISTS `{{ preprocessing_dataset }}`
   OPTIONS (
     description = 'Preprocessing Dataset',
     location = "{{ dataset_region }}");
 
+-- We recreate the ingestion table every time the pipeline run,
+-- so we need to drop the generated in the  previous run
 DROP TABLE IF EXISTS `{{ preprocessing_dataset }}.{{ ingested_table }}`;
 
 CREATE TABLE `{{ preprocessing_dataset }}.{{ ingested_table }}` AS (
@@ -50,6 +53,7 @@ WHERE
     {% endfor %}
 );
 
+-- Drop and creation of train, testing and validations tables
 DROP TABLE IF EXISTS `{{ preprocessing_dataset }}.{{ train_table }}`;
 
 CREATE TABLE `{{ preprocessing_dataset }}.{{ train_table }}` AS (

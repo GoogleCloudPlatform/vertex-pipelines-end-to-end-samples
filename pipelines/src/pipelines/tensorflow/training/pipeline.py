@@ -98,7 +98,7 @@ def tensorflow_pipeline(
     queries_folder = pathlib.Path(__file__).parent / "queries"
 
     ingest_query = generate_query(
-        queries_folder / "ingest.sql",
+        queries_folder / "preprocessing.sql",
         source_dataset=f"{ingestion_project_id}.{ingestion_dataset_id}",
         source_table=ingestion_table,
         preprocessing_dataset=f"{ingestion_project_id}.{dataset_id}",
@@ -127,7 +127,7 @@ def tensorflow_pipeline(
             dataset_location=dataset_location,
         )
         .after(ingest)
-        .set_display_name("Extract train data to storage")
+        .set_display_name("Extract train")
         .set_caching_options(False)
     ).outputs["dataset"]
     valid_dataset = (
@@ -139,7 +139,7 @@ def tensorflow_pipeline(
             dataset_location=dataset_location,
         )
         .after(ingest)
-        .set_display_name("Extract validation data to storage")
+        .set_display_name("Extract validation data")
         .set_caching_options(False)
     ).outputs["dataset"]
     test_dataset = (
@@ -152,7 +152,7 @@ def tensorflow_pipeline(
             destination_gcs_uri=test_dataset_uri,
         )
         .after(ingest)
-        .set_display_name("Extract test data to storage")
+        .set_display_name("Extract test data")
         .set_caching_options(False)
     ).outputs["dataset"]
 

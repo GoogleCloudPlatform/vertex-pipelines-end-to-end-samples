@@ -14,11 +14,15 @@
 
 -- Treat "filter_start_value" as the current time, unless it is empty then use CURRENT_DATETIME() instead
 -- This allows us to set the filter_start_value to a specific time for testing or for backfill
+
+-- If prediction dataset don't exist, create it
 CREATE SCHEMA IF NOT EXISTS `{{ prediction_dataset }}`
   OPTIONS (
     description = 'Prediction Dataset',
     location = "{{ dataset_region }}");
 
+-- We recreate the ingestion table every time the pipeline run,
+-- so we need to drop the generated in the  previous run
 DROP TABLE IF EXISTS `{{ preprocessing_dataset }}.{{ ingested_table }}`;
 
 CREATE TABLE `{{ preprocessing_dataset }}.{{ ingested_table }}` AS (
