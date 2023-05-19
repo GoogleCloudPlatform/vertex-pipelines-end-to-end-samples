@@ -89,7 +89,7 @@ def tensorflow_pipeline(
     queries_folder = pathlib.Path(__file__).parent / "queries"
 
     ingest_query = generate_query(
-        queries_folder / "ingest.sql",
+        queries_folder / "preprocessing.sql",
         source_dataset=f"{ingestion_project_id}.{ingestion_dataset_id}",
         source_table=ingestion_table,
         prediction_dataset=f"{ingestion_project_id}.{prediction_dataset_id}",

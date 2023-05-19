@@ -2,7 +2,7 @@
 CREATE SCHEMA IF NOT EXISTS `{{ preprocessing_dataset }}`
   OPTIONS (
     description = 'Preprocessing Dataset',
-    location = "{{ dataset_region }}");
+    location = '{{ dataset_region }}');
 
 -- We recreate the ingestion table every time the pipeline run,
 -- so we need to drop the generated in the  previous run
@@ -11,9 +11,9 @@ DROP TABLE IF EXISTS `{{ preprocessing_dataset }}.{{ ingested_table }}`;
 CREATE TABLE `{{ preprocessing_dataset }}.{{ ingested_table }}` AS (
 WITH filter_start_values AS (
 SELECT
-	IF("{{ filter_start_value }}" = '',
+	IF('{{ filter_start_value }}' = '',
 	CURRENT_DATETIME(),
-	CAST("{{ filter_start_value }}" AS DATETIME)) AS filter_start_value
+	CAST('{{ filter_start_value }}' AS DATETIME)) AS filter_start_value
 )
 -- Ingest data between 2 and 3 months ago
 ,filtered_data AS (
@@ -47,8 +47,8 @@ SELECT
 FROM filtered_data AS t, mean_time AS m
 WHERE
     trip_miles > 0 AND fare > 0 AND fare < 1500
-    {% for field in ["fare", "trip_start_timestamp", "pickup_longitude",
-                "pickup_latitude", "dropoff_longitude", "dropoff_latitude","payment_type","company"] %}
+    {% for field in ['fare', 'trip_start_timestamp', 'pickup_longitude',
+                'pickup_latitude', 'dropoff_longitude', 'dropoff_latitude','payment_type','company'] %}
         AND `{{ field }}` IS NOT NULL
     {% endfor %}
 );
