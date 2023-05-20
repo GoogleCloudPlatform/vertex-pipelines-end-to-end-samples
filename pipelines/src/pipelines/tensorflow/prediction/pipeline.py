@@ -88,7 +88,7 @@ def tensorflow_pipeline(
     # operations
     queries_folder = pathlib.Path(__file__).parent / "queries"
 
-    ingest_query = generate_query(
+    preprocessing_query = generate_query(
         queries_folder / "preprocessing.sql",
         source_dataset=f"{ingestion_project_id}.{ingestion_dataset_id}",
         source_table=ingestion_table,
@@ -101,8 +101,8 @@ def tensorflow_pipeline(
     )
 
     # data ingestion and preprocessing operations
-    ingest = BigqueryQueryJobOp(
-        project=project_id, location=dataset_location, query=ingest_query
+    preprocessing = BigqueryQueryJobOp(
+        project=project_id, location=dataset_location, query=preprocessing_query
     ).set_display_name("Ingest data")
 
     # lookup champion model
@@ -143,7 +143,7 @@ def tensorflow_pipeline(
             monitoring_skew_config=monitoring_skew_config,
             instance_config=instance_config,
         )
-        .after(ingest)
+        .after(preprocessing)
         .set_display_name("Batch prediction job")
     )
 

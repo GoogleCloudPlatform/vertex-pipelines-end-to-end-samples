@@ -84,7 +84,7 @@ def xgboost_pipeline(
     # operations
     queries_folder = pathlib.Path(__file__).parent / "queries"
 
-    ingest_query = generate_query(
+    preprocessing_query = generate_query(
         queries_folder / "preprocessing.sql",
         source_dataset=f"{ingestion_project_id}.{ingestion_dataset_id}",
         source_table=ingestion_table,
@@ -96,8 +96,8 @@ def xgboost_pipeline(
         filter_start_value=timestamp,
     )
 
-    ingest = BigqueryQueryJobOp(
-        project=project_id, location=dataset_location, query=ingest_query
+    preprocessing = BigqueryQueryJobOp(
+        project=project_id, location=dataset_location, query=preprocessing_query
     ).set_display_name("Ingest data")
 
     # lookup champion model
@@ -135,7 +135,7 @@ def xgboost_pipeline(
             monitoring_alert_email_addresses=monitoring_alert_email_addresses,
             monitoring_skew_config=monitoring_skew_config,
         )
-        .after(ingest)
+        .after(preprocessing)
         .set_display_name("Batch prediction job")
     )
 

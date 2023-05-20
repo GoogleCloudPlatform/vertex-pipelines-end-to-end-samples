@@ -95,7 +95,7 @@ def xgboost_pipeline(
 
     queries_folder = pathlib.Path(__file__).parent / "queries"
 
-    ingest_query = generate_query(
+    preprocessing_query = generate_query(
         queries_folder / "preprocessing.sql",
         source_dataset=f"{ingestion_project_id}.{ingestion_dataset_id}",
         source_table=ingestion_table,
@@ -110,8 +110,8 @@ def xgboost_pipeline(
         test_table=test_table,
     )
 
-    ingest = BigqueryQueryJobOp(
-        project=project_id, location=dataset_location, query=ingest_query
+    preprocessing = BigqueryQueryJobOp(
+        project=project_id, location=dataset_location, query=preprocessing_query
     ).set_display_name("Ingest data")
 
     # data extraction to gcs
@@ -124,7 +124,7 @@ def xgboost_pipeline(
             table_name=train_table,
             dataset_location=dataset_location,
         )
-        .after(ingest)
+        .after(preprocessing)
         .set_display_name("Extract train data")
         .set_caching_options(False)
     ).outputs["dataset"]
@@ -136,7 +136,7 @@ def xgboost_pipeline(
             table_name=valid_table,
             dataset_location=dataset_location,
         )
-        .after(ingest)
+        .after(preprocessing)
         .set_display_name("Extract validation data")
         .set_caching_options(False)
     ).outputs["dataset"]
@@ -149,7 +149,7 @@ def xgboost_pipeline(
             dataset_location=dataset_location,
             destination_gcs_uri=test_dataset_uri,
         )
-        .after(ingest)
+        .after(preprocessing)
         .set_display_name("Extract test data")
         .set_caching_options(False)
     ).outputs["dataset"]

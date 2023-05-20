@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import json
+
 from pathlib import Path
 from jinja2 import Template
 
@@ -30,7 +30,4 @@ def generate_query(input_file: Path, **replacements) -> str:
     with open(input_file, "r") as f:
         query_template = f.read()
 
-    # Render the template with the provided replacements
-    query = Template(query_template).render(**replacements)
-
-    return query
+    return Template(query_template).render(**replacements)
