@@ -114,7 +114,7 @@ def tensorflow_pipeline(
 
     preprocessing = BigqueryQueryJobOp(
         project=project_id, location=dataset_location, query=preprocessing_query
-    ).set_display_name("Ingest data")
+    ).set_display_name("Ingest & preprocess data")
 
     # data extraction to gcs
 
