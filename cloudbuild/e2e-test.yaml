@@ -30,19 +30,12 @@ steps:
   # Run end-to-end (E2E) pipeline tests on both pipelines
   - name: python:3.7
     entrypoint: /bin/sh
-    dir: pipelines
     args:
       - -c
       - |
-        pip install pipenv && \
-        pipenv install --dev && \
-        cd ../ && \
-        make compile-all-components && \
-        make compile-pipeline pipeline=training && \
-        make compile-pipeline pipeline=prediction && \
-        cd pipelines && \
-        pipenv run python -m pytest --log-cli-level=INFO tests/${_PIPELINE_TEMPLATE}/training --enable_caching=${_TEST_ENABLE_PIPELINE_CACHING} && \
-        pipenv run python -m pytest --log-cli-level=INFO tests/${_PIPELINE_TEMPLATE}/prediction --enable_caching=${_TEST_ENABLE_PIPELINE_CACHING}
+        make setup && \
+        make e2e-tests pipeline=training enable_pipeline_caching=False sync_assets=false && \
+        make e2e-tests pipeline=prediction enable_pipeline_caching=False sync_assets=false
     env:
       - VERTEX_LOCATION=${_TEST_VERTEX_LOCATION}
       - VERTEX_PROJECT_ID=${_TEST_VERTEX_PROJECT_ID}
