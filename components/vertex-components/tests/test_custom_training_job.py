@@ -16,8 +16,10 @@ def test_custom_train_job(tmpdir):
         "builtins.open", mock.mock_open(read_data="{}")
     ) as mock_open:
 
+        # Mock that the training script exists
         mock_exists.return_value = True
 
+        # Mock Artifacts
         mock_train_data = Dataset(uri=tmpdir)
         mock_valid_data = Dataset(uri=tmpdir)
         mock_test_data = Dataset(uri=tmpdir)
@@ -25,6 +27,7 @@ def test_custom_train_job(tmpdir):
         mock_model = Artifact(uri=tmpdir, metadata={"resourceName": ""})
         mock_metrics = Metrics(uri=tmpdir)
 
+        # Call function
         custom_train_job(
             train_script_uri="gs://my-bucket/train_script.py",
             train_data=mock_train_data,
@@ -41,6 +44,7 @@ def test_custom_train_job(tmpdir):
             job_name="my-job",
         )
 
+        # Assert custom training job is called
         mock_job.assert_called_once_with(
             project="my-project-id",
             location="europe-west4",
@@ -52,6 +56,7 @@ def test_custom_train_job(tmpdir):
             model_serving_container_image_uri="gcr.io/my-project/my-serving-image:latest",  # noqa: E501
         )
 
+        # Assert metrics loading
         mock_open.assert_called_once_with(tmpdir, "r")
 
 
@@ -62,7 +67,8 @@ def test_custom_train_script_not_found(tmpdir):
         "builtins.open", mock.mock_open(read_data="{}")
     ) as mock_open:
 
-        mock_exists.return_value = False  # Simulate script path not found
+        # Mock that the training script is not found
+        mock_exists.return_value = False
 
         mock_train_data = Dataset(uri=tmpdir)
         mock_valid_data = Dataset(uri=tmpdir)
@@ -87,5 +93,6 @@ def test_custom_train_script_not_found(tmpdir):
             job_name="my-job",
         )
 
+        # Assert the custom training job is not executed
         mock_job.assert_not_called()
         mock_open.assert_not_called()

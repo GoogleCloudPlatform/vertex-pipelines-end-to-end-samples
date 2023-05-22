@@ -37,7 +37,7 @@ def test_extract_bq_to_dataset(tmpdir):
             skip_if_exists=False,
         )
 
-        # Check that Client.extract_table was called correctly
+        # Check that client.extract_table was called correctly
         mock_client.return_value.extract_table.assert_called_once_with(
             mock_table.return_value, "gs://mock_bucket", job_config="mock-job-config"
         )
@@ -50,13 +50,13 @@ def test_extract_bq_to_dataset_skip_existing(tmpdir):
         "pathlib.Path.exists"
     ) as mock_path_exists:
 
-        # # Mock the Dataset path
+        # Mock the Dataset path
         mock_path = tmpdir
 
         # Mock that the destination already exists
         mock_path_exists.return_value = True
 
-        # Call the function with skip_if_exists set to True
+        # Call the function
         extract_bq_to_dataset(
             bq_client_project_id="my-project-id",
             source_project_id="source-project-id",
