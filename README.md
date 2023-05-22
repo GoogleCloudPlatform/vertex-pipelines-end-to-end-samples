@@ -242,14 +242,10 @@ Below is a diagram of how the files are published in each environment in the `e2
 ```
 . <-- GCS directory set by _PIPELINE_PUBLISH_GCS_PATH
 └── TAG_NAME or GIT COMMIT HASH <-- Git tag used for the release (release.yaml) OR git commit hash (e2e-test.yaml)
-    ├── prediction
-    │   ├── assets
-    │   │   └── some_useful_file.json
-    │   └── prediction.json   <-- compiled prediction pipeline
-    └── training
-        ├── assets
-        │   └── training_task.py
-        └── training.json   <-- compiled training pipeline
+    ├── training.json
+    ├── prediction.json
+    ├── assets
+    │   └── some_useful_file.json
 ```
 
 4. `terraform-plan.yaml` - Checks the Terraform configuration under `terraform/envs/<env>` (e.g. `terraform/envs/test`), and produces a summary of any proposed changes that will be applied on merge to the main branch.
