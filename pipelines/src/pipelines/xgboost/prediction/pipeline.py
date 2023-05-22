@@ -12,14 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import json
 import os
 import pathlib
 
+from google_cloud_pipeline_components.v1.bigquery import BigqueryQueryJobOp
 from kfp.v2 import compiler, dsl
 
 from pipelines import generate_query
-from bigquery_components import bq_query_to_table
 from vertex_components import lookup_model, model_batch_predict
 
 
@@ -29,9 +28,10 @@ def xgboost_pipeline(
     project_location: str = os.environ.get("VERTEX_LOCATION"),
     ingestion_project_id: str = os.environ.get("VERTEX_PROJECT_ID"),
     model_name: str = "simple_xgboost",
-    dataset_id: str = "preprocessing",
+    preprocessing_dataset_id: str = "preprocessing",
     dataset_location: str = os.environ.get("VERTEX_LOCATION"),
     ingestion_dataset_id: str = "chicago_taxi_trips",
+    prediction_dataset_id: str = "prediction",
     timestamp: str = "2022-12-01 00:00:00",
     batch_prediction_machine_type: str = "n1-standard-4",
     batch_prediction_min_replicas: int = 3,
@@ -50,14 +50,17 @@ def xgboost_pipeline(
             for ingestion. This can be the same as `project_id` if the source data is
             in the same project where the ML pipeline is executed.
         model_name (str): name of model
-        dataset_id (str): id of BQ dataset used to store all staging data & predictions
+        preprocessing_dataset_id (str): id of BQ dataset used to
+            store all staging data .
+        prediction_dataset_id (str): id of BQ dataset used to
+            store all predictions.
         dataset_location (str): location of dataset
         ingestion_dataset_id (str): dataset id of ingestion data
         timestamp (str): Optional. Empty or a specific timestamp in ISO 8601 format
             (YYYY-MM-DDThh:mm:ss.sss±hh:mm or YYYY-MM-DDThh:mm:ss).
             If any time part is missing, it will be regarded as zero.
         batch_prediction_machine_type (str): Machine type to be used for Vertex Batch
-            Prediction. Example machine_types - n1-standard-4, n1-standard-16 etc
+            Prediction. Example machine_types - n1-standard-4, n1-standard-16 etc.
         batch_prediction_min_replicas (int): Minimum no of machines to distribute the
             Vertex Batch Prediction job for horizontal scalability
         batch_prediction_max_replicas (int): Maximum no of machines to distribute the
@@ -81,24 +84,20 @@ def xgboost_pipeline(
     # operations
     queries_folder = pathlib.Path(__file__).parent / "queries"
 
-    ingest_query = generate_query(
-        queries_folder / "ingest.sql",
+    preprocessing_query = generate_query(
+        queries_folder / "preprocessing.sql",
         source_dataset=f"{ingestion_project_id}.{ingestion_dataset_id}",
         source_table=ingestion_table,
+        prediction_dataset=f"{ingestion_project_id}.{prediction_dataset_id}",
+        preprocessing_dataset=f"{ingestion_project_id}.{preprocessing_dataset_id}",
+        ingested_table=ingested_table,
+        dataset_region=project_location,
         filter_column=time_column,
         filter_start_value=timestamp,
     )
 
-    # data ingestion and preprocessing operations
-    kwargs = dict(
-        bq_client_project_id=project_id,
-        destination_project_id=project_id,
-        dataset_id=dataset_id,
-        dataset_location=dataset_location,
-        query_job_config=json.dumps(dict(write_disposition="WRITE_TRUNCATE")),
-    )
-    ingest = bq_query_to_table(
-        query=ingest_query, table_id=ingested_table, **kwargs
+    preprocessing = BigqueryQueryJobOp(
+        project=project_id, location=dataset_location, query=preprocessing_query
     ).set_display_name("Ingest data")
 
     # lookup champion model
@@ -114,8 +113,10 @@ def xgboost_pipeline(
     )
 
     # batch predict from BigQuery to BigQuery
-    bigquery_source_input_uri = f"bq://{project_id}.{dataset_id}.{ingested_table}"
-    bigquery_destination_output_uri = f"bq://{project_id}.{dataset_id}"
+    bigquery_source_input_uri = (
+        f"bq://{project_id}.{preprocessing_dataset_id}.{ingested_table}"
+    )
+    bigquery_destination_output_uri = f"bq://{project_id}.{prediction_dataset_id}"
 
     batch_prediction = (
         model_batch_predict(
@@ -134,7 +135,7 @@ def xgboost_pipeline(
             monitoring_alert_email_addresses=monitoring_alert_email_addresses,
             monitoring_skew_config=monitoring_skew_config,
         )
-        .after(ingest)
+        .after(preprocessing)
         .set_display_name("Batch prediction job")
     )
 
