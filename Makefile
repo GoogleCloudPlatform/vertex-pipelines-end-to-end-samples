@@ -19,13 +19,14 @@ help: ## Display this help screen
 	@grep -h -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
     
 pre-commit: ## Runs the pre-commit checks over entire repo
+	@pip install pre-commit \
 	@cd pipelines && \
 	poetry run pre-commit run --all-files
 
 setup: ## Set up local environment for Python development on pipelines
 	@pip install poetry && \
 	cd pipelines && \
-	poetry install --dev
+	poetry install --with dev 
 
 test-trigger: ## Runs unit tests for the pipeline trigger code
 	@cd pipelines && \
