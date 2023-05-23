@@ -21,7 +21,6 @@ repos:
     rev: v0.0.9
     hooks:
       - id: terraform-fmt
-      # - id: shellcheck
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v1.2.3
@@ -43,7 +42,6 @@ repos:
     hooks:
       - id: yamllint
         args: [--format, parsable, --strict]
-        exclude: .*component.yaml
 
   - repo: https://github.com/psf/black
     rev: 22.3.0

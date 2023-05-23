@@ -92,7 +92,7 @@ module "cloudfunction" {
   region                        = local.cloudfunction_region
   function_name                 = var.cloudfunction_name
   description                   = var.cloudfunction_description
-  source_dir                    = "../../../pipelines/trigger"
+  source_dir                    = "../../../pipelines/src/pipelines/trigger"
   source_code_bucket_name       = google_storage_bucket.cf_staging_bucket.name
   runtime                       = "python39"
   entry_point                   = "cf_handler"

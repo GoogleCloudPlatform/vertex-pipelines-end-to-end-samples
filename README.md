@@ -152,18 +152,6 @@ bq mk --transfer_config \
 
 #### Running Pipelines
 
-Before you run the pipeline(s), you will need to compile the pipeline components to their YAML format with:
-
-```bash
-make compile-all-components
-```
-
-Whenever you make changes to the pipeline components, you will need to re-compile the relevant components with:
-
-```bash
-make compile-components GROUP=<component group e.g. aiplatform>
-```
-
 You can run the XGBoost training pipeline (for example) with:
 
 ```bash
@@ -190,30 +178,34 @@ When triggering ad hoc runs in your dev/sandbox environment, or when running the
 
 ### Assets
 
-In each pipeline folder, there is an `assets` directory (`pipelines/pipelines/<xgboost|tensorflow>/<training|prediction>/assets/`). This can be used for any additional files that may be needed during execution of the pipelines. 
+In each pipeline folder, there is an `assets` directory (`pipelines/pipelines/<xgboost|tensorflow>/<training|prediction>/assets/`). 
+This can be used for any additional files that may be needed during execution of the pipelines. 
 This directory is rsync'd to Google Cloud Storage when running a pipeline in the sandbox environment or as part of the CD pipeline (see [CI/CD setup](cloudbuild/README.md)).
 
 ## Testing
 
-Unit tests and end-to-end (E2E) pipeline tests are performed using [pytest](https://docs.pytest.org). The unit tests for custom KFP components are run on each pull request, and the E2E tests are run on merge to the main branch. To run them on your local machine:
+Unit tests and end-to-end (E2E) pipeline tests are performed using [pytest](https://docs.pytest.org). 
+The unit tests for custom KFP components are run on each pull request, and the E2E tests are run on merge to the main branch. To run them on your local machine:
 
 ```
-make test-components GROUP=<component group e.g. aiplatform>
-```
-
-or
-
-```
+make setup-all-components
 make test-all-components
 ```
 
-and
+Alternatively, only setup and install one of the components groups by running:
+```
+make setup-components GROUP=vertex-components
+make test-components GROUP=vertex-components
+```
+
+To run end-to-end tests of a single pipeline, you can use:
 
 ```
-make e2e-tests pipeline=<training|prediction> [ enable_caching=<true|false> ]
+make e2e-tests pipeline=<training|prediction> [ enable_caching=<true|false> ] [ sync_assets=<true|false> ]
 ```
 
-There are also unit tests for the pipeline triggering code [`pipelines/pipelines/trigger`](../pipelines/trigger). This is not run as part of a CI/CD pipeline, as we don't expect this to be changed for each use case. To run them on your local machine:
+There are also unit tests for the pipeline triggering code. 
+This is not run as part of a CI/CD pipeline, as we don't expect this to be changed for each use case. To run them on your local machine:
 
 ```
 make test-trigger
@@ -223,7 +215,7 @@ make test-trigger
 
 ### Update existing pipelines
 
-See existing [XGBoost](pipelines/pipelines/xgboost) and [Tensorflow](pipelines/pipelines/tensorflow) pipelines as part of this template.
+See existing [XGBoost](pipelines/src/pipelines/xgboost) and [Tensorflow](pipelines/src/pipelines/tensorflow) pipelines as part of this template.
 Update `PIPELINE_TEMPLATE` to `xgboost` or `tensorflow` in [env.sh](env.sh.example) to specify whether to run the XGBoost pipelines or TensorFlow pipelines. 
 Make changes to the ML pipelines and their associated tests.
 Refer to the [contribution instructions](CONTRIBUTING.md) for more information on committing changes. 

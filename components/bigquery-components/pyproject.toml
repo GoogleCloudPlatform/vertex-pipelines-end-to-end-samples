@@ -1,0 +1,45 @@
+[project]
+name = "bigquery-components"
+authors = [
+    {name = "Example User", email = "user@example.com"},
+]
+description = "BigQuery components"
+readme = "README.md"
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3.7",
+]
+requires-python = ">=3.7"
+dynamic = ["version"]
+dependencies = [
+    "kfp == 1.8.21",
+]
+
+[project.optional-dependencies]
+tests = [
+    "google-cloud-bigquery == 2.30.0",
+    "pytest >= 7.3.1,<8.0.0",
+]
+
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta:__legacy__"
+
+[tool.flake8]
+max-line-length = 88
+per-file-ignores = [
+    "E203",
+    "F841"
+]
+ignore = [
+    "E203",
+    "F841",
+]
+
+[tool.pytest.ini_options]
+pythonpath = [
+  "src"
+]
+testpaths = "tests"
+junit_family = "xunit2"
