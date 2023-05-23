@@ -1,9 +1,7 @@
 [tool.poetry]
 name = "pipelines"
 version = "0.1.0"
-authors = [
-    {name = "Example User", email = "user@example.com"},
-]
+authors = ["Example User <user@example.com>"]
 description = "Turbo Template"
 readme = "README.md"
 classifiers = [
@@ -43,4 +41,3 @@ pythonpath = [
 ]
 testpaths = "tests"
 junit_family = "xunit2"
-
