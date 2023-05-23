@@ -20,7 +20,7 @@ help: ## Display this help screen
     
 pre-commit: ## Runs the pre-commit checks over entire repo
 	@pip install pre-commit \
-	@cd pipelines && \
+	cd pipelines && \
 	poetry run pre-commit run --all-files
 
 setup: ## Set up local environment for Python development on pipelines
