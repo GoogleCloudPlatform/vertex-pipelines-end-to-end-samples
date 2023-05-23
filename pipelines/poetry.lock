@@ -237,7 +237,7 @@ files = [
 name = "exceptiongroup"
 version = "1.1.1"
 description = "Backport of PEP 654 (exception groups)"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.7"
 files = [
@@ -281,14 +281,14 @@ termcolor = "*"
 
 [[package]]
 name = "google-api-core"
-version = "2.10.2"
+version = "1.34.0"
 description = "Google API client core library"
 category = "main"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "google-api-core-2.10.2.tar.gz", hash = "sha256:10c06f7739fe57781f87523375e8e1a3a4674bf6392cd6131a3222182b971320"},
-    {file = "google_api_core-2.10.2-py3-none-any.whl", hash = "sha256:34f24bd1d5f72a8c4519773d99ca6bf080a6c4e041b4e9f024fe230191dda62e"},
+    {file = "google-api-core-1.34.0.tar.gz", hash = "sha256:6fb380f49d19ee1d09a9722d0379042b7edb06c0112e4796c7a395078a043e71"},
+    {file = "google_api_core-1.34.0-py3-none-any.whl", hash = "sha256:7421474c39d396a74dfa317dddbc69188f2336835f526087c7648f91105e32ff"},
 ]
 
 [package.dependencies]
@@ -296,7 +296,7 @@ google-auth = ">=1.25.0,<3.0dev"
 googleapis-common-protos = ">=1.56.2,<2.0dev"
 grpcio = {version = ">=1.33.2,<2.0dev", optional = true, markers = "extra == \"grpc\""}
 grpcio-status = {version = ">=1.33.2,<2.0dev", optional = true, markers = "extra == \"grpc\""}
-protobuf = ">=3.19.5,<3.20.0 || >3.20.0,<3.20.1 || >3.20.1,<4.21.0 || >4.21.0,<4.21.1 || >4.21.1,<4.21.2 || >4.21.2,<4.21.3 || >4.21.3,<4.21.4 || >4.21.4,<4.21.5 || >4.21.5,<5.0.0dev"
+protobuf = ">=3.19.5,<3.20.0 || >3.20.0,<3.20.1 || >3.20.1,<4.0.0dev"
 requests = ">=2.18.0,<3.0.0dev"
 
 [package.extras]
@@ -490,23 +490,6 @@ grpc = ["grpcio (>=1.38.0,<2.0dev)"]
 
 [[package]]
 name = "google-cloud-notebooks"
-version = "1.4.4"
-description = ""
-category = "main"
-optional = false
-python-versions = ">=3.7"
-files = [
-    {file = "google-cloud-notebooks-1.4.4.tar.gz", hash = "sha256:76c1c21f2328c0777c4b0333d1a9adbeeea94cfc9af25fe589bef00a9dae41cd"},
-    {file = "google_cloud_notebooks-1.4.4-py2.py3-none-any.whl", hash = "sha256:b0204d26663df0e460cd4158d6d0747e9e16d70c607e4da99572a77b51cf2e8d"},
-]
-
-[package.dependencies]
-google-api-core = {version = ">=1.32.0,<2.0.0 || >=2.8.0,<3.0.0dev", extras = ["grpc"]}
-proto-plus = ">=1.22.0,<2.0.0dev"
-protobuf = ">=3.19.5,<3.20.0 || >3.20.0,<3.20.1 || >3.20.1,<4.21.0 || >4.21.0,<4.21.1 || >4.21.1,<4.21.2 || >4.21.2,<4.21.3 || >4.21.3,<4.21.4 || >4.21.4,<4.21.5 || >4.21.5,<5.0.0dev"
-
-[[package]]
-name = "google-cloud-notebooks"
 version = "1.7.0"
 description = "Google Cloud Notebooks API client library"
 category = "main"
@@ -549,24 +532,6 @@ protobuf = ">=3.19.0,<4.0.0dev"
 
 [package.extras]
 tests = ["flake8 (>=3.0.0)", "google-api-core (>=1.31.5,<2.0.0 || >=2.8.0,<3.0.0dev)", "google-cloud-aiplatform (>=1.14.0,<2)", "google-cloud-notebooks (>=0.4.0)", "google-cloud-storage (>=2.2.1,<3)", "googleapis-common-protos (>=1.56.2,<2.0dev)", "grpcio-status (<=1.47.0)", "kfp (>=1.8.9,<2.0.0)", "mock (>=4.0.0)", "protobuf (>=3.19.0,<4.0.0dev)", "pytest (>=6.0.0)"]
-
-[[package]]
-name = "google-cloud-resource-manager"
-version = "1.6.3"
-description = "Google Cloud Resource Manager API client library"
-category = "main"
-optional = false
-python-versions = ">=3.7"
-files = [
-    {file = "google-cloud-resource-manager-1.6.3.tar.gz", hash = "sha256:6cf8a9a74e65a03857896967c79307b75805c752ade3bc41224e6167774bc9c9"},
-    {file = "google_cloud_resource_manager-1.6.3-py2.py3-none-any.whl", hash = "sha256:e330883c53c5e3e38a651da85ae0bce201a736b5cd5f9df10941160c6a66ce6e"},
-]
-
-[package.dependencies]
-google-api-core = {version = ">=1.32.0,<2.0.0 || >=2.8.0,<3.0.0dev", extras = ["grpc"]}
-grpc-google-iam-v1 = ">=0.12.4,<1.0.0dev"
-proto-plus = ">=1.22.0,<2.0.0dev"
-protobuf = ">=3.19.5,<3.20.0 || >3.20.0,<3.20.1 || >3.20.1,<4.21.0 || >4.21.0,<4.21.1 || >4.21.1,<4.21.2 || >4.21.2,<4.21.3 || >4.21.3,<4.21.4 || >4.21.4,<4.21.5 || >4.21.5,<5.0.0dev"
 
 [[package]]
 name = "google-cloud-resource-manager"
@@ -868,7 +833,7 @@ files = [
 name = "iniconfig"
 version = "2.0.0"
 description = "brain-dead simple config-ini parsing"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.7"
 files = [
@@ -1135,7 +1100,7 @@ test = ["appdirs (==1.4.4)", "covdefaults (>=2.3)", "pytest (>=7.3.1)", "pytest-
 name = "pluggy"
 version = "1.0.0"
 description = "plugin and hook calling mechanisms for python"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.6"
 files = [
@@ -1352,7 +1317,7 @@ files = [
 name = "pytest"
 version = "7.3.1"
 description = "pytest: simple powerful testing with Python"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.7"
 files = [
@@ -1630,7 +1595,7 @@ tests = ["pytest", "pytest-cov"]
 name = "tomli"
 version = "2.0.1"
 description = "A lil' TOML parser"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.7"
 files = [
@@ -1842,4 +1807,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "61dd42065ded5aa173586b15285aee373d40d89710fff18ae49e546999a29156"
+content-hash = "3f173b0e8ccc458b480858963ca07ed592426d564e0fa62378a51e325d15f802"
