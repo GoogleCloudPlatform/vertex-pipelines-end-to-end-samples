@@ -20,24 +20,24 @@ help: ## Display this help screen
     
 pre-commit: ## Runs the pre-commit checks over entire repo
 	@cd pipelines && \
-	pipenv run pre-commit run --all-files
+	poetry run pre-commit run --all-files
 
 setup: ## Set up local environment for Python development on pipelines
-	@pip install pipenv && \
+	@pip install poetry && \
 	cd pipelines && \
-	pipenv install --dev
+	poetry install --dev
 
 test-trigger: ## Runs unit tests for the pipeline trigger code
 	@cd pipelines && \
-	pipenv run python -m pytest tests/trigger
+	poetry run python -m pytest tests/trigger
 
 compile-pipeline: ## Compile the pipeline to training.json or prediction.json. Must specify pipeline=<training|prediction>
 	@cd pipelines/src && \
-	pipenv run python -m pipelines.${PIPELINE_TEMPLATE}.${pipeline}.pipeline
+	poetry run python -m pipelines.${PIPELINE_TEMPLATE}.${pipeline}.pipeline
 
 setup-components: ## Run unit tests for a component group
 	@cd "components/${GROUP}" && \
-	pipenv install --dev
+	poetry install --dev
 
 setup-all-components: ## Run unit tests for all pipeline components
 	@set -e && \
@@ -48,7 +48,7 @@ setup-all-components: ## Run unit tests for all pipeline components
 
 test-components: ## Run unit tests for a component group
 	@cd "components/${GROUP}" && \
-	pipenv run pytest
+	poetry run pytest
 
 test-all-components: ## Run unit tests for all pipeline components
 	@set -e && \
@@ -69,7 +69,7 @@ run: ## Compile pipeline, copy assets to GCS, and run pipeline in sandbox enviro
 	@ $(MAKE) compile-pipeline && \
 	$(MAKE) sync-assets && \
 	cd pipelines/src && \
-	pipenv run python -m pipelines.trigger --template_path=./$(pipeline).json --enable_caching=$(enable_pipeline_caching)
+	poetry run python -m pipelines.trigger --template_path=./$(pipeline).json --enable_caching=$(enable_pipeline_caching)
 
 sync_assets ?= true
 e2e-tests: ## (Optionally) copy assets to GCS, and perform end-to-end (E2E) pipeline tests. Must specify pipeline=<training|prediction>. Optionally specify enable_pipeline_caching=<true|false> (defaults to default Vertex caching behaviour). Optionally specify sync_assets=<true|false> (defaults to true)
@@ -79,7 +79,7 @@ e2e-tests: ## (Optionally) copy assets to GCS, and perform end-to-end (E2E) pipe
 		echo "Skipping syncing assets to GCS"; \
     fi && \
 	cd pipelines && \
-	pipenv run pytest --log-cli-level=INFO tests/${PIPELINE_TEMPLATE}/$(pipeline) --enable_caching=$(enable_pipeline_caching)
+	poetry run pytest --log-cli-level=INFO tests/${PIPELINE_TEMPLATE}/$(pipeline) --enable_caching=$(enable_pipeline_caching)
 
 env ?= dev
 deploy-infra: ## Deploy the Terraform infrastructure to your project. Requires VERTEX_PROJECT_ID and VERTEX_LOCATION env variables to be set in env.sh. Optionally specify env=<dev|test|prod> (default = dev)
