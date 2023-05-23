@@ -4,7 +4,7 @@ version = "0.1.0"
 authors = [
     {name = "Example User", email = "user@example.com"},
 ]
-description = "Vertex components for training and prediction using the Chicago Taxi Dataset"
+description = "KFP components for interacting with Vertex AI"
 readme = "README.md"
 classifiers = [
     "Development Status :: 3 - Alpha",
