@@ -37,7 +37,7 @@ steps:
         mkdir -p ${TAG_NAME}/assets && \
         cp pipelines/src/training.json ${TAG_NAME}/training.json && \
         cp pipelines/src/prediction.json ${TAG_NAME}/prediction.json && \
-        cp -r pipelines/assets ${TAG_NAME}/assets && \
+        cp -r pipelines/assets/* ${TAG_NAME}/assets/ && \
         for dest in ${_PIPELINE_PUBLISH_GCS_PATHS} ; do \
           gsutil cp -r ${TAG_NAME} $$dest ; \
         done
