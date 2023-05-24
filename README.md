@@ -178,7 +178,8 @@ When triggering ad hoc runs in your dev/sandbox environment, or when running the
 
 ### Assets
 
-Pipeline folder, contains `assets` directory (`pipelines/assets/`). This can be used for any additional files that may be needed during execution of the pipelines. 
+The folder `pipelines/assets/` can be used for any additional files that may be needed during execution of the pipelines. 
+Most importantly this can include your training scripts.
 This directory is rsync'd to Google Cloud Storage when running a pipeline in the sandbox environment or as part of the CD pipeline (see [CI/CD setup](cloudbuild/README.md)).
 
 ## Testing
