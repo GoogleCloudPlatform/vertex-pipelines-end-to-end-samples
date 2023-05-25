@@ -37,7 +37,7 @@ compile-pipeline: ## Compile the pipeline to training.json or prediction.json. M
 
 setup-components: ## Run unit tests for a component group
 	@cd "components/${GROUP}" && \
-	poetry install --dev
+	poetry install --with dev 
 
 setup-all-components: ## Run unit tests for all pipeline components
 	@set -e && \
