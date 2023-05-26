@@ -14,10 +14,9 @@ Your Python dependencies should be defined in `poetry.lock file`, `pyproject.tom
 
 Define your pipeline components using the `@component` decorator in Python files under `my-new-components/src/my-new-components`. You will need to update the `__init__.py` file to provide tests - see the [Kubeflow Pipelines documentation](https://www.kubeflow.org/docs/components/pipelines/v1/sdk-v2/python-function-components/#building-python-function-based-components) for more information about writing pipeline components.
 
-Finally, you will need to install this new components package into the [`pipelines`](../pipelines) package. In [`pipelines/pyproject.toml`](../pipelines/pyproject.toml), add the following line to the `packages` section:
+Finally, you will need to install this new components package into the [`pipelines`](../pipelines) package. In [`pipelines/pyproject.toml`](../pipelines/pyproject.toml), add the following line to the `tool.poetry.dependencies` section:
 
 ```
-[tool.poetry.dependencies]
 my-new-components = { path = "../components/my-new-components", develop = true }
 ```
 Once you have added this line to [`pipelines/pyproject.toml`](../pipelines/pyproject.toml), run `make setup` from the root of the repository to install the new components package into the `pipelines` package.
