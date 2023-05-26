@@ -56,7 +56,7 @@ In a production MLOps solution, your ML pipelines need to be repeatable. So, we 
 1. Clone the repository locally
 1. Install Python: `pyenv install`
 1. Install poetry and  dependencies: `make setup`
-1. Install pre-commit hooks: `cd pipelines` && `poetry run pre-commit install`
+1. Install pre-commit hooks: `cd pipelines && poetry run pre-commit install`
 1. Copy `env.sh.example` to `env.sh`, and update the environment variables in `env.sh`
 1. Load the environment variables in `env.sh` by running `source env.sh`
 
