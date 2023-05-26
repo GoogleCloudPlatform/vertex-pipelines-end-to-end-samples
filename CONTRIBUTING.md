@@ -22,7 +22,7 @@ This guide is chiefly for users wishing to contribute to the opensource version.
 ## Links to Important Resources
 - [pytest](https://docs.pytest.org)
 - [unittest.mock](https://docs.python.org/3/library/unittest.mock.html)
-- [pipenv](https://pipenv-fork.readthedocs.io/en/latest/index.html)
+- [poetry](https://python-poetry.org/docs/#installation)
 - [Kubeflow Pipelines](https://www.kubeflow.org/docs/components/pipelines/overview)
 - [Vertex AI](https://cloud.google.com/vertex-ai/docs)
 - [AI Platform SDK](https://googleapis.dev/python/aiplatform/latest/index.html)
