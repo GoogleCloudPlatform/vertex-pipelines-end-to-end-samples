@@ -57,6 +57,18 @@ test-all-components: ## Run unit tests for all pipeline components
 		$(MAKE) test-components GROUP=$$(basename $$component_group) ; \
 	done
 
+test-components-coverage: ## Run tests with coverage
+	@cd "components/${GROUP}" && \
+	pipenv run coverage run -m pytest && \
+	pipenv run coverage report -m
+
+test-all-components-coverage: ## Run tests with coverage
+		@set -e && \
+	for component_group in components/*/ ; do \
+		echo "Test components under $$component_group" && \
+		$(MAKE) test-components-coverage GROUP=$$(basename $$component_group) ; \
+	done
+
 sync-assets: ## Sync assets folder to GCS. Must specify pipeline=<training|prediction>
 	@if [ -d "./pipelines/src/pipelines/${PIPELINE_TEMPLATE}/$(pipeline)/assets/" ] ; then \
 		echo "Syncing assets to GCS" && \
