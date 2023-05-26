@@ -37,5 +37,5 @@ steps:
 options:
   logging: CLOUD_LOGGING_ONLY
 
-# Increase timeout to allow pipenv to resolve dependencies
+# Increase timeout to allow poetry to resolve dependencies
 timeout: 3600s
