@@ -13,7 +13,7 @@
 # limitations under the License.
 import json
 import pytest
-from unittest import mock
+from unittest.mock import Mock, patch
 from kfp.v2.dsl import Model
 from google.cloud.aiplatform_v1beta1.types.job_state import JobState
 
@@ -30,19 +30,7 @@ TRAIN_DATASET = {
     "targetField": "col",
 }
 
-mock_job1 = mock.Mock()
-mock_job1.name = "mock-batch-job"
-mock_job1.state = JobState.JOB_STATE_SUCCEEDED
 
-
-@mock.patch(
-    "google.cloud.aiplatform_v1beta1.services.job_service.JobServiceClient.create_batch_prediction_job",  # noqa : E501
-    return_value=mock_job1,
-)
-@mock.patch(
-    "google.cloud.aiplatform_v1beta1.services.job_service.JobServiceClient.get_batch_prediction_job",  # noqa : E501
-    return_value=mock_job1,
-)
 @pytest.mark.parametrize(
     (
         "source_format,destination_format,source_uri,monitoring_training_dataset,"
@@ -56,8 +44,6 @@ mock_job1.state = JobState.JOB_STATE_SUCCEEDED
     ],
 )
 def test_model_batch_predict(
-    create_job,
-    get_job,
     tmpdir,
     source_format,
     destination_format,
@@ -69,22 +55,37 @@ def test_model_batch_predict(
     """
     Asserts model_batch_predict successfully creates requests given different arguments.
     """
+    mock_resource_name = "mock-batch-job"
+
+    mock_job1 = Mock()
+    mock_job1.name = mock_resource_name
+    mock_job1.state = JobState.JOB_STATE_SUCCEEDED
+
     mock_model = Model(uri=tmpdir, metadata={"resourceName": ""})
 
-    (gcp_resources,) = model_batch_predict(
-        model=mock_model,
-        job_display_name="",
-        project_location="",
-        project_id="",
-        source_uri=source_uri,
-        destination_uri=destination_format,
-        source_format=source_format,
-        destination_format=destination_format,
-        monitoring_training_dataset=monitoring_training_dataset,
-        monitoring_alert_email_addresses=monitoring_alert_email_addresses,
-        monitoring_skew_config=monitoring_skew_config,
-    )
+    with patch(
+        "google.cloud.aiplatform_v1beta1.services.job_service.JobServiceClient.create_batch_prediction_job",  # noqa: E501
+        return_value=mock_job1,
+    ) as create_job, patch(
+        "google.cloud.aiplatform_v1beta1.services.job_service.JobServiceClient.get_batch_prediction_job",  # noqa: E501
+        return_value=mock_job1,
+    ) as get_job:
+        (gcp_resources,) = model_batch_predict(
+            model=mock_model,
+            job_display_name="",
+            project_location="",
+            project_id="",
+            source_uri=source_uri,
+            destination_uri=destination_format,
+            source_format=source_format,
+            destination_format=destination_format,
+            monitoring_training_dataset=monitoring_training_dataset,
+            monitoring_alert_email_addresses=monitoring_alert_email_addresses,
+            monitoring_skew_config=monitoring_skew_config,
+        )
 
     create_job.assert_called_once()
     get_job.assert_called_once()
-    assert json.loads(gcp_resources)["resources"][0]["resourceUri"] == mock_job1.name
+    assert (
+        json.loads(gcp_resources)["resources"][0]["resourceUri"] == mock_resource_name
+    )
