@@ -16,7 +16,7 @@ from kfp.v2.dsl import Dataset, Output, component
 
 
 @component(
-    base_image="python:3.9",
+    base_image="python:3.7",
     packages_to_install=["google-cloud-bigquery==2.30.0"],
 )
 def extract_bq_to_dataset(

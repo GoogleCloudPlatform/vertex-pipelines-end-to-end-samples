@@ -7,11 +7,11 @@ readme = "README.md"
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
-    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.7",
 ]
 
 [tool.poetry.dependencies]
-python = ">=3.9,<3.11"
+python = ">=3.7,<3.11"
 kfp = "==1.8.21"
 
 [tool.poetry.group.dev.dependencies]
