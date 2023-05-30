@@ -60,6 +60,13 @@ In a production MLOps solution, your ML pipelines need to be repeatable. So, we 
 1. Copy `env.sh.example` to `env.sh`, and update the environment variables in `env.sh`
 1. Load the environment variables in `env.sh` by running `source env.sh`
 
+please note: `poetry install` or `poetry add`, installs packages within the project's virtual environment. If you use pip directly, you might accidentally install packages globally or in the wrong environment, leading to conflicts or difficulties in managing dependencies.
+
+### Configuring poetry to detect python version using pyenv
+
+1. run in terminal `poetry config virtualenvs.prefer-active-python true`
+1. Manage and install project's dependencies using `poetry install`
+
 ### Deploying Cloud Infrastructure
 
 The cloud infrastructure is managed using Terraform and is defined in the [`terraform`](terraform) directory. There are three Terraform modules defined in [`terraform/modules`](terraform/modules):
