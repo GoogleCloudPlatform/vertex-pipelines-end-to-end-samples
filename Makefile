@@ -25,7 +25,7 @@ pre-commit: ## Runs the pre-commit checks over entire repo
 setup: ## Set up local environment for Python development on pipelines
 	@pip install poetry && \
 	cd pipelines && \
-	poetry install --with dev 
+	poetry install --with dev
 
 test-trigger: ## Runs unit tests for the pipeline trigger code
 	@cd pipelines && \
@@ -37,7 +37,7 @@ compile-pipeline: ## Compile the pipeline to training.json or prediction.json. M
 
 setup-components: ## Run unit tests for a component group
 	@cd "components/${GROUP}" && \
-	poetry install --with dev 
+	poetry install --with dev
 
 setup-all-components: ## Run unit tests for all pipeline components
 	@set -e && \
