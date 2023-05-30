@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from unittest.mock import patch
+from unittest import mock
 
 from kfp.v2.dsl import Model
 
@@ -21,26 +21,31 @@ import vertex_components
 update_best_model = vertex_components.update_best_model.python_func
 
 
-def test_model_batch_predict(tmpdir):
+@mock.patch("google.cloud.aiplatform.Model")
+@mock.patch("google.cloud.aiplatform.model_evaluation.ModelEvaluation")
+@mock.patch("google.cloud.aiplatform.models.ModelRegistry")
+@mock.patch("google.protobuf.json_format.MessageToDict")
+def test_model_batch_predict(
+    mock_message_to_dict,
+    mock_model_registry,
+    mock_model_evaluation,
+    mock_model_class,
+    tmpdir,
+):
     """
     Asserts model_batch_predict successfully creates requests given different arguments.
     """
     mock_model = Model(uri=tmpdir, metadata={"resourceName": ""})
     mock_message = {"metrics": {"rmse": 0.01}}
+    mock_message_to_dict.return_value = mock_message
 
-    with patch("google.cloud.aiplatform.Model",), patch(
-        "google.cloud.aiplatform.model_evaluation.ModelEvaluation",
-    ), patch("google.cloud.aiplatform.models.ModelRegistry",), patch(
-        "google.protobuf.json_format.MessageToDict", return_value=mock_message
-    ):
-
-        (challenger_wins,) = update_best_model(
-            challenger=mock_model,
-            challenger_evaluation="",
-            parent_model="",
-            project_id="",
-            project_location="",
-            eval_metric="rmse",
-            eval_lower_is_better=True,
-        )
-        assert not challenger_wins
+    (challenger_wins,) = update_best_model(
+        challenger=mock_model,
+        challenger_evaluation="",
+        parent_model="",
+        project_id="",
+        project_location="",
+        eval_metric="rmse",
+        eval_lower_is_better=True,
+    )
+    assert not challenger_wins
