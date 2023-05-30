@@ -64,8 +64,8 @@ please note: `poetry install` or `poetry add`, installs packages within the proj
 
 ### Configuring poetry to detect python version using pyenv
 
-1. run in terminal `poetry config virtualenvs.prefer-active-python true`
-1. Manage and install project's dependencies using `poetry install`
+1. Run `poetry config virtualenvs.prefer-active-python true`
+1. Install project dependencies using `poetry install`
 
 ### Deploying Cloud Infrastructure
 
