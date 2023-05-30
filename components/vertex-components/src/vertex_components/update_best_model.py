@@ -17,7 +17,7 @@ from kfp.v2.dsl import Input, Model, component
 
 
 @component(
-    base_image="python:3.7",
+    base_image="python:3.9",
     packages_to_install=["google-cloud-aiplatform==1.24.1"],
 )
 def update_best_model(
