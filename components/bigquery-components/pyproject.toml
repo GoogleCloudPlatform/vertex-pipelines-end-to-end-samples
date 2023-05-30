@@ -2,7 +2,7 @@
 name = "bigquery-components"
 version = "0.1.0"
 authors = ["Example User <user@example.com>"]
-description = "Bigquery components for vertex pipelines"
+description = "KubeFlow components for BigQuery"
 readme = "README.md"
 classifiers = [
     "Development Status :: 3 - Alpha",
