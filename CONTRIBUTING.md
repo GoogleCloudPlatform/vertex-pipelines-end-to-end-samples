@@ -211,7 +211,7 @@ def test_vertex_endpoint_uri(output_uri: str):
 ```
 
 ## Adding or changing python dependencies
-We use [poetry](https://python-poetry.org/docs/#installation) to handle our packages and their dependencies. Each group of pipeline components (e.g. [aiplatform](./pipeline_components/aiplatform/)) containers its own poetry environment, and there is a [separate poetry environment](./pipelines/) for the ML pipelines themselves and the pipeline trigger code.
+We use [poetry](https://python-poetry.org/docs/#installation) to handle our packages and their dependencies. Each group of pipeline components (e.g. [vertex](./components/vertex-components/)) includes its own poetry environment, and there is a [separate poetry environment](./pipelines/) for the ML pipelines themselves and the pipeline trigger code.
 
 ### Adding python dependencies
 You may need to add new packages for your own use cases. To do this, run the following from the relevant directory ([pipelines](./pipelines) for the main ML pipeline dependencies or the directory of the relevant component group e.g. [aiplatform](./pipeline_components/aiplatform/)):
