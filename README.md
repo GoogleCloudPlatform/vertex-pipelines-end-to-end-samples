@@ -178,8 +178,8 @@ When triggering ad hoc runs in your dev/sandbox environment, or when running the
 
 ### Assets
 
-In each pipeline folder, there is an `assets` directory (`pipelines/pipelines/<xgboost|tensorflow>/<training|prediction>/assets/`). 
-This can be used for any additional files that may be needed during execution of the pipelines. 
+The folder `pipelines/assets/` can be used for any additional files that may be needed during execution of the pipelines. 
+Most importantly this can include your training scripts.
 This directory is rsync'd to Google Cloud Storage when running a pipeline in the sandbox environment or as part of the CD pipeline (see [CI/CD setup](cloudbuild/README.md)).
 
 ## Testing
@@ -243,14 +243,10 @@ Below is a diagram of how the files are published in each environment in the `e2
 ```
 . <-- GCS directory set by _PIPELINE_PUBLISH_GCS_PATH
 └── TAG_NAME or GIT COMMIT HASH <-- Git tag used for the release (release.yaml) OR git commit hash (e2e-test.yaml)
-    ├── prediction
-    │   ├── assets
-    │   │   └── some_useful_file.json
-    │   └── prediction.json   <-- compiled prediction pipeline
-    └── training
-        ├── assets
-        │   └── training_task.py
-        └── training.json   <-- compiled training pipeline
+    ├── training.json
+    ├── prediction.json
+    ├── assets
+    │   └── some_useful_file.json
 ```
 
 4. `terraform-plan.yaml` - Checks the Terraform configuration under `terraform/envs/<env>` (e.g. `terraform/envs/test`), and produces a summary of any proposed changes that will be applied on merge to the main branch.

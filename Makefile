@@ -69,12 +69,12 @@ test-all-components-coverage: ## Run tests with coverage
 		$(MAKE) test-components-coverage GROUP=$$(basename $$component_group) ; \
 	done
 
-sync-assets: ## Sync assets folder to GCS. Must specify pipeline=<training|prediction>
-	@if [ -d "./pipelines/src/pipelines/${PIPELINE_TEMPLATE}/$(pipeline)/assets/" ] ; then \
+sync-assets: ## Sync assets folder to GCS.
+	@if [ -d "./pipelines/assets/" ] ; then \
 		echo "Syncing assets to GCS" && \
-		gsutil -m rsync -r -d ./pipelines/src/pipelines/${PIPELINE_TEMPLATE}/$(pipeline)/assets ${PIPELINE_FILES_GCS_PATH}/$(pipeline)/assets ; \
+		gsutil -m rsync -r -d ./pipelines/assets ${PIPELINE_FILES_GCS_PATH}/assets ; \
 	else \
-		echo "No assets folder found for pipeline $(pipeline)" ; \
+		echo "No assets folder found" ; \
 	fi ;
 
 run: ## Compile pipeline, copy assets to GCS, and run pipeline in sandbox environment. Must specify pipeline=<training|prediction>. Optionally specify enable_pipeline_caching=<true|false> (defaults to default Vertex caching behaviour)

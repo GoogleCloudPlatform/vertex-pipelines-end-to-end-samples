@@ -21,7 +21,6 @@ steps:
       - -c
       - |
         make setup && \
-        make compile-all-components && \
         make compile-pipeline pipeline=training && \
         make compile-pipeline pipeline=prediction
     env:
@@ -35,12 +34,10 @@ steps:
     args:
       - -c
       - |
-        mkdir -p ${TAG_NAME}/training/assets && \
-        mkdir -p ${TAG_NAME}/prediction/assets && \
-        cp pipelines/training.json ${TAG_NAME}/training/training.json && \
-        cp pipelines/prediction.json ${TAG_NAME}/prediction/prediction.json && \
-        cp -r pipelines/pipelines/${_PIPELINE_TEMPLATE}/training/assets ${TAG_NAME}/training/ && \
-        cp -r pipelines/pipelines/${_PIPELINE_TEMPLATE}/prediction/assets ${TAG_NAME}/prediction/ && \
+        mkdir -p ${TAG_NAME}/assets && \
+        cp pipelines/src/training.json ${TAG_NAME}/training.json && \
+        cp pipelines/src/prediction.json ${TAG_NAME}/prediction.json && \
+        cp -r pipelines/assets/* ${TAG_NAME}/assets/ && \
         for dest in ${_PIPELINE_PUBLISH_GCS_PATHS} ; do \
           gsutil cp -r ${TAG_NAME} $$dest ; \
         done
