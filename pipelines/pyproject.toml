@@ -2,7 +2,7 @@
 name = "pipelines"
 version = "0.1.0"
 authors = ["Example User <user@example.com>"]
-description = "Turbo Template"
+description = "Vertex AI Pipelines end-to-end sample"
 readme = "README.md"
 classifiers = [
     "Development Status :: 3 - Alpha",
