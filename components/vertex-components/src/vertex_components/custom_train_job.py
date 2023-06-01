@@ -18,7 +18,10 @@ from kfp.v2.dsl import Input, component, Metrics, Output, Artifact, Dataset
 
 @component(
     base_image="python:3.7",
-    packages_to_install=["google-cloud-aiplatform==1.24.1", "google-cloud-pipeline-components==1.0.42"],
+    packages_to_install=[
+        "google-cloud-aiplatform==1.24.1",
+        "google-cloud-pipeline-components==1.0.42",
+    ],
 )
 def custom_train_job(
     train_script_uri: str,
@@ -41,7 +44,7 @@ def custom_train_job(
     accelerator_type: str = "ACCELERATOR_TYPE_UNSPECIFIED",
     accelerator_count: int = 0,
     parent_model: str = None,
-) -> NamedTuple("Outputs",  [("gcp_resources", str)]):
+) -> NamedTuple("Outputs", [("gcp_resources", str)]):
     """Run a custom training job using a training script.
 
     The provided script will be invoked by passing the following command-line arguments:
@@ -146,13 +149,12 @@ def custom_train_job(
     for k, v in parsed_metrics.items():
         if type(v) is float:
             metrics.log_metric(k, v)
-    
 
     # return GCP resource for Vertex AI UI integration
-    custom_job_name = job.to_dict()['trainingTaskMetadata']['backingCustomJob']
+    custom_job_name = job.to_dict()["trainingTaskMetadata"]["backingCustomJob"]
     custom_train_job_resources = GcpResources()
     ctr = custom_train_job_resources.resources.add()
     ctr.resource_type = "CustomJob"
-    ctr.resource_uri=custom_job_name
-    gcp_resources=MessageToJson(custom_train_job_resources)
+    ctr.resource_uri = custom_job_name
+    gcp_resources = MessageToJson(custom_train_job_resources)
     return (gcp_resources,)
