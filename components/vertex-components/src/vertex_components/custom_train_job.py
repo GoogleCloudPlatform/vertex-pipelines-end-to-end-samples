@@ -147,10 +147,12 @@ def custom_train_job(
         if type(v) is float:
             metrics.log_metric(k, v)
     
+
     # return GCP resource for Vertex AI UI integration
+    custom_job_name = job.to_dict()['trainingTaskMetadata']['backingCustomJob']
     custom_train_job_resources = GcpResources()
     ctr = custom_train_job_resources.resources.add()
     ctr.resource_type = "CustomJob"
-    ctr.resource_uri=f"https://{project_location}-aiplatform.googleapis.com/v1/projects/{project_id}/locations/{project_location}/customJobs/{job.name}"
+    ctr.resource_uri=custom_job_name
     gcp_resources=MessageToJson(custom_train_job_resources)
     return (gcp_resources,)
