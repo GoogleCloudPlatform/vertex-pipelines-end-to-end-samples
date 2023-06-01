@@ -150,7 +150,7 @@ def custom_train_job(
     # return GCP resource for Vertex AI UI integration
     custom_train_job_resources = GcpResources()
     ctr = custom_train_job_resources.resources.add()
-    ctr.resource_type = "CustomTrainingJob"
-    ctr.resource_uri=f"https://{project_location}-aiplatform.googleapis.com/v1/{job.resource_name}"
+    ctr.resource_type = "CustomJob"
+    ctr.resource_uri=f"https://{project_location}-aiplatform.googleapis.com/v1/projects/{project_id}/locations/{project_location}/customJobs/{job.name}"
     gcp_resources=MessageToJson(custom_train_job_resources)
     return (gcp_resources,)
