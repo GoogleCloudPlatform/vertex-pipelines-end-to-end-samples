@@ -87,6 +87,7 @@ def custom_train_job(
     Returns:
         parent_model (str): Resource URI of the parent model (empty string if the
             trained model is the first model version of its kind).
+        NamedTuple: gcp_resources for Vertex AI UI integration.
     """
     import json
     import logging
@@ -146,18 +147,10 @@ def custom_train_job(
         if type(v) is float:
             metrics.log_metric(k, v)
     
-    custom_train_job_name = job.name
-    logging.info(f"CustomJobName: {job.name }")
-
+    # return GCP resource for Vertex AI UI integration
     custom_train_job_resources = GcpResources()
     ctr = custom_train_job_resources.resources.add()
-    ctr.resource_type = "CustomJob"
-    ctr.resource_uri=f"https://{project_location}-aiplatform.googleapis.com/v1/projects/{project_id}/locations/{project_location}/customJobs/{custom_train_job_name}"
-    # ctr.resource_uri=f"https://{project_location}-aiplatform.googleapis.com/v1/projects/{project_id}/locations/{project_location}/trainingPipelines/{custom_train_job_name}" ?
-
+    ctr.resource_type = "CustomTrainingJob"
+    ctr.resource_uri=f"https://{project_location}-aiplatform.googleapis.com/v1/{job.resource_name}"
     gcp_resources=MessageToJson(custom_train_job_resources)
-    logging.info(f"GCPresources -: {gcp_resources }")
-    return gcp_resources
-
-    # return NamedTuple("Outputs", [("gcp_resources", str)])(gcp_resources) ?
-
+    return (gcp_resources,)
