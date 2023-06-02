@@ -102,12 +102,16 @@ def xgboost_pipeline(
     ).set_display_name("Ingest data")
 
     # lookup champion model
-    champion_model = lookup_model(
-        model_name=model_name,
-        project_location=project_location,
-        project_id=project_id,
-        fail_on_model_not_found=True,
-    ).set_display_name("Look up champion model")
+    champion_model = (
+        lookup_model(
+            model_name=model_name,
+            project_location=project_location,
+            project_id=project_id,
+            fail_on_model_not_found=True,
+        )
+        .set_display_name("Look up champion model")
+        .set_caching_options(False)
+    )
 
     # batch predict from BigQuery to BigQuery
     bigquery_source_input_uri = f"bq://{project_id}.{dataset_id}.{ingested_table}"

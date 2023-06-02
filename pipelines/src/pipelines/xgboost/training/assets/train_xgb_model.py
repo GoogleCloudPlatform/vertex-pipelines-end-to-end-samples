@@ -1,4 +1,6 @@
 import argparse
+from pathlib import Path
+
 import joblib
 import json
 import os
@@ -14,7 +16,9 @@ from xgboost import XGBRegressor
 
 logging.basicConfig(level=logging.DEBUG)
 
-
+# used for monitoring during prediction time
+TRAINING_DATASET_INFO = "training_dataset.json"
+# numeric/categorical features in Chicago trips dataset to be preprocessed
 NUM_COLS = ["dayofweek", "hourofday", "trip_distance", "trip_miles", "trip_seconds"]
 ORD_COLS = ["company"]
 OHE_COLS = ["payment_type"]
@@ -38,6 +42,9 @@ parser.add_argument("--model", default=os.getenv("AIP_MODEL_DIR"), type=str, hel
 parser.add_argument("--metrics", type=str, required=True)
 parser.add_argument("--hparams", default={}, type=json.loads)
 args = parser.parse_args()
+
+if args.model.startswith("gs://"):
+    args.model = Path("/gcs/" + args.model[5:])
 
 logging.info("Read csv files into dataframes")
 df_train = pd.read_csv(args.train_data)
@@ -111,15 +118,25 @@ metrics = {
     "rootMeanSquaredLogError": np.sqrt(metrics.mean_squared_log_error(y_test, y_pred)),
 }
 
-try:
-    model_path = args.model.replace("gs://", "/gcs/")
-    logging.info(f"Save model to: {model_path}")
-    os.makedirs(model_path, exist_ok=True)
-    joblib.dump(pipeline, model_path + "model.joblib")
-except Exception as e:
-    print(e)
-    raise e
+logging.info(f"Save model to: {args.model}")
+args.model.mkdir(parents=True)
+joblib.dump(pipeline, str(args.model / "model.joblib"))
 
 logging.info(f"Metrics: {metrics}")
 with open(args.metrics, "w") as fp:
     json.dump(metrics, fp)
+
+# Persist URIs of training file(s) for model monitoring in batch predictions
+# See https://cloud.google.com/python/docs/reference/aiplatform/latest/google.cloud.aiplatform_v1beta1.types.ModelMonitoringObjectiveConfig.TrainingDataset  # noqa: E501
+# for the expected schema.
+path = args.model / TRAINING_DATASET_INFO
+training_dataset_for_monitoring = {
+    "gcsSource": {"uris": [args.train_data]},
+    "dataFormat": "csv",
+    "targetField": label,
+}
+logging.info(f"Training dataset info: {training_dataset_for_monitoring}")
+
+with open(path, "w") as fp:
+    logging.info(f"Save training dataset info for model monitoring: {path}")
+    json.dump(training_dataset_for_monitoring, fp)
