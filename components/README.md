@@ -6,7 +6,7 @@ This directory contains multiple Python packages that are used to define pipelin
 
 To create a new set of components (with different Python dependencies), copy one of the existing subdirectories and rename the different files and directories as appropriate (e.g. `vertex-components` -> `my-new-components`). You will also need to update any references in the Python files themselves, as well as `poetry.lock` and `pyproject.toml`.
 
-Your Python dependencies should be defined in `poetry.lock file`, `pyproject.toml`, and in `packages_to_install` (in the `@component` decorator):
+Your Python dependencies should be defined in `poetry.lock`, `pyproject.toml`, and in `packages_to_install` (in the `@component` decorator):
 
 - In `pyproject.toml`, add `kfp` to the `[dependencies]` section (pinned to a specific version), and add any dependencies that your component uses under `[tool.poetry.dependencies]`(each pinned to a specific version)
 - In `packages_to_install` (in the `@component` decorator used to define your component), add any dependencies that your component uses (each pinned to a specific version)
