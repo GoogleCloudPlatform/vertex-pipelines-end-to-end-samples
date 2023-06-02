@@ -60,7 +60,8 @@ In a production MLOps solution, your ML pipelines need to be repeatable. So, we 
 1. Copy `env.sh.example` to `env.sh`, and update the environment variables in `env.sh`
 1. Load the environment variables in `env.sh` by running `source env.sh`
 
-please note: `poetry install` or `poetry add`, installs packages within the project's virtual environment. If you use pip directly, you might accidentally install packages globally or in the wrong environment, leading to conflicts or difficulties in managing dependencies.
+Note: `poetry install` or `poetry add`, installs packages within the project's virtual environment. 
+If you use `pip` directly, you might accidentally install packages globally or in the wrong environment, leading to conflicts or difficulties in managing dependencies.
 
 ### Configuring poetry to detect python version using pyenv
 

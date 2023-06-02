@@ -23,7 +23,8 @@ pre-commit: ## Runs the pre-commit checks over entire repo
 	poetry run pre-commit run --all-files
 
 setup: ## Set up local environment for Python development on pipelines
-	@pip install poetry && \
+	@pip install pip --upgrade && \
+	pip install poetry --upgrade && \
 	cd pipelines && \
 	poetry install --with dev
 
@@ -59,11 +60,11 @@ test-all-components: ## Run unit tests for all pipeline components
 
 test-components-coverage: ## Run tests with coverage
 	@cd "components/${GROUP}" && \
-	pipenv run coverage run -m pytest && \
-	pipenv run coverage report -m
+	poetry run coverage run -m pytest && \
+	poetry run coverage report -m
 
 test-all-components-coverage: ## Run tests with coverage
-		@set -e && \
+	@set -e && \
 	for component_group in components/*/ ; do \
 		echo "Test components under $$component_group" && \
 		$(MAKE) test-components-coverage GROUP=$$(basename $$component_group) ; \
