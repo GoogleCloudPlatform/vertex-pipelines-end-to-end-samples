@@ -13,29 +13,31 @@
 # limitations under the License.
 
 import os
-import pathlib
 
 from google_cloud_pipeline_components.v1.bigquery import BigqueryQueryJobOp
-from kfp.v2 import compiler, dsl
+from kfp.v2 import dsl
 
-from pipelines import generate_query
+from pipelines.utils import generate_query
+from pipelines.configs import load_config
 from vertex_components import lookup_model, model_batch_predict
 
+config = load_config()
 
-@dsl.pipeline(name="xgboost-prediction-pipeline")
-def xgboost_pipeline(
+
+@dsl.pipeline(name=config.predict_pipeline_name)
+def pipeline(
     project_id: str = os.environ.get("VERTEX_PROJECT_ID"),
     project_location: str = os.environ.get("VERTEX_LOCATION"),
     ingestion_project_id: str = os.environ.get("VERTEX_PROJECT_ID"),
-    model_name: str = "simple_xgboost",
+    model_name: str = config.model_name,
     preprocessing_dataset_id: str = "preprocessing",
     dataset_location: str = os.environ.get("VERTEX_LOCATION"),
     ingestion_dataset_id: str = "chicago_taxi_trips",
     prediction_dataset_id: str = "prediction",
     timestamp: str = "2022-12-01 00:00:00",
-    batch_prediction_machine_type: str = "n1-standard-4",
-    batch_prediction_min_replicas: int = 3,
-    batch_prediction_max_replicas: int = 10,
+    batch_prediction_machine_type: str = config.predict_machine_type,
+    batch_prediction_min_replicas: int = config.predict_min_replicas,
+    batch_prediction_max_replicas: int = config.predict_max_replicas,
 ):
     """
     XGB prediction pipeline which:
@@ -75,17 +77,13 @@ def xgboost_pipeline(
     # into different components of the pipeline
     time_column = "trip_start_timestamp"
     ingestion_table = "taxi_trips"
-    table_suffix = "_xgb_prediction"  # suffix to table names
-    ingested_table = "ingested_data" + table_suffix
-    monitoring_alert_email_addresses = []
-    monitoring_skew_config = {"defaultSkewThreshold": {"value": 0.001}}
+    ingested_table = config.table_prefix + "ingested_data"
+    monitoring_alert_email_addresses = config.monitoring_alert_email_addresses
+    monitoring_skew_config = config.monitoring_skew_config
 
-    # generate sql queries which are used in ingestion and preprocessing
-    # operations
-    queries_folder = pathlib.Path(__file__).parent / "queries"
-
+    # data ingestion and preprocessing operations
     preprocessing_query = generate_query(
-        queries_folder / "preprocessing.sql",
+        config.predict_preprocess_sql,
         source_dataset=f"{ingestion_project_id}.{ingestion_dataset_id}",
         source_table=ingestion_table,
         prediction_dataset=f"{ingestion_project_id}.{prediction_dataset_id}",
@@ -121,7 +119,7 @@ def xgboost_pipeline(
     batch_prediction = (
         model_batch_predict(
             model=champion_model.outputs["model"],
-            job_display_name="my-xgboost-batch-prediction-job",
+            job_display_name=config.predict_job_name,
             project_location=project_location,
             project_id=project_id,
             source_uri=bigquery_source_input_uri,
@@ -134,15 +132,8 @@ def xgboost_pipeline(
             monitoring_training_dataset=champion_model.outputs["training_dataset"],
             monitoring_alert_email_addresses=monitoring_alert_email_addresses,
             monitoring_skew_config=monitoring_skew_config,
+            instance_config=config.instance_config,
         )
         .after(preprocessing)
         .set_display_name("Batch prediction job")
-    )
-
-
-if __name__ == "__main__":
-    compiler.Compiler().compile(
-        pipeline_func=xgboost_pipeline,
-        package_path="prediction.json",
-        type_check=False,
     )

@@ -34,7 +34,7 @@ test-trigger: ## Runs unit tests for the pipeline trigger code
 
 compile-pipeline: ## Compile the pipeline to training.json or prediction.json. Must specify pipeline=<training|prediction>
 	@cd pipelines/src && \
-	poetry run python -m pipelines.${PIPELINE_TEMPLATE}.${pipeline}.pipeline
+	poetry run python -m pipelines --compile
 
 setup-components: ## Run unit tests for a component group
 	@cd "components/${GROUP}" && \
