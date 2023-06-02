@@ -4,7 +4,7 @@ This directory contains multiple Python packages that are used to define pipelin
 
 ## Creating a new pipeline components package
 
-To create a new set of components (with different Python dependencies), copy one of the existing subdirectories and rename the different files and directories as appropriate (e.g. `bigquery-components` -> `my-new-components`). You will also need to update any references in the Python files themselves, as well as the `poetry.lock file` and `pyproject.toml`.
+To create a new set of components (with different Python dependencies), copy one of the existing subdirectories and rename the different files and directories as appropriate (e.g. `vertex-components` -> `my-new-components`). You will also need to update any references in the Python files themselves, as well as `poetry.lock` and `pyproject.toml`.
 
 Your Python dependencies should be defined in `poetry.lock file`, `pyproject.toml`, and in `packages_to_install` (in the `@component` decorator):
 
