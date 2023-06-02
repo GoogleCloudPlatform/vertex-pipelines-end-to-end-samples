@@ -34,15 +34,15 @@ steps:
       - -c
       - |
         make setup && \
-        make e2e-tests pipeline=training enable_pipeline_caching=False sync_assets=false && \
-        make e2e-tests pipeline=prediction enable_pipeline_caching=False sync_assets=false
+        pipeline=train enable_pipeline_caching=false make e2e-tests sync_assets=false && \
+        pipeline=predict enable_pipeline_caching=false make e2e-tests sync_assets=false
     env:
       - VERTEX_LOCATION=${_TEST_VERTEX_LOCATION}
       - VERTEX_PROJECT_ID=${_TEST_VERTEX_PROJECT_ID}
       - VERTEX_SA_EMAIL=${_TEST_VERTEX_SA_EMAIL}
       - VERTEX_CMEK_IDENTIFIER=${_TEST_VERTEX_CMEK_IDENTIFIER}
       - VERTEX_NETWORK=${_TEST_VERTEX_NETWORK}
-      - PIPELINE_TEMPLATE=${_PIPELINE_TEMPLATE}
+      - config=${_PIPELINE_TEMPLATE}
       - VERTEX_PIPELINE_ROOT=${_TEST_VERTEX_PIPELINE_ROOT}
       - PIPELINE_FILES_GCS_PATH=${_PIPELINE_PUBLISH_GCS_PATH}/${COMMIT_SHA}
 

@@ -26,13 +26,13 @@ steps:
         git init && \
         git add . && \
         make pre-commit && \
-        make compile-pipeline pipeline=training && \
-        make compile-pipeline pipeline=prediction && \
+        pipeline=train make compile-pipeline && \
+        pipeline=prediction make compile-pipeline && \
         make setup-all-components && \
         make test-all-components
     env:
       - SKIP=terraform-fmt,git-dirty
-      - PIPELINE_TEMPLATE=${_PIPELINE_TEMPLATE}
+      - config=${_PIPELINE_TEMPLATE}
 
 options:
   logging: CLOUD_LOGGING_ONLY

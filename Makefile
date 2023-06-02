@@ -85,6 +85,7 @@ run: ## Compile pipeline, copy assets to GCS, and run pipeline in sandbox enviro
 	poetry run python -m pipelines.trigger --template_path=./$(pipeline).json --enable_caching=$(enable_pipeline_caching)
 
 sync_assets ?= true
+enable_pipeline_caching ?= true
 e2e-tests: ## (Optionally) copy assets to GCS, and perform end-to-end (E2E) pipeline tests. Must specify pipeline=<training|prediction>. Optionally specify enable_pipeline_caching=<true|false> (defaults to default Vertex caching behaviour). Optionally specify sync_assets=<true|false> (defaults to true)
 	@if [ $$sync_assets = true ] ; then \
         $(MAKE) sync-assets; \
@@ -92,7 +93,7 @@ e2e-tests: ## (Optionally) copy assets to GCS, and perform end-to-end (E2E) pipe
 		echo "Skipping syncing assets to GCS"; \
     fi && \
 	cd pipelines && \
-	poetry run pytest --log-cli-level=INFO tests/${PIPELINE_TEMPLATE}/$(pipeline) --enable_caching=$(enable_pipeline_caching)
+	enable_caching=$(enable_pipeline_caching) poetry run pytest --log-cli-level=INFO tests/e2e
 
 env ?= dev
 deploy-infra: ## Deploy the Terraform infrastructure to your project. Requires VERTEX_PROJECT_ID and VERTEX_LOCATION env variables to be set in env.sh. Optionally specify env=<dev|test|prod> (default = dev)
