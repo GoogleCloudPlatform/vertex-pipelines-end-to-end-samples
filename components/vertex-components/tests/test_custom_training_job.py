@@ -2,7 +2,7 @@ import google.cloud.aiplatform as aip  # noqa
 from kfp.v2.dsl import Dataset, Metrics, Artifact
 from unittest import mock
 import pytest
-
+import json
 
 import vertex_components
 
@@ -24,7 +24,12 @@ def test_custom_train_job(mock_open, mock_exists, mock_job, tmpdir):
     mock_model = Artifact(uri=tmpdir, metadata={"resourceName": ""})
     mock_metrics = Metrics(uri=tmpdir)
 
-    custom_train_job(
+    mock_job_instance = mock_job.return_value
+    mock_job_instance.to_dict.return_value = {
+        "trainingTaskMetadata": {"backingCustomJob": "mock_custom_job_name"}
+    }
+
+    (gcp_resources,) = custom_train_job(
         train_script_uri="gs://my-bucket/train_script.py",
         train_data=mock_train_data,
         valid_data=mock_valid_data,
@@ -53,6 +58,11 @@ def test_custom_train_job(mock_open, mock_exists, mock_job, tmpdir):
 
     # Assert metrics loading
     mock_open.assert_called_once_with(tmpdir, "r")
+    # Assert gcp_resources contains the expected value
+    assert (
+        json.loads(gcp_resources)["resources"][0]["resourceUri"]
+        == "mock_custom_job_name"
+    )
 
 
 @mock.patch("google.cloud.aiplatform.CustomTrainingJob")
@@ -72,7 +82,7 @@ def test_custom_train_script_not_found(mock_open, mock_exists, mock_job, tmpdir)
     mock_metrics = Metrics(uri=tmpdir)
 
     with pytest.raises(ValueError):
-        custom_train_job(
+        (gcp_resources,) = custom_train_job(
             train_script_uri="gs://my-bucket/train_script.py",
             train_data=mock_train_data,
             valid_data=mock_valid_data,

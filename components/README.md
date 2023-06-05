@@ -4,22 +4,21 @@ This directory contains multiple Python packages that are used to define pipelin
 
 ## Creating a new pipeline components package
 
-To create a new set of components (with different Python dependencies), copy one of the existing subdirectories and rename the different files and directories as appropriate (e.g. `bigquery-components` -> `my-new-components`). You will also need to update any references in the Python files themselves, as well as the `Pipfile` and `pyproject.toml`.
+To create a new set of components (with different Python dependencies), copy one of the existing subdirectories and rename the different files and directories as appropriate (e.g. `vertex-components` -> `my-new-components`). You will also need to update any references in the Python files themselves, as well as `poetry.lock` and `pyproject.toml`.
 
-Your Python dependencies should be defined in `Pipfile`, `pyproject.toml`, and in `packages_to_install` (in the `@component` decorator):
+Your Python dependencies should be defined in `poetry.lock`, `pyproject.toml`, and in `packages_to_install` (in the `@component` decorator):
 
-- In `Pipfile`, add `kfp` to the `[packages]` section (pinned to a specific version), and add any dependencies that your component uses under `[dev-packages]` (each pinned to a specific version)
-- In `pyproject.toml`, add `kfp` to the `[dependencies]` section (pinned to a specific version), and add any dependencies that your component uses under `[[project.optional-dependencies]` -> `tests` (each pinned to a specific version)
+- In `pyproject.toml`, add `kfp` to the `[dependencies]` section (pinned to a specific version), and add any dependencies that your component uses under `[tool.poetry.dependencies]`(each pinned to a specific version)
 - In `packages_to_install` (in the `@component` decorator used to define your component), add any dependencies that your component uses (each pinned to a specific version)
 
 Define your pipeline components using the `@component` decorator in Python files under `my-new-components/src/my-new-components`. You will need to update the `__init__.py` file to provide tests - see the [Kubeflow Pipelines documentation](https://www.kubeflow.org/docs/components/pipelines/v1/sdk-v2/python-function-components/#building-python-function-based-components) for more information about writing pipeline components.
 
-Finally, you will need to install this new components package into the [`pipelines`](../pipelines) package. In [`pipelines/Pipfile`](../pipelines/Pipfile), add the following line to the `packages` section:
-```ini
-my-new-components = {editable = true, path = "./../components/my-new-components"}
-```
+Finally, you will need to install this new components package into the [`pipelines`](../pipelines) package. In [`pipelines/pyproject.toml`](../pipelines/pyproject.toml), add the following line to the `tool.poetry.dependencies` section:
 
-Once you have added this line to [`pipelines/Pipfile`](../pipelines/Pipfile), run `make setup` from the root of the repository to install the new components package into the `pipelines` package.
+```
+my-new-components = { path = "../components/my-new-components", develop = true }
+```
+Once you have added this line to [`pipelines/pyproject.toml`](../pipelines/pyproject.toml), run `make setup` from the root of the repository to install the new components package into the `pipelines` package.
 
 ## Testing components
 

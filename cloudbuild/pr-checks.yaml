@@ -14,7 +14,7 @@
 ---
 steps:
 
-  # Install pipenv and deps, run pre-commit and unit tests
+  # Install poetry and deps, run pre-commit and unit tests
   # Then compile pipelines (to make sure they can compile)
   # need to run "git init" for pre-commit checks to work
   - name: python:3.7
@@ -37,5 +37,5 @@ steps:
 options:
   logging: CLOUD_LOGGING_ONLY
 
-# Increase timeout to allow pipenv to resolve dependencies
+# Increase timeout to allow poetry to resolve dependencies
 timeout: 3600s

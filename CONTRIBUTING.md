@@ -22,7 +22,7 @@ This guide is chiefly for users wishing to contribute to the opensource version.
 ## Links to Important Resources
 - [pytest](https://docs.pytest.org)
 - [unittest.mock](https://docs.python.org/3/library/unittest.mock.html)
-- [pipenv](https://pipenv-fork.readthedocs.io/en/latest/index.html)
+- [poetry](https://python-poetry.org/docs/#installation)
 - [Kubeflow Pipelines](https://www.kubeflow.org/docs/components/pipelines/overview)
 - [Vertex AI](https://cloud.google.com/vertex-ai/docs)
 - [AI Platform SDK](https://googleapis.dev/python/aiplatform/latest/index.html)
@@ -211,12 +211,12 @@ def test_vertex_endpoint_uri(output_uri: str):
 ```
 
 ## Adding or changing python dependencies
-We use [pipenv](https://pipenv-fork.readthedocs.io/en/latest/index.html) to handle our packages and their dependencies. Each group of pipeline components (e.g. [aiplatform](./pipeline_components/aiplatform/)) containers its own pipenv environment, and there is a [separate pipenv environment](./pipelines/) for the ML pipelines themselves and the pipeline trigger code.
+We use [poetry](https://python-poetry.org/docs/#installation) to handle our packages and their dependencies. Each group of pipeline components (e.g. [vertex](./components/vertex-components/)) includes its own poetry environment, and there is a [separate poetry environment](./pipelines/) for the ML pipelines themselves and the pipeline trigger code.
 
 ### Adding python dependencies
 You may need to add new packages for your own use cases. To do this, run the following from the relevant directory ([pipelines](./pipelines) for the main ML pipeline dependencies or the directory of the relevant component group e.g. [aiplatform](./pipeline_components/aiplatform/)):
 ```
-pipenv install <package name>
+poetry install <package name>
 ```
 
 ## Committing Changes
@@ -260,7 +260,7 @@ make pre-commit
 - **Checks fail and displays an error message**. Some errors cannot be automatically fixed by pre-commit hooks, and instead they will display the error number and the file and line which failed. For more details beyond the error message, you can look up the error number online. The most common errors are caused by lines which exceed the character limit. Once you identify the cause of the error, you will need to fix this in your code, add the edited file to the staging area, and then commit again.
 
 ### Commit changes to Python packages and dependencies
-If you have changes to `Pipfile` and `Pipfile.lock`, please make sure you commit these files!
+If you have changes to `pyproject.toml` and `poetry.lock`, please make sure you commit these files!
 
 ## Makefile
 This project contains a [Makefile](Makefile) which contains "rules" describing the commands to be executed by the system. These allow you to quickly and easily run commands for specific purposes, for example running all of the unit-tests, or compiling a pipeline. You can find the full set of available `make` rules by running:

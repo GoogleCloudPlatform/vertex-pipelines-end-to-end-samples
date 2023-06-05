@@ -55,10 +55,18 @@ In a production MLOps solution, your ML pipelines need to be repeatable. So, we 
 
 1. Clone the repository locally
 1. Install Python: `pyenv install`
-1. Install pipenv and pipenv dependencies: `make setup`
-1. Install pre-commit hooks: `cd pipelines && pipenv run pre-commit install`
+1. Install poetry and poetry dependencies: `make setup`
+1. Install pre-commit hooks: `cd pipelines && poetry run pre-commit install`
 1. Copy `env.sh.example` to `env.sh`, and update the environment variables in `env.sh`
 1. Load the environment variables in `env.sh` by running `source env.sh`
+
+Note: `poetry install` or `poetry add`, installs packages within the project's virtual environment. 
+If you use `pip` directly, you might accidentally install packages globally or in the wrong environment, leading to conflicts or difficulties in managing dependencies.
+
+### Configuring poetry to detect python version using pyenv
+
+1. Run `poetry config virtualenvs.prefer-active-python true`
+1. Install project dependencies using `poetry install`
 
 ### Deploying Cloud Infrastructure
 

@@ -14,7 +14,7 @@
 ---
 steps:
 
-  # Install pipenv, install deps, compile pipelines
+  # Install poetry, install deps, compile pipelines
   - name: python:3.7
     entrypoint: /bin/sh
     args:
