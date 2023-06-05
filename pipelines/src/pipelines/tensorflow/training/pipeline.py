@@ -52,7 +52,6 @@ def tensorflow_pipeline(
     Args:
         project_id (str): project id of the Google Cloud project
         project_location (str): location of the Google Cloud project
-        pipeline_files_gcs_path (str): GCS path where the pipeline files are located
         ingestion_project_id (str): project id containing the source bigquery data
             for ingestion. This can be the same as `project_id` if the source data is
             in the same project where the ML pipeline is executed.
@@ -83,9 +82,7 @@ def tensorflow_pipeline(
     valid_table = "valid_data" + table_suffix
     test_table = "test_data" + table_suffix
     primary_metric = "rootMeanSquaredError"
-    train_script_uri = (
-        f"{pipeline_files_gcs_path}/assets{additional_suffix}/train_tf_model.py"
-    )
+    train_script_uri = f"{pipeline_files_gcs_path}/train_tf_model.py"
     hparams = dict(
         batch_size=100,
         epochs=5,

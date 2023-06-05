@@ -81,9 +81,7 @@ def xgboost_pipeline(
     valid_table = "valid_data" + table_suffix
     test_table = "test_data" + table_suffix
     primary_metric = "rootMeanSquaredError"
-    train_script_uri = (
-        f"{pipeline_files_gcs_path}/assets{additional_suffix}/train_xgb_model.py"
-    )
+    train_script_uri = f"{pipeline_files_gcs_path}/train_xgb_model.py"
     hparams = dict(
         n_estimators=200,
         early_stopping_rounds=10,
