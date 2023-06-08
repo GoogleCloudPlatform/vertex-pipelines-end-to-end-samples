@@ -12,9 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-RESOURCE_SUFFIX ?= $(shell . env.sh && echo $$RESOURCE_SUFFIX)
-PIPELINE_FILES_GCS_PATH ?= $(shell . env.sh && echo $$PIPELINE_FILES_GCS_PATH)
-
 -include env.sh
 export
 
