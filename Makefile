@@ -15,9 +15,6 @@
 -include env.sh
 export
 
-# RESOURCE_SUFFIX := $(shell . env.sh && echo $$RESOURCE_SUFFIX)
-# PIPELINE_FILES_GCS_PATH := $(shell . env.sh && echo $$PIPELINE_FILES_GCS_PATH)
-
 help: ## Display this help screen
 	@grep -h -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
     
@@ -36,7 +33,8 @@ test-trigger: ## Runs unit tests for the pipeline trigger code
 	poetry run python -m pytest tests/trigger
 
 compile-pipeline: ## Compile the pipeline to training.json or prediction.json. Must specify pipeline=<training|prediction>
-	@cd pipelines/src && \
+	@source ./env.sh && \
+	cd pipelines/src && \
 	poetry run python -m pipelines.${PIPELINE_TEMPLATE}.${pipeline}.pipeline
 
 setup-components: ## Run unit tests for a component group
@@ -76,7 +74,8 @@ test-all-components-coverage: ## Run tests with coverage
 sync-assets: ## Sync assets folder to GCS.
 	@if [ -d "./pipelines/assets/" ] ; then \
 		echo "Syncing assets to GCS" && \
-		gsutil -m rsync -r -d ./pipelines/assets ${PIPELINE_FILES_GCS_PATH}; \
+		source ./env.sh && \
+		gsutil -m rsync -r -d ./pipelines/assets $$PIPELINE_FILES_GCS_PATH; \
 	else \
 		echo "No assets folder found" ; \
 	fi ;
