@@ -12,6 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+RESOURCE_SUFFIX ?= $(shell . env.sh && echo $$RESOURCE_SUFFIX)
+PIPELINE_FILES_GCS_PATH ?= $(shell . env.sh && echo $$PIPELINE_FILES_GCS_PATH)
+
 -include env.sh
 export
 
@@ -33,8 +36,7 @@ test-trigger: ## Runs unit tests for the pipeline trigger code
 	poetry run python -m pytest tests/trigger
 
 compile-pipeline: ## Compile the pipeline to training.json or prediction.json. Must specify pipeline=<training|prediction>
-	@. ./env.sh && \
-	cd pipelines/src && \
+	@cd pipelines/src && \
 	poetry run python -m pipelines.${PIPELINE_TEMPLATE}.${pipeline}.pipeline
 
 setup-components: ## Run unit tests for a component group
@@ -74,7 +76,6 @@ test-all-components-coverage: ## Run tests with coverage
 sync-assets: ## Sync assets folder to GCS.
 	@if [ -d "./pipelines/assets/" ] ; then \
 		echo "Syncing assets to GCS" && \
-		. ./env.sh && \
 		gsutil -m rsync -r -d ./pipelines/assets $$PIPELINE_FILES_GCS_PATH; \
 	else \
 		echo "No assets folder found" ; \
