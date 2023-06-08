@@ -33,7 +33,7 @@ test-trigger: ## Runs unit tests for the pipeline trigger code
 	poetry run python -m pytest tests/trigger
 
 compile-pipeline: ## Compile the pipeline to training.json or prediction.json. Must specify pipeline=<training|prediction>
-	@source ./env.sh && \
+	@. ./env.sh && \
 	cd pipelines/src && \
 	poetry run python -m pipelines.${PIPELINE_TEMPLATE}.${pipeline}.pipeline
 
@@ -74,7 +74,7 @@ test-all-components-coverage: ## Run tests with coverage
 sync-assets: ## Sync assets folder to GCS.
 	@if [ -d "./pipelines/assets/" ] ; then \
 		echo "Syncing assets to GCS" && \
-		source ./env.sh && \
+		. ./env.sh && \
 		gsutil -m rsync -r -d ./pipelines/assets $$PIPELINE_FILES_GCS_PATH; \
 	else \
 		echo "No assets folder found" ; \
