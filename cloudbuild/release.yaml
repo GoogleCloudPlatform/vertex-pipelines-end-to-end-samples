@@ -23,8 +23,6 @@ steps:
         make setup && \
         make compile-pipeline pipeline=training && \
         make compile-pipeline pipeline=prediction
-    env:
-      - PIPELINE_TEMPLATE=${_PIPELINE_TEMPLATE}
 
   # Copy pipelines and files to a new directory in GCS
   # (via a new local directory)

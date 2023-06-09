@@ -11,13 +11,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-import os
-import pathlib
-
 from google_cloud_pipeline_components.v1.bigquery import BigqueryQueryJobOp
-from kfp.v2 import compiler, dsl
-from pipelines import generate_query
+from kfp.v2 import dsl, compiler
+
+from pipelines.config import TrainingConfig
+from pipelines.utils import generate_query
 from bigquery_components import extract_bq_to_dataset
 from vertex_components import (
     lookup_model,
@@ -26,23 +24,25 @@ from vertex_components import (
     update_best_model,
 )
 
+config = TrainingConfig()
 
-@dsl.pipeline(name="tensorflow-train-pipeline")
-def tensorflow_pipeline(
-    project_id: str = os.environ.get("VERTEX_PROJECT_ID"),
-    project_location: str = os.environ.get("VERTEX_LOCATION"),
-    ingestion_project_id: str = os.environ.get("VERTEX_PROJECT_ID"),
-    model_name: str = "simple_tensorflow",
-    dataset_id: str = "preprocessing",
-    dataset_location: str = os.environ.get("VERTEX_LOCATION"),
-    ingestion_dataset_id: str = "chicago_taxi_trips",
-    timestamp: str = "2022-12-01 00:00:00",
-    staging_bucket: str = os.environ.get("VERTEX_PIPELINE_ROOT"),
-    pipeline_files_gcs_path: str = os.environ.get("PIPELINE_FILES_GCS_PATH"),
-    test_dataset_uri: str = "",
+
+@dsl.pipeline(name=config.pipeline_name)
+def pipeline(
+    project_id: str = config.project_id,
+    project_location: str = config.project_location,
+    ingestion_project_id: str = config.project_id_ingestion,
+    model_name: str = config.model_name,
+    dataset_id: str = config.dataset_id,
+    dataset_location: str = config.dataset_location,
+    ingestion_dataset_id: str = config.dataset_id_ingestion,
+    timestamp: str = config.timestamp,
+    staging_bucket: str = config.staging_bucket,
+    pipeline_files_gcs_path: str = config.pipeline_files_gcs_path,
+    test_dataset_uri: str = config.test_dataset_uri,
 ):
     """
-    Tensorflow Keras training pipeline which:
+    XGB training pipeline which:
      1. Splits and extracts a dataset from BQ to GCS
      2. Trains a model via Vertex AI CustomTrainingJob
      3. Evaluates the model against the current champion model
@@ -51,12 +51,10 @@ def tensorflow_pipeline(
     Args:
         project_id (str): project id of the Google Cloud project
         project_location (str): location of the Google Cloud project
-        pipeline_files_gcs_path (str): GCS path where the pipeline files are located
         ingestion_project_id (str): project id containing the source bigquery data
             for ingestion. This can be the same as `project_id` if the source data is
             in the same project where the ML pipeline is executed.
         model_name (str): name of model
-        model_label (str): label of model
         dataset_id (str): id of BQ dataset used to store all staging data & predictions
         dataset_location (str): location of dataset
         ingestion_dataset_id (str): dataset id of ingestion data
@@ -64,52 +62,30 @@ def tensorflow_pipeline(
             (YYYY-MM-DDThh:mm:ss.sss±hh:mm or YYYY-MM-DDThh:mm:ss).
             If any time part is missing, it will be regarded as zero.
         staging_bucket (str): Staging bucket for pipeline artifacts.
-        pipeline_files_gcs_path (str): GCS path where the pipeline files are located
+        pipeline_files_gcs_path (str): GCS path where the pipeline files are located.
         test_dataset_uri (str): Optional. GCS URI of statis held-out test dataset.
     """
 
     # Create variables to ensure the same arguments are passed
     # into different components of the pipeline
-    label_column_name = "total_fare"
-    time_column = "trip_start_timestamp"
-    ingestion_table = "taxi_trips"
-    table_suffix = "_tf_training"  # suffix to table names
-    ingested_table = "ingested_data" + table_suffix
-    preprocessed_table = "preprocessed_data" + table_suffix
-    train_table = "train_data" + table_suffix
-    valid_table = "valid_data" + table_suffix
-    test_table = "test_data" + table_suffix
-    primary_metric = "rootMeanSquaredError"
-    train_script_uri = f"{pipeline_files_gcs_path}/assets/train_tf_model.py"
-    hparams = dict(
-        batch_size=100,
-        epochs=5,
-        loss_fn="MeanSquaredError",
-        optimizer="Adam",
-        learning_rate=0.01,
-        hidden_units=[(64, "relu"), (32, "relu")],
-        distribute_strategy="single",
-        early_stopping_epochs=5,
-    )
+    train_script_uri = f"{pipeline_files_gcs_path}/assets/{config.train_script}"
 
     # generate sql queries which are used in ingestion and preprocessing
     # operations
 
-    queries_folder = pathlib.Path(__file__).parent / "queries"
-
     preprocessing_query = generate_query(
-        queries_folder / "preprocessing.sql",
+        config.query_file,
         source_dataset=f"{ingestion_project_id}.{ingestion_dataset_id}",
-        source_table=ingestion_table,
+        source_table=config.ingestion_table,
         preprocessing_dataset=f"{ingestion_project_id}.{dataset_id}",
-        ingested_table=ingested_table,
+        ingested_table=config.ingested_table,
         dataset_region=project_location,
-        filter_column=time_column,
-        target_column=label_column_name,
+        filter_column=config.time_col,
+        target_column=config.label_col,
         filter_start_value=timestamp,
-        train_table=train_table,
-        validation_table=valid_table,
-        test_table=test_table,
+        train_table=config.train_table,
+        validation_table=config.valid_table,
+        test_table=config.test_table,
     )
 
     preprocessing = BigqueryQueryJobOp(
@@ -123,11 +99,11 @@ def tensorflow_pipeline(
             bq_client_project_id=project_id,
             source_project_id=project_id,
             dataset_id=dataset_id,
-            table_name=train_table,
+            table_name=config.train_table,
             dataset_location=dataset_location,
         )
         .after(preprocessing)
-        .set_display_name("Extract train")
+        .set_display_name("Extract train data")
         .set_caching_options(False)
     ).outputs["dataset"]
     valid_dataset = (
@@ -135,7 +111,7 @@ def tensorflow_pipeline(
             bq_client_project_id=project_id,
             source_project_id=project_id,
             dataset_id=dataset_id,
-            table_name=valid_table,
+            table_name=config.valid_table,
             dataset_location=dataset_location,
         )
         .after(preprocessing)
@@ -147,7 +123,7 @@ def tensorflow_pipeline(
             bq_client_project_id=project_id,
             source_project_id=project_id,
             dataset_id=dataset_id,
-            table_name=test_table,
+            table_name=config.test_table,
             dataset_location=dataset_location,
             destination_gcs_uri=test_dataset_uri,
         )
@@ -176,9 +152,10 @@ def tensorflow_pipeline(
         project_id=project_id,
         project_location=project_location,
         model_display_name=model_name,
-        train_container_uri="europe-docker.pkg.dev/vertex-ai/training/tf-cpu.2-6:latest",  # noqa: E501
-        serving_container_uri="europe-docker.pkg.dev/vertex-ai/prediction/tf2-cpu.2-6:latest",  # noqa: E501
-        hparams=hparams,
+        train_container_uri=config.train_container,
+        serving_container_uri=config.serve_container,
+        hparams=config.hparams,
+        requirements=config.requirements,
         staging_bucket=staging_bucket,
         parent_model=existing_model,
     ).set_display_name("Train model")
@@ -196,7 +173,7 @@ def tensorflow_pipeline(
             challenger=train_model.outputs["model"],
             challenger_evaluation=evaluation.outputs["model_evaluation"],
             parent_model=existing_model,
-            eval_metric=primary_metric,
+            eval_metric=config.primary_metric,
             eval_lower_is_better=True,
             project_id=project_id,
             project_location=project_location,
@@ -205,7 +182,7 @@ def tensorflow_pipeline(
 
 if __name__ == "__main__":
     compiler.Compiler().compile(
-        pipeline_func=tensorflow_pipeline,
-        package_path="training.json",
+        pipeline_func=pipeline,
+        package_path="train.json",
         type_check=False,
     )

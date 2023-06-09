@@ -11,31 +11,30 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-import os
-import pathlib
-
 from google_cloud_pipeline_components.v1.bigquery import BigqueryQueryJobOp
-from kfp.v2 import compiler, dsl
+from kfp.v2 import dsl, compiler
 
-from pipelines import generate_query
+from pipelines.config import PredictionConfig
+from pipelines.utils import generate_query
 from vertex_components import lookup_model, model_batch_predict
 
+config = PredictionConfig()
 
-@dsl.pipeline(name="xgboost-prediction-pipeline")
-def xgboost_pipeline(
-    project_id: str = os.environ.get("VERTEX_PROJECT_ID"),
-    project_location: str = os.environ.get("VERTEX_LOCATION"),
-    ingestion_project_id: str = os.environ.get("VERTEX_PROJECT_ID"),
-    model_name: str = "simple_xgboost",
-    preprocessing_dataset_id: str = "preprocessing",
-    dataset_location: str = os.environ.get("VERTEX_LOCATION"),
-    ingestion_dataset_id: str = "chicago_taxi_trips",
-    prediction_dataset_id: str = "prediction",
-    timestamp: str = "2022-12-01 00:00:00",
-    batch_prediction_machine_type: str = "n1-standard-4",
-    batch_prediction_min_replicas: int = 3,
-    batch_prediction_max_replicas: int = 10,
+
+@dsl.pipeline(name=config.pipeline_name)
+def pipeline(
+    project_id: str = config.project_id,
+    project_location: str = config.project_location,
+    ingestion_project_id: str = config.project_id_ingestion,
+    model_name: str = config.model_name,
+    preprocessing_dataset_id: str = config.preprocessing_dataset_id,
+    dataset_location: str = config.dataset_location,
+    ingestion_dataset_id: str = config.project_id_ingestion,
+    prediction_dataset_id: str = config.prediction_dataset_id,
+    timestamp: str = config.timestamp,
+    batch_prediction_machine_type: str = config.machine_type,
+    batch_prediction_min_replicas: int = config.min_replicas,
+    batch_prediction_max_replicas: int = config.max_replicas,
 ):
     """
     XGB prediction pipeline which:
@@ -73,26 +72,17 @@ def xgboost_pipeline(
 
     # Create variables to ensure the same arguments are passed
     # into different components of the pipeline
-    time_column = "trip_start_timestamp"
-    ingestion_table = "taxi_trips"
-    table_suffix = "_xgb_prediction"  # suffix to table names
-    ingested_table = "ingested_data" + table_suffix
-    monitoring_alert_email_addresses = []
-    monitoring_skew_config = {"defaultSkewThreshold": {"value": 0.001}}
 
-    # generate sql queries which are used in ingestion and preprocessing
-    # operations
-    queries_folder = pathlib.Path(__file__).parent / "queries"
-
+    # data ingestion and preprocessing operations
     preprocessing_query = generate_query(
-        queries_folder / "preprocessing.sql",
+        config.query_file,
         source_dataset=f"{ingestion_project_id}.{ingestion_dataset_id}",
-        source_table=ingestion_table,
+        source_table=config.ingestion_table,
         prediction_dataset=f"{ingestion_project_id}.{prediction_dataset_id}",
         preprocessing_dataset=f"{ingestion_project_id}.{preprocessing_dataset_id}",
-        ingested_table=ingested_table,
+        ingested_table=config.ingested_table,
         dataset_region=project_location,
-        filter_column=time_column,
+        filter_column=config.time_col,
         filter_start_value=timestamp,
     )
 
@@ -114,14 +104,14 @@ def xgboost_pipeline(
 
     # batch predict from BigQuery to BigQuery
     bigquery_source_input_uri = (
-        f"bq://{project_id}.{preprocessing_dataset_id}.{ingested_table}"
+        f"bq://{project_id}.{preprocessing_dataset_id}.{config.ingested_table}"
     )
     bigquery_destination_output_uri = f"bq://{project_id}.{prediction_dataset_id}"
 
     batch_prediction = (
         model_batch_predict(
             model=champion_model.outputs["model"],
-            job_display_name="my-xgboost-batch-prediction-job",
+            job_display_name=config.predict_job_name,
             project_location=project_location,
             project_id=project_id,
             source_uri=bigquery_source_input_uri,
@@ -132,8 +122,9 @@ def xgboost_pipeline(
             starting_replica_count=batch_prediction_min_replicas,
             max_replica_count=batch_prediction_max_replicas,
             monitoring_training_dataset=champion_model.outputs["training_dataset"],
-            monitoring_alert_email_addresses=monitoring_alert_email_addresses,
-            monitoring_skew_config=monitoring_skew_config,
+            monitoring_alert_email_addresses=config.monitoring_alert_email_addresses,
+            monitoring_skew_config=config.monitoring_skew_config,
+            instance_config=config.instance_config,
         )
         .after(preprocessing)
         .set_display_name("Batch prediction job")
@@ -142,7 +133,7 @@ def xgboost_pipeline(
 
 if __name__ == "__main__":
     compiler.Compiler().compile(
-        pipeline_func=xgboost_pipeline,
-        package_path="prediction.json",
+        pipeline_func=pipeline,
+        package_path="predict.json",
         type_check=False,
     )
