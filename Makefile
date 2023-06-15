@@ -73,11 +73,8 @@ test-all-components-coverage: ## Run tests with coverage
 sync-assets: ## Sync assets folder to GCS.
 	@if [ -d "./pipelines/assets/" ]; then \
 		echo "Syncing assets to GCS"; \
-		if [[ "$${PIPELINE_FILES_GCS_PATH}" == */ ]]; then \
-    		gsutil -m rsync -r -d ./pipelines/assets "$${PIPELINE_FILES_GCS_PATH}assets"; \
-		else \
-    		gsutil -m rsync -r -d ./pipelines/assets "$${PIPELINE_FILES_GCS_PATH}/assets"; \
-		fi; \
+		PIPELINE_FILES_GCS_PATH=$${PIPELINE_FILES_GCS_PATH}$(if $(strip $(RESOURCE_SUFFIX)),/$(RESOURCE_SUFFIX)); \
+		gsutil -m rsync -r -d ./pipelines/assets "$${PIPELINE_FILES_GCS_PATH}/assets"; \
 	else \
 		echo "No assets folder found"; \
 	fi;
