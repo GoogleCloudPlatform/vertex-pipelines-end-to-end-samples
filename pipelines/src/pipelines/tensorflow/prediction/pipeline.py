@@ -36,6 +36,7 @@ def tensorflow_pipeline(
     batch_prediction_machine_type: str = "n1-standard-4",
     batch_prediction_min_replicas: int = 3,
     batch_prediction_max_replicas: int = 10,
+    resource_suffix: str = os.environ.get("RESOURCE_SUFFIX"),
 ):
     """
     Tensorflow prediction pipeline which:
@@ -68,6 +69,8 @@ def tensorflow_pipeline(
             Vertex Batch Prediction job for horizontal scalability
         batch_prediction_max_replicas (int): Maximum no of machines to distribute the
             Vertex Batch Prediction job for horizontal scalability.
+        resource_suffix (str): Optional. Additional suffix to append GCS resources
+            that get overwritten.
 
     Returns:
         None
@@ -79,7 +82,7 @@ def tensorflow_pipeline(
     file_pattern = ""  # e.g. "files-*.csv", used as file pattern on storage
     time_column = "trip_start_timestamp"
     ingestion_table = "taxi_trips"
-    table_suffix = "_tf_prediction"  # suffix to table names
+    table_suffix = "_tf_prediction" + str(resource_suffix)  # suffix to table names
     ingested_table = "ingested_data" + table_suffix
     monitoring_alert_email_addresses = []
     monitoring_skew_config = {"defaultSkewThreshold": {"value": 0.001}}

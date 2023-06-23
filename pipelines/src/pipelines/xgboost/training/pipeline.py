@@ -39,6 +39,7 @@ def xgboost_pipeline(
     timestamp: str = "2022-12-01 00:00:00",
     staging_bucket: str = os.environ.get("VERTEX_PIPELINE_ROOT"),
     pipeline_files_gcs_path: str = os.environ.get("PIPELINE_FILES_GCS_PATH"),
+    resource_suffix: str = os.environ.get("RESOURCE_SUFFIX"),
     test_dataset_uri: str = "",
 ):
     """
@@ -63,6 +64,8 @@ def xgboost_pipeline(
             If any time part is missing, it will be regarded as zero.
         staging_bucket (str): Staging bucket for pipeline artifacts.
         pipeline_files_gcs_path (str): GCS path where the pipeline files are located.
+        resource_suffix (str): Optional. Additional suffix to append GCS resources
+            that get overwritten.
         test_dataset_uri (str): Optional. GCS URI of statis held-out test dataset.
     """
 
@@ -71,7 +74,7 @@ def xgboost_pipeline(
     label_column_name = "total_fare"
     time_column = "trip_start_timestamp"
     ingestion_table = "taxi_trips"
-    table_suffix = "_xgb_training"  # suffix to table names
+    table_suffix = "_xgb_training" + str(resource_suffix)  # suffix to table names
     ingested_table = "ingested_data" + table_suffix
     preprocessed_table = "preprocessed_data" + table_suffix
     train_table = "train_data" + table_suffix

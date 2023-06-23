@@ -178,6 +178,8 @@ This will execute the pipeline using the chosen template on Vertex AI, namely it
 1. Copy the `assets` folders to Cloud Storage
 1. Trigger the pipeline with the help of `pipelines/trigger/main.py`
 
+To avoid resource conflicts when running pipelines concurrently in the same Google Cloud project with multiple developers, populate the `RESOURCE_SUFFIX` environment variable in your `env.sh` file. This will append your defined suffix to Google resources and ensure each developer's resources remain unique and separate, preventing unintentional overwriting.
+
 #### Pipeline input parameters
 
 The ML pipelines have input parameters. As you can see in the pipeline definition files (`pipelines/pipelines/<xgboost|tensorflow>/<training|prediction>/pipeline.py`), they have default values, and some of these default values are derived from environment variables (which in turn are defined in `env.sh`).
