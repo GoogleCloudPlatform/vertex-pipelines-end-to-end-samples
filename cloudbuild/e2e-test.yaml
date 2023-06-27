@@ -25,8 +25,6 @@ steps:
         mkdir -p ${COMMIT_SHA}/assets && \
         cp -r pipelines/assets ${COMMIT_SHA} && \
         gsutil cp -r ${COMMIT_SHA} ${_PIPELINE_PUBLISH_GCS_PATH}/${RESOURCE_SUFFIX}
-    substitutions:
-      RESOURCE_SUFFIX: _${COMMIT_SHA}
 
   # Install Python deps
   # Run end-to-end (E2E) pipeline tests on both pipelines
@@ -48,8 +46,9 @@ steps:
       - VERTEX_PIPELINE_ROOT=${_TEST_VERTEX_PIPELINE_ROOT}
       - RESOURCE_SUFFIX=${RESOURCE_SUFFIX}
       - PIPELINE_FILES_GCS_PATH=${_PIPELINE_PUBLISH_GCS_PATH}/${RESOURCE_SUFFIX}
-    substitutions:
-      RESOURCE_SUFFIX: _${COMMIT_SHA}
+
+substitutions:
+  RESOURCE_SUFFIX: _${COMMIT_SHA}
 
 options:
   logging: CLOUD_LOGGING_ONLY
