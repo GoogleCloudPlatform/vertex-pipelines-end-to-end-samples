@@ -15,6 +15,7 @@
 -include env.sh
 export
 
+
 help: ## Display this help screen
 	@grep -h -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
     
@@ -73,8 +74,7 @@ test-all-components-coverage: ## Run tests with coverage
 sync-assets: ## Sync assets folder to GCS.
 	@if [ -d "./pipelines/assets/" ]; then \
 		echo "Syncing assets to GCS"; \
-		PIPELINE_FILES_GCS_PATH=$${PIPELINE_FILES_GCS_PATH}$(if $(strip $(RESOURCE_SUFFIX)),/$(RESOURCE_SUFFIX)); \
-		gsutil -m rsync -r -d ./pipelines/assets "$${PIPELINE_FILES_GCS_PATH}/assets"; \
+		gsutil -m rsync -r -d ./pipelines/assets $(PIPELINE_FILES_GCS_PATH)/assets ; \
 	else \
 		echo "No assets folder found"; \
 	fi;

@@ -75,7 +75,7 @@ def tensorflow_pipeline(
     label_column_name = "total_fare"
     time_column = "trip_start_timestamp"
     ingestion_table = "taxi_trips"
-    table_suffix = "_tf_training" + str(resource_suffix)  # suffix to table names
+    table_suffix = f"_tf_training_{resource_suffix}"  # suffix to table names
     ingested_table = "ingested_data" + table_suffix
     preprocessed_table = "preprocessed_data" + table_suffix
     train_table = "train_data" + table_suffix
