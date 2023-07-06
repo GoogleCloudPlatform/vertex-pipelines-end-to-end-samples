@@ -15,7 +15,6 @@
 import argparse
 import base64
 import json
-import logging
 import os
 import distutils.util
 from typing import Optional, List
@@ -191,8 +190,6 @@ def sandbox_run(args: List[str] = None) -> aiplatform.PipelineJob:
     Returns the PipelineJob object of the triggered pipeline run.
     Usage: python main.py --template_path=pipeline.json --enable_caching=true
     """
-    logging.basicConfig(level=logging.DEBUG)
-
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--template_path", help="Path to the compiled pipeline (JSON)", type=str
