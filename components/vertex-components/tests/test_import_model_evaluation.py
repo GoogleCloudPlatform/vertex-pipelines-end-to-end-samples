@@ -1,5 +1,5 @@
 from unittest import mock
-from kfp.v2.dsl import Model, Metrics, Dataset
+from kfp.dsl import Model, Metrics, Dataset
 
 import vertex_components
 from google.cloud.aiplatform_v1 import ModelEvaluation

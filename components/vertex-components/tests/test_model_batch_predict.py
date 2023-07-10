@@ -14,7 +14,7 @@
 import json
 import pytest
 from unittest import mock
-from kfp.v2.dsl import Model
+from kfp.dsl import Model
 from google.cloud.aiplatform_v1beta1.types.job_state import JobState
 
 

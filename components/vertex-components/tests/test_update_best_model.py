@@ -13,7 +13,7 @@
 # limitations under the License.
 from unittest import mock
 
-from kfp.v2.dsl import Model
+from kfp.dsl import Model
 
 
 import vertex_components

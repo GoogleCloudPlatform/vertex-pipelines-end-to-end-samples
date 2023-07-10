@@ -18,7 +18,7 @@ from typing import Callable
 import pytest
 import os
 from google.cloud import storage
-from kfp.v2 import compiler
+from kfp import compiler
 
 from pipelines.trigger.main import trigger_pipeline_from_payload
 

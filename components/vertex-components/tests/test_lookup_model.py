@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import google.cloud.aiplatform  # noqa
-from kfp.v2.dsl import Model
+from kfp.dsl import Model
 from unittest import mock
 import pytest
 

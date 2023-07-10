@@ -13,7 +13,7 @@ from typing import NamedTuple
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from kfp.v2.dsl import Input, Model, component
+from kfp.dsl import Input, Model, component
 
 
 @component(

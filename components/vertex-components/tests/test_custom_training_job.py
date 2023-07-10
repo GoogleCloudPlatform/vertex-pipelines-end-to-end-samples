@@ -1,5 +1,5 @@
 import google.cloud.aiplatform as aip  # noqa
-from kfp.v2.dsl import Dataset, Metrics, Artifact
+from kfp.dsl import Dataset, Metrics, Artifact
 from unittest import mock
 import pytest
 import json

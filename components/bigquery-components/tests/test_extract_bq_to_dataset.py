@@ -1,5 +1,5 @@
 import google.cloud.bigquery  # noqa
-from kfp.v2.dsl import Dataset
+from kfp.dsl import Dataset
 from unittest import mock
 
 import bigquery_components

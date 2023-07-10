@@ -13,7 +13,7 @@ from typing import List, Dict, NamedTuple
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from kfp.v2.dsl import Input, component, Metrics, Output, Artifact, Dataset
+from kfp.dsl import Input, component, Metrics, Output, Artifact, Dataset
 
 
 @component(
