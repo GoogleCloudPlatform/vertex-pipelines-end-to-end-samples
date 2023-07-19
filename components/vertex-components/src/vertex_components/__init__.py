@@ -3,6 +3,7 @@ from .import_model_evaluation import import_model_evaluation
 from .lookup_model import lookup_model
 from .model_batch_predict import model_batch_predict
 from .update_best_model import update_best_model
+from .upload_model import upload_model
 
 
 __version__ = "0.0.1"
@@ -12,4 +13,5 @@ __all__ = [
     "lookup_model",
     "model_batch_predict",
     "update_best_model",
+    "upload_model",
 ]

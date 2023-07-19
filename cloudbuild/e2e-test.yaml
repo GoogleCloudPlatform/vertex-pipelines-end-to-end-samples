@@ -28,7 +28,7 @@ steps:
 
   # Install Python deps
   # Run end-to-end (E2E) pipeline tests on both pipelines
-  - name: python:3.7
+  - name: python:3.9
     entrypoint: /bin/sh
     args:
       - -c

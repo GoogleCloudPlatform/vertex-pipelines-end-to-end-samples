@@ -17,7 +17,7 @@ from typing import List, NamedTuple
 
 
 @component(
-    base_image="python:3.7",
+    base_image="python:3.9",
     packages_to_install=[
         "google-cloud-aiplatform==1.24.1",
         "google-cloud-pipeline-components==1.0.33",

@@ -17,14 +17,45 @@ import pathlib
 
 from google_cloud_pipeline_components.v1.bigquery import BigqueryQueryJobOp
 from kfp import compiler, dsl
+from kfp.dsl import Dataset, Input, Metrics, Model, Output, OutputPath
 from pipelines import generate_query
 from bigquery_components import extract_bq_to_dataset
-from vertex_components import (
-    lookup_model,
-    custom_train_job,
-    import_model_evaluation,
-    update_best_model,
-)
+from vertex_components import upload_model
+
+IMAGE = os.environ.get("TRAINING_CONTAINER_IMAGE")
+
+
+@dsl.container_component
+def train(
+    train_data: Input[Dataset],
+    valid_data: Input[Dataset],
+    test_data: Input[Dataset],
+    model: Output[Model],
+    model_output_uri: OutputPath(str),
+    metrics: Output[Metrics],  # TODO could be a more specific type of metrics object
+    hparams: dict,
+):
+    return dsl.ContainerSpec(
+        image=IMAGE,
+        command=["python"],
+        args=[
+            "main.py",
+            "--train-data",
+            train_data.path,
+            "--valid-data",
+            valid_data.path,
+            "--test-data",
+            test_data.path,
+            "--model",
+            model.path,
+            "--model-output-uri",
+            model_output_uri,
+            "--metrics",
+            metrics.path,
+            "--hparams",
+            hparams,
+        ],
+    )
 
 
 @dsl.pipeline(name="xgboost-train-pipeline")
@@ -81,7 +112,6 @@ def xgboost_pipeline(
     valid_table = "valid_data" + table_suffix
     test_table = "test_data" + table_suffix
     primary_metric = "rootMeanSquaredError"
-    train_script_uri = f"{pipeline_files_gcs_path}/assets/train_xgb_model.py"
     hparams = dict(
         n_estimators=200,
         early_stopping_rounds=10,
@@ -157,52 +187,27 @@ def xgboost_pipeline(
         .set_caching_options(False)
     ).outputs["dataset"]
 
-    existing_model = (
-        lookup_model(
-            model_name=model_name,
-            project_location=project_location,
-            project_id=project_id,
-            fail_on_model_not_found=False,
-        )
-        .set_display_name("Lookup past model")
-        .set_caching_options(False)
-        .outputs["model_resource_name"]
-    )
-
-    train_model = custom_train_job(
-        train_script_uri=train_script_uri,
+    train_model = train(
         train_data=train_dataset,
         valid_data=valid_dataset,
         test_data=test_dataset,
-        project_id=project_id,
-        project_location=project_location,
-        model_display_name=model_name,
-        train_container_uri="europe-docker.pkg.dev/vertex-ai/training/scikit-learn-cpu.0-23:latest",  # noqa: E501
-        serving_container_uri="europe-docker.pkg.dev/vertex-ai/prediction/sklearn-cpu.0-24:latest",  # noqa: E501
         hparams=hparams,
-        requirements=["scikit-learn==0.24.0"],
-        staging_bucket=staging_bucket,
-        parent_model=existing_model,
     ).set_display_name("Train model")
 
-    evaluation = import_model_evaluation(
+    upload_model_op = upload_model(
+        project=project_id,
+        location=project_location,
+        model_evaluation=train_model.outputs["metrics"],
+        eval_metric=primary_metric,
+        eval_lower_is_better=True,
         model=train_model.outputs["model"],
-        metrics=train_model.outputs["metrics"],
-        test_dataset=test_dataset,
+        serving_container_image=(
+            "europe-docker.pkg.dev/vertex-ai/prediction/sklearn-cpu.0-24:latest"
+        ),
+        model_name=model_name,
         pipeline_job_id="{{$.pipeline_job_name}}",
-        project_location=project_location,
-    ).set_display_name("Import evaluation")
-
-    with dsl.Condition(existing_model != "", "champion-exists"):
-        update_best_model(
-            challenger=train_model.outputs["model"],
-            challenger_evaluation=evaluation.outputs["model_evaluation"],
-            parent_model=existing_model,
-            eval_metric=primary_metric,
-            eval_lower_is_better=True,
-            project_id=project_id,
-            project_location=project_location,
-        ).set_display_name("Update best model")
+        test_dataset=test_dataset,
+    ).set_display_name("Upload model")
 
 
 if __name__ == "__main__":

@@ -105,3 +105,9 @@ destroy-infra: ## DESTROY the Terraform infrastructure in your project. Requires
 	@ cd terraform/envs/$(env) && \
 	terraform init -backend-config='bucket=${VERTEX_PROJECT_ID}-tfstate' && \
 	terraform destroy -var 'project_id=${VERTEX_PROJECT_ID}' -var 'region=${VERTEX_LOCATION}'
+
+build-training-container: ## Build and push training container image using Docker
+	@ cd training && \
+	poetry export -f requirements.txt -o requirements.txt && \
+	docker build -t ${TRAINING_CONTAINER_IMAGE} . && \
+	docker push ${TRAINING_CONTAINER_IMAGE}
