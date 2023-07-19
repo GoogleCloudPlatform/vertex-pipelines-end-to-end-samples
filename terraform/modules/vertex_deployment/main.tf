@@ -122,3 +122,13 @@ resource "google_vertex_ai_metadata_store" "default_metadata_store" {
   region      = var.region
   depends_on  = [google_project_service.gcp_services]
 }
+
+## Artifact Registry ##
+resource "google_artifact_registry_repository" "vertex-images" {
+  repository_id = "vertex-images"
+  description   = "Container image repository for training container images"
+  project       = var.project_id
+  location      = var.region
+  format        = "DOCKER"
+  depends_on    = [google_project_service.gcp_services]
+}
