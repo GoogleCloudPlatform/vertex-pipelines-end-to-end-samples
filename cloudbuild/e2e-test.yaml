@@ -14,18 +14,6 @@
 ---
 steps:
 
-  # Copy assets files to a new directory in GCS
-  # (via a new local directory)
-  # Directory name = git commit hash
-  - name: gcr.io/cloud-builders/gsutil
-    entrypoint: bash
-    args:
-      - -c
-      - |
-        mkdir -p ${COMMIT_SHA}/assets && \
-        cp -r pipelines/assets ${COMMIT_SHA} && \
-        gsutil cp -r ${COMMIT_SHA} ${_PIPELINE_PUBLISH_GCS_PATH}/${COMMIT_SHA}
-
   # Install Python deps
   # Run end-to-end (E2E) pipeline tests on both pipelines
   - name: python:3.9
@@ -34,8 +22,8 @@ steps:
       - -c
       - |
         make setup && \
-        make e2e-tests pipeline=training enable_pipeline_caching=False sync_assets=false && \
-        make e2e-tests pipeline=prediction enable_pipeline_caching=False sync_assets=false
+        make e2e-tests pipeline=training enable_pipeline_caching=False && \
+        make e2e-tests pipeline=prediction enable_pipeline_caching=False
     env:
       - VERTEX_LOCATION=${_TEST_VERTEX_LOCATION}
       - VERTEX_PROJECT_ID=${_TEST_VERTEX_PROJECT_ID}
@@ -44,7 +32,6 @@ steps:
       - VERTEX_NETWORK=${_TEST_VERTEX_NETWORK}
       - PIPELINE_TEMPLATE=${_PIPELINE_TEMPLATE}
       - VERTEX_PIPELINE_ROOT=${_TEST_VERTEX_PIPELINE_ROOT}
-      - PIPELINE_FILES_GCS_PATH=${_PIPELINE_PUBLISH_GCS_PATH}/${COMMIT_SHA}
       - RESOURCE_SUFFIX=${COMMIT_SHA}
 
 options:

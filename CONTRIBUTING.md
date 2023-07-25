@@ -271,12 +271,3 @@ make help
 Some of these rules use the environment variables specified in [`env.sh`](env.sh).
 
 **It is not expected that you will need to change the Makefile or create a new one.**
-
-## Assets folder
-
-For a brief description of the Assets folder, please refer to our [general documentation](README.md#Assets). 
-To make sure that assets are available while running the ML pipelines, `make run` ensure that these will be uploaded automatically to the respective Google Cloud Storage locations.
-
-### Common assets
-
-Within the [assets](./assets/) folder, there are common files stored which need to be uploaded to Google Cloud Storage so that the pipelines running Vertex AI can consume such assets, namely:

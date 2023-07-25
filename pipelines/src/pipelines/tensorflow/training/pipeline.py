@@ -16,7 +16,7 @@ import os
 import pathlib
 
 from google_cloud_pipeline_components.v1.bigquery import BigqueryQueryJobOp
-from kfp import compiler, dsl
+from kfp import dsl
 from pipelines import generate_query
 from bigquery_components import extract_bq_to_dataset
 from vertex_components import (
@@ -28,7 +28,7 @@ from vertex_components import (
 
 
 @dsl.pipeline(name="tensorflow-train-pipeline")
-def tensorflow_pipeline(
+def pipeline(
     project_id: str = os.environ.get("VERTEX_PROJECT_ID"),
     project_location: str = os.environ.get("VERTEX_LOCATION"),
     ingestion_project_id: str = os.environ.get("VERTEX_PROJECT_ID"),
@@ -38,7 +38,6 @@ def tensorflow_pipeline(
     ingestion_dataset_id: str = "chicago_taxi_trips",
     timestamp: str = "2022-12-01 00:00:00",
     staging_bucket: str = os.environ.get("VERTEX_PIPELINE_ROOT"),
-    pipeline_files_gcs_path: str = os.environ.get("PIPELINE_FILES_GCS_PATH"),
     resource_suffix: str = os.environ.get("RESOURCE_SUFFIX"),
     test_dataset_uri: str = "",
 ):
@@ -64,7 +63,6 @@ def tensorflow_pipeline(
             (YYYY-MM-DDThh:mm:ss.sss±hh:mm or YYYY-MM-DDThh:mm:ss).
             If any time part is missing, it will be regarded as zero.
         staging_bucket (str): Staging bucket for pipeline artifacts.
-        pipeline_files_gcs_path (str): GCS path where the pipeline files are located
         resource_suffix (str): Optional. Additional suffix to append GCS resources
             that get overwritten.
         test_dataset_uri (str): Optional. GCS URI of statis held-out test dataset.
@@ -82,6 +80,7 @@ def tensorflow_pipeline(
     valid_table = "valid_data" + table_suffix
     test_table = "test_data" + table_suffix
     primary_metric = "rootMeanSquaredError"
+    pipeline_files_gcs_path = "TODO - remove"
     train_script_uri = f"{pipeline_files_gcs_path}/assets/train_tf_model.py"
     hparams = dict(
         batch_size=100,
@@ -203,11 +202,3 @@ def tensorflow_pipeline(
             project_id=project_id,
             project_location=project_location,
         ).set_display_name("Update best model")
-
-
-if __name__ == "__main__":
-    compiler.Compiler().compile(
-        pipeline_func=tensorflow_pipeline,
-        package_path="training.json",
-        type_check=False,
-    )

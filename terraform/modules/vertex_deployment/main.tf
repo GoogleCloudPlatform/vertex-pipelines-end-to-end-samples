@@ -50,15 +50,6 @@ resource "google_storage_bucket" "pipeline_root_bucket" {
   depends_on                  = [google_project_service.gcp_services]
 }
 
-resource "google_storage_bucket" "pipeline_assets_bucket" {
-  name                        = "${var.project_id}-pl-assets"
-  location                    = var.region
-  project                     = var.project_id
-  uniform_bucket_level_access = true
-  public_access_prevention    = "enforced"
-  depends_on                  = [google_project_service.gcp_services]
-}
-
 ## Cloud Function - used to trigger pipelines ##
 
 locals {
@@ -123,12 +114,22 @@ resource "google_vertex_ai_metadata_store" "default_metadata_store" {
   depends_on  = [google_project_service.gcp_services]
 }
 
-## Artifact Registry ##
+## Artifact Registry - container images ##
 resource "google_artifact_registry_repository" "vertex-images" {
   repository_id = "vertex-images"
   description   = "Container image repository for training container images"
   project       = var.project_id
   location      = var.region
   format        = "DOCKER"
+  depends_on    = [google_project_service.gcp_services]
+}
+
+## Artifact Registry - KFP pipelines ##
+resource "google_artifact_registry_repository" "vertex-pipelines" {
+  repository_id = "vertex-pipelines"
+  description   = "KFP repository for Vertex Pipelines"
+  project       = var.project_id
+  location      = var.region
+  format        = "KFP"
   depends_on    = [google_project_service.gcp_services]
 }

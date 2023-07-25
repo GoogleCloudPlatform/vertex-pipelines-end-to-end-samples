@@ -197,7 +197,6 @@ def upload_model(
             champion_model.resource_name if champion_model is not None else None
         ),
         is_default_version=challenger_wins,
-        # TODO more model options
     )
 
     # Output google.VertexModel artifact

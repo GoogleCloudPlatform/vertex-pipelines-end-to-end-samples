@@ -47,15 +47,6 @@ storage.googleapis.com \
 --project $GCP_PROJECT_ID
 ```
 
-### Google Cloud Storage buckets
-
-Two buckets will need to be created - one for publishing the compiled JSON pipelines (and any other files required for running the pipelines), and one for the pipeline root.
-
-```
-gsutil mb -l ${GCP_REGION} -p ${GCP_PROJECT_ID} gs://${GCP_PROJECT_ID}-pl-root
-gsutil mb -l ${GCP_REGION} -p ${GCP_PROJECT_ID} gs://${GCP_PROJECT_ID}-assets 
-```
-
 ### BigQuery 
 
 Create a new BigQuery dataset for the Chicago Taxi data:
@@ -137,14 +128,10 @@ gcloud projects add-iam-policy-binding $GCP_PROJECT_ID --member="serviceAccount:
 gcloud projects add-iam-policy-binding $GCP_PROJECT_ID --member="serviceAccount:vertex-pipelines@${GCP_PROJECT_ID}.iam.gserviceaccount.com" --role="roles/bigquery.jobUser" --condition=None
 ```
 
-The Vertex Pipelines service account requires read access to the assets bucket, read/write access to the pipeline root bucket, and access to list both buckets:
+The Vertex Pipelines service account requires read/write/list access to the pipeline root bucket:
 
 ```
-gsutil iam ch serviceAccount:vertex-pipelines@${GCP_PROJECT_ID}.iam.gserviceaccount.com:objectViewer gs://${GCP_PROJECT_ID}-assets
-
 gsutil iam ch serviceAccount:vertex-pipelines@${GCP_PROJECT_ID}.iam.gserviceaccount.com:objectAdmin gs://${GCP_PROJECT_ID}-pl-root
-
-gsutil iam ch serviceAccount:vertex-pipelines@${GCP_PROJECT_ID}.iam.gserviceaccount.com:legacyBucketReader gs://${GCP_PROJECT_ID}-assets
 
 gsutil iam ch serviceAccount:vertex-pipelines@${GCP_PROJECT_ID}.iam.gserviceaccount.com:legacyBucketReader gs://${GCP_PROJECT_ID}-pl-root
 ```
@@ -181,4 +168,4 @@ For each of the above, create a Cloud Build trigger with the following settings:
 | `pr-checks.yaml` (xgboost)    |  _PIPELINE_TEMPLATE = `xgboost`     |
 | `trigger-tests.yaml`          |                                     |
 | `e2e-test.yaml` (tensorflow)  |  _PIPELINE_TEMPLATE = `tensorflow`<br>_PIPELINE_PUBLISH_GCS_PATH = `gs://<GCP PROJECT ID>-assets/e2e-test-tensorflow`<br>_TEST_ENABLE_PIPELINE_CACHING = `False`<br>_TEST_TRAIN_STATS_GCS_PATH = `gs://<GCP PROJECT ID>-pl-root/e2e-test-tensorflow/train-stats/train.stats`<br>_TEST_VERTEX_LOCATION = `<GCP REGION (same as buckets etc above)>`<br>_TEST_VERTEX_PIPELINE_ROOT = `gs://<GCP PROJECT ID>-pl-root`<br>_TEST_VERTEX_PROJECT_ID = `<GCP PROJECT ID>`<br>_TEST_VERTEX_SA_EMAIL = `vertex-pipelines@<GCP PROJECT ID>.iam.gserviceaccount.com`  |
-| `e2e-test.yaml` (xgboost)  |  _PIPELINE_TEMPLATE = `xgboost`<br>_PIPELINE_PUBLISH_GCS_PATH = `gs://<GCP PROJECT ID>-assets/e2e-test-xgboost`<br>_TEST_ENABLE_PIPELINE_CACHING = `False`<br>_TEST_TRAIN_STATS_GCS_PATH = `gs://<GCP PROJECT ID>-pl-root/e2e-test-xgboost/train-stats/train.stats`<br>_TEST_VERTEX_LOCATION = `<GCP REGION (same as buckets etc above)>`<br>_TEST_VERTEX_PIPELINE_ROOT = `gs://<GCP PROJECT ID>-pl-root`<br>_TEST_VERTEX_PROJECT_ID = `<GCP PROJECT ID>`<br>_TEST_VERTEX_SA_EMAIL = `vertex-pipelines@<GCP PROJECT ID>.iam.gserviceaccount.com`  |
+| `e2e-test.yaml` (xgboost)  |  _PIPELINE_TEMPLATE = `xgboost`<br>_TEST_ENABLE_PIPELINE_CACHING = `False`<br>_TEST_VERTEX_LOCATION = `<GCP REGION (same as buckets etc above)>`<br>_TEST_VERTEX_PIPELINE_ROOT = `gs://<GCP PROJECT ID>-pl-root`<br>_TEST_VERTEX_PROJECT_ID = `<GCP PROJECT ID>`<br>_TEST_VERTEX_SA_EMAIL = `vertex-pipelines@<GCP PROJECT ID>.iam.gserviceaccount.com`  |

@@ -22,25 +22,23 @@ steps:
       - |
         make setup && \
         make compile-pipeline pipeline=training && \
-        make compile-pipeline pipeline=prediction
+        make compile-pipeline pipeline=prediction && \
+        cd pipelines && \
+        for dest in ${_PIPELINE_PUBLISH_AR_PATHS} ; do \
+          poetry run python -m pipelines.utils.upload_pipeline \
+          --dest=$$dest \
+          --yaml=src/pipelines/${_PIPELINE_TEMPLATE}/training/pipeline.yaml \
+          --tag=latest \
+          --tag=${TAG_NAME} && \
+          poetry run python -m pipelines.utils.upload_pipeline \
+          --dest=$$dest \
+          --yaml=src/pipelines/${_PIPELINE_TEMPLATE}/prediction/pipeline.yaml \
+          --tag=latest \
+          --tag=${TAG_NAME}; \
+        done
+
     env:
       - PIPELINE_TEMPLATE=${_PIPELINE_TEMPLATE}
-
-  # Copy pipelines and files to a new directory in GCS
-  # (via a new local directory)
-  # Directory name = git commit hash
-  - name: gcr.io/cloud-builders/gsutil
-    entrypoint: bash
-    args:
-      - -c
-      - |
-        mkdir -p ${TAG_NAME}/assets && \
-        cp pipelines/src/training.json ${TAG_NAME}/training.json && \
-        cp pipelines/src/prediction.json ${TAG_NAME}/prediction.json && \
-        cp -r pipelines/assets/* ${TAG_NAME}/assets/ && \
-        for dest in ${_PIPELINE_PUBLISH_GCS_PATHS} ; do \
-          gsutil cp -r ${TAG_NAME} $$dest ; \
-        done
 
 options:
   logging: CLOUD_LOGGING_ONLY

@@ -16,14 +16,14 @@ import os
 import pathlib
 
 from google_cloud_pipeline_components.v1.bigquery import BigqueryQueryJobOp
-from kfp import compiler, dsl
+from kfp import dsl
 
 from pipelines import generate_query
 from vertex_components import lookup_model, model_batch_predict
 
 
 @dsl.pipeline(name="xgboost-prediction-pipeline")
-def xgboost_pipeline(
+def pipeline(
     project_id: str = os.environ.get("VERTEX_PROJECT_ID"),
     project_location: str = os.environ.get("VERTEX_LOCATION"),
     ingestion_project_id: str = os.environ.get("VERTEX_PROJECT_ID"),
@@ -140,12 +140,4 @@ def xgboost_pipeline(
         )
         .after(preprocessing)
         .set_display_name("Batch prediction job")
-    )
-
-
-if __name__ == "__main__":
-    compiler.Compiler().compile(
-        pipeline_func=xgboost_pipeline,
-        package_path="prediction.json",
-        type_check=False,
     )

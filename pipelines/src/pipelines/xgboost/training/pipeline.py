@@ -16,7 +16,7 @@ import os
 import pathlib
 
 from google_cloud_pipeline_components.v1.bigquery import BigqueryQueryJobOp
-from kfp import compiler, dsl
+from kfp import dsl
 from kfp.dsl import Dataset, Input, Metrics, Model, Output, OutputPath
 from pipelines import generate_query
 from bigquery_components import extract_bq_to_dataset
@@ -32,7 +32,7 @@ def train(
     test_data: Input[Dataset],
     model: Output[Model],
     model_output_uri: OutputPath(str),
-    metrics: Output[Metrics],  # TODO could be a more specific type of metrics object
+    metrics: Output[Metrics],
     hparams: dict,
 ):
     return dsl.ContainerSpec(
@@ -59,7 +59,7 @@ def train(
 
 
 @dsl.pipeline(name="xgboost-train-pipeline")
-def xgboost_pipeline(
+def pipeline(
     project_id: str = os.environ.get("VERTEX_PROJECT_ID"),
     project_location: str = os.environ.get("VERTEX_LOCATION"),
     ingestion_project_id: str = os.environ.get("VERTEX_PROJECT_ID"),
@@ -68,8 +68,6 @@ def xgboost_pipeline(
     dataset_location: str = os.environ.get("VERTEX_LOCATION"),
     ingestion_dataset_id: str = "chicago_taxi_trips",
     timestamp: str = "2022-12-01 00:00:00",
-    staging_bucket: str = os.environ.get("VERTEX_PIPELINE_ROOT"),
-    pipeline_files_gcs_path: str = os.environ.get("PIPELINE_FILES_GCS_PATH"),
     resource_suffix: str = os.environ.get("RESOURCE_SUFFIX"),
     test_dataset_uri: str = "",
 ):
@@ -93,8 +91,6 @@ def xgboost_pipeline(
         timestamp (str): Optional. Empty or a specific timestamp in ISO 8601 format
             (YYYY-MM-DDThh:mm:ss.sss±hh:mm or YYYY-MM-DDThh:mm:ss).
             If any time part is missing, it will be regarded as zero.
-        staging_bucket (str): Staging bucket for pipeline artifacts.
-        pipeline_files_gcs_path (str): GCS path where the pipeline files are located.
         resource_suffix (str): Optional. Additional suffix to append GCS resources
             that get overwritten.
         test_dataset_uri (str): Optional. GCS URI of statis held-out test dataset.
@@ -208,11 +204,3 @@ def xgboost_pipeline(
         pipeline_job_id="{{$.pipeline_job_name}}",
         test_dataset=test_dataset,
     ).set_display_name("Upload model")
-
-
-if __name__ == "__main__":
-    compiler.Compiler().compile(
-        pipeline_func=xgboost_pipeline,
-        package_path="training.json",
-        type_check=False,
-    )

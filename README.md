@@ -74,7 +74,7 @@ The cloud infrastructure is managed using Terraform and is defined in the [`terr
 
 - `cloudfunction` - deploys a (Pub/Sub-triggered) Cloud Function from local source code
 - `scheduled_pipelines` - deploys Cloud Scheduler jobs that will trigger Vertex Pipeline runs (via the above Cloud Function)
-- `vertex_deployment` - deploys Cloud infrastructure required for running Vertex Pipelines, including enabling APIs, creating buckets, service accounts, and IAM permissions.
+- `vertex_deployment` - deploys Cloud infrastructure required for running Vertex Pipelines, including enabling APIs, creating buckets, Artifact Registry repos, service accounts, and IAM permissions.
 
 There is a Terraform configuration for each environment (dev/test/prod) under [`terraform/envs`](terraform/envs/).
 
@@ -158,6 +158,14 @@ bq mk --transfer_config \
   --params='{"source_dataset_id":"'"chicago_taxi_trips"'","source_project_id":"'"bigquery-public-data"'"}'
 ```
 
+#### Building the training container image
+
+Build the container image and push it to Artifact Registry with:
+
+```bash
+make build-training-container
+```
+
 #### Running Pipelines
 
 You can run the XGBoost training pipeline (for example) with:
@@ -175,7 +183,6 @@ make run pipeline=<training|prediction>
 This will execute the pipeline using the chosen template on Vertex AI, namely it will:
 
 1. Compile the pipeline using the Kubeflow Pipelines SDK
-1. Copy the `assets` folders to Cloud Storage
 1. Trigger the pipeline with the help of `pipelines/trigger/main.py`
 
 To avoid resource conflicts when running pipelines concurrently in the same Google Cloud project with multiple developers, populate the `RESOURCE_SUFFIX` environment variable in your `env.sh` file. This will append your defined suffix to Google resources and ensure each developer's resources remain unique and separate, preventing unintentional overwriting.
@@ -185,12 +192,6 @@ To avoid resource conflicts when running pipelines concurrently in the same Goog
 The ML pipelines have input parameters. As you can see in the pipeline definition files (`pipelines/pipelines/<xgboost|tensorflow>/<training|prediction>/pipeline.py`), they have default values, and some of these default values are derived from environment variables (which in turn are defined in `env.sh`).
 
 When triggering ad hoc runs in your dev/sandbox environment, or when running the E2E tests in CI, these default values are used. For the test and production deployments, the pipeline parameters are defined in the Terraform code for the Cloud Scheduler jobs (`terraform/envs/<test|prod>/variables.auto.tfvars`).
-
-### Assets
-
-The folder `pipelines/assets/` can be used for any additional files that may be needed during execution of the pipelines. 
-Most importantly this can include your training scripts.
-This directory is rsync'd to Google Cloud Storage when running a pipeline in the sandbox environment or as part of the CD pipeline (see [CI/CD setup](cloudbuild/README.md)).
 
 ## Testing
 
@@ -211,7 +212,7 @@ make test-components GROUP=vertex-components
 To run end-to-end tests of a single pipeline, you can use:
 
 ```
-make e2e-tests pipeline=<training|prediction> [ enable_caching=<true|false> ] [ sync_assets=<true|false> ]
+make e2e-tests pipeline=<training|prediction> [ enable_caching=<true|false> ]
 ```
 
 There are also unit tests for the pipeline triggering code. 
@@ -245,8 +246,8 @@ To schedule pipelines into an environment, you will need to provide the `cloud_s
 There are five CI/CD pipelines located under the [cloudbuild](cloudbuild) directory:
 
 1. `pr-checks.yaml` - runs pre-commit checks and unit tests on the custom KFP components, and checks that the ML pipelines (training and prediction) can compile.
-2. `e2e-test.yaml` - copies the "assets" folders to the chosen GCS destination (versioned by git commit hash - see below) and runs end-to-end tests of the training and prediction pipeline.
-3. `release.yaml` - Compiles the training and prediction pipelines, and copies the compiled pipelines, along with their respective `assets` directories, to Google Cloud Storage in the build / CI/CD environment. The Google Cloud Storage destination is namespaced using the git tag (see below). Following this, the E2E tests are run on the new compiled pipelines.
+2. `e2e-test.yaml` - runs end-to-end tests of the training and prediction pipeline.
+3. `release.yaml` - Compiles the training and prediction pipelines, and copies the compiled pipelines to Google Cloud Storage in the build / CI/CD environment. The Google Cloud Storage destination is namespaced using the git tag (see below). Following this, the E2E tests are run on the new compiled pipelines.
 
 Below is a diagram of how the files are published in each environment in the `e2e-test.yaml` and `release.yaml` pipelines:
 
@@ -255,8 +256,6 @@ Below is a diagram of how the files are published in each environment in the `e2
 └── TAG_NAME or GIT COMMIT HASH <-- Git tag used for the release (release.yaml) OR git commit hash (e2e-test.yaml)
     ├── training.json
     ├── prediction.json
-    ├── assets
-    │   └── some_useful_file.json
 ```
 
 4. `terraform-plan.yaml` - Checks the Terraform configuration under `terraform/envs/<env>` (e.g. `terraform/envs/test`), and produces a summary of any proposed changes that will be applied on merge to the main branch.

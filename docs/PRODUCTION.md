@@ -54,24 +54,14 @@ When the new tag is created, the `release.yaml` pipeline should be triggered. It
   - `_PIPELINE_PUBLISH_GCS_PATHS` = `gs://<Project ID of dev project>-pl-assets gs://<Project ID of test project>-pl-assets gs://<Project ID of prod project>-pl-assets`
 
 Assuming your end-to-end tests pass, your compiled training pipeline will be published to:
-- `gs://<Project ID of dev project>-pl-assets/v1.2/training/training.json`
-- `gs://<Project ID of test project>-pl-assets/v1.2/training/training.json`
-- `gs://<Project ID of prod project>-pl-assets/v1.2/training/training.json`
-
-The contents of your assets folder for your training pipeline will be published to:
-- `gs://<Project ID of dev project>-pl-assets/v1.2/training/assets/`
-- `gs://<Project ID of test project>-pl-assets/v1.2/training/assets/`
-- `gs://<Project ID of prod project>-pl-assets/v1.2/training/assets/`
+- `https://<GCP region>-kfp.pkg.dev/<Project ID of dev project>/vertex-pipelines/xgboost-train-pipeline/v1.2`
+- `https://<GCP region>-kfp.pkg.dev/<Project ID of test project>/vertex-pipelines/xgboost-train-pipeline/v1.2`
+- `https://<GCP region>-kfp.pkg.dev/<Project ID of prod project>/vertex-pipelines/xgboost-train-pipeline/v1.2`
 
 Similarly, your compiled prediction pipeline will be published in this location:
-- `gs://<Project ID of dev project>-pl-assets/v1.2/prediction/prediction.json`
-- `gs://<Project ID of test project>-pl-assets/v1.2/prediction/prediction.json`
-- `gs://<Project ID of prod project>-pl-assets/v1.2/prediction/prediction.json`
-
-The contents of your assets folder for your prediction pipeline will be published in this location:
-- `gs://<Project ID of dev project>-pl-assets/v1.2/prediction/assets/`
-- `gs://<Project ID of test project>-pl-assets/v1.2/prediction/assets/`
-- `gs://<Project ID of prod project>-pl-assets/v1.2/prediction/assets/`
+- `https://<GCP region>-kfp.pkg.dev/<Project ID of dev project>/vertex-pipelines/xgboost-prediction-pipeline/v1.2`
+- `https://<GCP region>-kfp.pkg.dev/<Project ID of test project>/vertex-pipelines/xgboost-prediction-pipeline/v1.2`
+- `https://<GCP region>-kfp.pkg.dev/<Project ID of prod project>/vertex-pipelines/xgboost-prediction-pipeline/v1.2`
 
 | :exclamation: IMPORTANT    |
 |:---------------------------|
@@ -79,7 +69,7 @@ The contents of your assets folder for your prediction pipeline will be publishe
 
 ## Deploying a release to the test environment
 
-Now that you have created a release, and the compiled pipelines (and their `assets` files) have been copied to the test and prod environments, you can now schedule your pipelines to run in those environments.
+Now that you have created a release, and the compiled pipelines have been copied to the test and prod environments, you can now schedule your pipelines to run in those environments.
 
 Of course, we will begin by scheduling the pipelines to run in the test environment.
 
@@ -97,17 +87,14 @@ cloud_schedulers_config = {
     description  = "Trigger my XGBoost training pipeline in Vertex"
     schedule     = "0 0 1 * *"
     time_zone    = "UTC"
-    template_path = "gs://<Project ID of test project>-pl-assets/v1.2/training/training.json"
+    template_path = "https://<GCP region>-kfp.pkg.dev/<Project ID of test project>/vertex-pipelines/xgboost-train-pipeline/<Git tag>"
     enable_caching = null
     pipeline_parameters = {
       project_id = <Project ID of test project>
       project_location = "europe-west2"
-      pipeline_files_gcs_path = "gs://<Project ID of test project>-pl-assets/v1.2/training/assets"
       ingestion_project_id = <Project ID of test project>
       model_name = "xgboost-with-preprocessing"
       model_label = "label_name"
-      tfdv_schema_filename = "tfdv_schema_training.pbtxt"
-      tfdv_train_stats_path = "gs://<Project ID of test project>-pl-root/train_stats/train.stats"
       dataset_id = "preprocessing"
       dataset_location = "europe-west2"
       ingestion_dataset_id = "chicago_taxi_trips"
@@ -120,17 +107,14 @@ cloud_schedulers_config = {
     description  = "Trigger my XGBoost prediction pipeline in Vertex"
     schedule     = "0 0 * * *"
     time_zone    = "UTC"
-    template_path = "gs://<Project ID of test project>-pl-assets/v1.2/prediction/prediction.json"
+    template_path = "https://<GCP region>-kfp.pkg.dev/<Project ID of test project>/vertex-pipelines/xgboost-prediction-pipeline/<Git tag>"
     enable_caching = null
     pipeline_parameters = {
       project_id = <Project ID of test project>
       project_location = "europe-west2"
-      pipeline_files_gcs_path = "gs://<Project ID of test project>-pl-assets/v1.2/prediction/assets"
       ingestion_project_id = <Project ID of test project>
       model_name = "xgboost-with-preprocessing"
       model_label = "label_name"
-      tfdv_schema_filename = "tfdv_schema_prediction.pbtxt"
-      tfdv_train_stats_path = "gs://<Project ID of test project>-pl-root/train_stats/train.stats"
       dataset_id = "preprocessing"
       dataset_location = "europe-west2"
       ingestion_dataset_id = "chicago_taxi_trips"

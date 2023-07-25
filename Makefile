@@ -33,9 +33,9 @@ test-trigger: ## Runs unit tests for the pipeline trigger code
 	@cd pipelines && \
 	poetry run python -m pytest tests/trigger
 
-compile-pipeline: ## Compile the pipeline to training.json or prediction.json. Must specify pipeline=<training|prediction>
+compile-pipeline: ## Compile the pipeline to pipeline.yaml. Must specify pipeline=<training|prediction>
 	@cd pipelines/src && \
-	poetry run python -m pipelines.${PIPELINE_TEMPLATE}.${pipeline}.pipeline
+	poetry run kfp dsl compile --py pipelines/${PIPELINE_TEMPLATE}/${pipeline}/pipeline.py --output pipelines/${PIPELINE_TEMPLATE}/${pipeline}/pipeline.yaml --function pipeline
 
 setup-components: ## Run unit tests for a component group
 	@cd "components/${GROUP}" && \
@@ -71,28 +71,13 @@ test-all-components-coverage: ## Run tests with coverage
 		$(MAKE) test-components-coverage GROUP=$$(basename $$component_group) ; \
 	done
 
-sync-assets: ## Sync assets folder to GCS.
-	@if [ -d "./pipelines/assets/" ]; then \
-		echo "Syncing assets to GCS"; \
-		gsutil -m rsync -r -d ./pipelines/assets $(PIPELINE_FILES_GCS_PATH)/assets ; \
-	else \
-		echo "No assets folder found"; \
-	fi;
-
-run: ## Compile pipeline, copy assets to GCS, and run pipeline in sandbox environment. Must specify pipeline=<training|prediction>. Optionally specify enable_pipeline_caching=<true|false> (defaults to default Vertex caching behaviour)
+run: ## Compile pipeline and run pipeline in sandbox environment. Must specify pipeline=<training|prediction>. Optionally specify enable_pipeline_caching=<true|false> (defaults to default Vertex caching behaviour)
 	@ $(MAKE) compile-pipeline && \
-	$(MAKE) sync-assets && \
 	cd pipelines/src && \
-	poetry run python -m pipelines.trigger --template_path=./$(pipeline).json --enable_caching=$(enable_pipeline_caching)
+	poetry run python -m pipelines.trigger --template_path=pipelines/${PIPELINE_TEMPLATE}/${pipeline}/pipeline.yaml --enable_caching=$(enable_pipeline_caching)
 
-sync_assets ?= true
-e2e-tests: ## (Optionally) copy assets to GCS, and perform end-to-end (E2E) pipeline tests. Must specify pipeline=<training|prediction>. Optionally specify enable_pipeline_caching=<true|false> (defaults to default Vertex caching behaviour). Optionally specify sync_assets=<true|false> (defaults to true)
-	@if [ $$sync_assets = true ] ; then \
-        $(MAKE) sync-assets; \
-	else \
-		echo "Skipping syncing assets to GCS"; \
-    fi && \
-	cd pipelines && \
+e2e-tests: ## Perform end-to-end (E2E) pipeline tests. Must specify pipeline=<training|prediction>. Optionally specify enable_pipeline_caching=<true|false> (defaults to default Vertex caching behaviour).
+	@ cd pipelines && \
 	poetry run pytest --log-cli-level=INFO tests/${PIPELINE_TEMPLATE}/$(pipeline) --enable_caching=$(enable_pipeline_caching)
 
 env ?= dev

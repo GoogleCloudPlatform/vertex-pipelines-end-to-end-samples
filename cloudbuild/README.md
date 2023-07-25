@@ -21,8 +21,8 @@ limitations under the License.
 There are five CI/CD pipelines
 
 1. `pr-checks.yaml` - runs pre-commit checks and unit tests on the custom KFP components, and checks that the ML pipelines (training and prediction) can compile.
-1. `e2e-test.yaml` - copies the "assets" folder to the chosen GCS destination (versioned by git commit hash) and runs end-to-end tests of the training and prediction pipeline.
-1. `release.yaml` - compiles training and prediction pipelines, then copies the compiled pipelines and "assets" folder to the chosen GCS destination (versioned by git tag).
+1. `e2e-test.yaml` - runs end-to-end tests of the training and prediction pipeline.
+1. `release.yaml` - compiles training and prediction pipelines, then copies the compiled pipelines to the chosen GCS destination (versioned by git tag).
 1. `terraform-plan.yaml` - Checks the Terraform configuration under `terraform/envs/<env>` (e.g. `terraform/envs/test`), and produces a summary of any proposed changes that will be applied on merge to the main branch.
 1. `terraform-apply.yaml` - Applies the Terraform configuration under `terraform/envs/<env>` (e.g. `terraform/envs/test`).
 
@@ -61,7 +61,6 @@ Set up a trigger for the `e2e-test.yaml` pipeline, and provide substitution valu
 
 | Variable | Description | Suggested value |
 |---|---|---|
-| `_PIPELINE_PUBLISH_GCS_PATH` | The GCS folder (i.e. path prefix) where the pipeline files will be copied to. See the [Assets](../README.md#assets) section of the main README for more information. | `gs://<Project ID for dev environment>-pl-assets/e2e-tests` |
 | `_PIPELINE_TEMPLATE` | The set of pipelines in the repo that you would like to use - i.e. the subfolder under `pipelines` where your pipelines live. | Currently, can be either `xgboost` or `tensorflow`. |
 | `_TEST_VERTEX_CMEK_IDENTIFIER` | Optional. ID of the CMEK (Customer Managed Encryption Key) that you want to use for the ML pipeline runs in the E2E tests as part of the CI/CD pipeline with the format `projects/my-project/locations/my-region/keyRings/my-kr/cryptoKeys/my-key` | Leave blank |
 | `_TEST_VERTEX_LOCATION` | The Google Cloud region where you want to run the ML pipelines in the E2E tests as part of the CI/CD pipeline. | Your chosen Google Cloud region |
@@ -69,7 +68,6 @@ Set up a trigger for the `e2e-test.yaml` pipeline, and provide substitution valu
 | `_TEST_VERTEX_PIPELINE_ROOT` | The GCS folder (i.e. path prefix) that you want to use for the pipeline artifacts and for passing data between stages in the pipeline. Used during the pipeline runs in the E2E tests as part of the CI/CD pipeline. | `gs://<Project ID for dev environment>-pl-root` |
 | `_TEST_VERTEX_PROJECT_ID` | Google Cloud project ID in which you want to run the ML pipelines in the E2E tests as part of the CI/CD pipeline. | Project ID for the dev environment |
 | `_TEST_VERTEX_SA_EMAIL` | Email address of the service account you want to use to run the ML pipelines in the E2E tests as part of the CI/CD pipeline. | `vertex-pipelines@<Project ID for dev environment>.iam.gserviceaccount.com` |
-| `_TEST_TRAIN_STATS_GCS_PATH` | GCS path to use for storing the statistics computed about the training dataset used in the training pipeline. | `gs://<Project ID for dev environment>-pl-root/train_stats/train.stats` |
 | `_TEST_ENABLE_PIPELINE_CACHING` | Override the default caching behaviour of the ML pipelines. Leave blank to use the default caching behaviour. | `False` |
 
 We recommend to enable comment control for this trigger (select `Required` under `Comment Control`). This will mean that the end-to-end tests will only run once a repository collaborator or owner comments `/gcbrun` on the pull request.
@@ -89,7 +87,7 @@ Set up a trigger for the `release.yaml` pipeline, and provide substitution value
 
 | Variable | Description | Suggested value |
 |---|---|---|
-| `_PIPELINE_PUBLISH_GCS_PATHS` | The (space separated) GCS folders (plural!) where the pipeline files (compiled pipelines + pipeline assets) will be copied to. See the [Assets](../README.md#assets) section of the main README for more information. | `gs://<Project ID for dev environment>-pl-assets gs://<Project ID for test environment>-pl-assets gs://<Project ID for prod environment>-pl-assets` |
+| `_PIPELINE_PUBLISH_AR_PATHS` | The (space separated) Artifact Registry repositories (plural!) where the compiled pipelines will be copied to. | `gs://europe-west2-kfp.pkg.dev/<Project ID for dev environment>/vertex-pipelines gs://europe-west2-kfp.pkg.dev/<Project ID for test environment>/vertex-pipelines gs://europe-west2-kfp.pkg.dev/<Project ID for prod environment>/vertex-pipelines` |
 | `_PIPELINE_TEMPLATE` | The set of pipelines in the repo that you would like to use - i.e. the subfolder under `pipelines` where your pipelines live. | Currently, can be either `xgboost` or `tensorflow`. |
 
 ### On merge to `main` / `master` branch
