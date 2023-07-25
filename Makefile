@@ -109,5 +109,8 @@ destroy-infra: ## DESTROY the Terraform infrastructure in your project. Requires
 build-training-container: ## Build and push training container image using Docker
 	@ cd training && \
 	poetry export -f requirements.txt -o requirements.txt && \
-	docker build -t ${TRAINING_CONTAINER_IMAGE} . && \
-	docker push ${TRAINING_CONTAINER_IMAGE}
+	gcloud builds submit . \
+	--tag=${TRAINING_CONTAINER_IMAGE} \
+	--region=${VERTEX_LOCATION} \
+	--project=${VERTEX_PROJECT_ID} \
+	--gcs-source-staging-dir=gs://${VERTEX_PROJECT_ID}-staging/source

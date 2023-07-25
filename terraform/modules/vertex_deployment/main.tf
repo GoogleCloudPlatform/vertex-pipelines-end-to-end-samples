@@ -75,9 +75,9 @@ resource "google_pubsub_topic" "pipeline_trigger_topic" {
   depends_on = [google_project_service.gcp_services]
 }
 
-# Cloud Function staging bucket
-resource "google_storage_bucket" "cf_staging_bucket" {
-  name                        = "${var.project_id}-cf-staging"
+# Cloud Function / Cloud Build staging bucket
+resource "google_storage_bucket" "staging_bucket" {
+  name                        = "${var.project_id}-staging"
   location                    = local.cloudfunction_region
   project                     = var.project_id
   uniform_bucket_level_access = true
@@ -93,7 +93,7 @@ module "cloudfunction" {
   function_name                 = var.cloudfunction_name
   description                   = var.cloudfunction_description
   source_dir                    = "../../../pipelines/src/pipelines/trigger"
-  source_code_bucket_name       = google_storage_bucket.cf_staging_bucket.name
+  source_code_bucket_name       = google_storage_bucket.staging_bucket.name
   runtime                       = "python39"
   entry_point                   = "cf_handler"
   cf_service_account            = google_service_account.vertex_cloudfunction_sa.email
