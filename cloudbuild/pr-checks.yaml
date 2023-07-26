@@ -32,7 +32,6 @@ steps:
         make test-all-components
     env:
       - SKIP=terraform-fmt,git-dirty
-      - PIPELINE_TEMPLATE=${_PIPELINE_TEMPLATE}
 
 options:
   logging: CLOUD_LOGGING_ONLY

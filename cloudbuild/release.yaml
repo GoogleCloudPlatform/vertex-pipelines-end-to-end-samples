@@ -27,18 +27,15 @@ steps:
         for dest in ${_PIPELINE_PUBLISH_AR_PATHS} ; do \
           poetry run python -m pipelines.utils.upload_pipeline \
           --dest=$$dest \
-          --yaml=src/pipelines/${_PIPELINE_TEMPLATE}/training/pipeline.yaml \
+          --yaml=src/pipelines/training/pipeline.yaml \
           --tag=latest \
           --tag=${TAG_NAME} && \
           poetry run python -m pipelines.utils.upload_pipeline \
           --dest=$$dest \
-          --yaml=src/pipelines/${_PIPELINE_TEMPLATE}/prediction/pipeline.yaml \
+          --yaml=src/pipelines/prediction/pipeline.yaml \
           --tag=latest \
           --tag=${TAG_NAME}; \
         done
-
-    env:
-      - PIPELINE_TEMPLATE=${_PIPELINE_TEMPLATE}
 
 options:
   logging: CLOUD_LOGGING_ONLY

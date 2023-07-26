@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from pipelines.xgboost.training.pipeline import xgboost_pipeline
+from pipelines.training.pipeline import pipeline
 from tests.e2e.test_e2e import pipeline_e2e_test
 
 
@@ -31,7 +31,7 @@ def test_pipeline_run(enable_caching) -> None:
         None
     """
     pipeline_e2e_test(
-        xgboost_pipeline,
+        pipeline,
         enable_caching=enable_caching,
         common_tasks={},
     )

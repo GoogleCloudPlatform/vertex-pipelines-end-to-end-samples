@@ -35,7 +35,7 @@ test-trigger: ## Runs unit tests for the pipeline trigger code
 
 compile-pipeline: ## Compile the pipeline to pipeline.yaml. Must specify pipeline=<training|prediction>
 	@cd pipelines/src && \
-	poetry run kfp dsl compile --py pipelines/${PIPELINE_TEMPLATE}/${pipeline}/pipeline.py --output pipelines/${PIPELINE_TEMPLATE}/${pipeline}/pipeline.yaml --function pipeline
+	poetry run kfp dsl compile --py pipelines/${pipeline}/pipeline.py --output pipelines/${pipeline}/pipeline.yaml --function pipeline
 
 setup-components: ## Run unit tests for a component group
 	@cd "components/${GROUP}" && \
@@ -74,11 +74,11 @@ test-all-components-coverage: ## Run tests with coverage
 run: ## Compile pipeline and run pipeline in sandbox environment. Must specify pipeline=<training|prediction>. Optionally specify enable_pipeline_caching=<true|false> (defaults to default Vertex caching behaviour)
 	@ $(MAKE) compile-pipeline && \
 	cd pipelines/src && \
-	poetry run python -m pipelines.trigger --template_path=pipelines/${PIPELINE_TEMPLATE}/${pipeline}/pipeline.yaml --enable_caching=$(enable_pipeline_caching)
+	poetry run python -m pipelines.trigger --template_path=pipelines/${pipeline}/pipeline.yaml --enable_caching=$(enable_pipeline_caching)
 
 e2e-tests: ## Perform end-to-end (E2E) pipeline tests. Must specify pipeline=<training|prediction>. Optionally specify enable_pipeline_caching=<true|false> (defaults to default Vertex caching behaviour).
 	@ cd pipelines && \
-	poetry run pytest --log-cli-level=INFO tests/${PIPELINE_TEMPLATE}/$(pipeline) --enable_caching=$(enable_pipeline_caching)
+	poetry run pytest --log-cli-level=INFO tests/$(pipeline) --enable_caching=$(enable_pipeline_caching)
 
 env ?= dev
 deploy-infra: ## Deploy the Terraform infrastructure to your project. Requires VERTEX_PROJECT_ID and VERTEX_LOCATION env variables to be set in env.sh. Optionally specify env=<dev|test|prod> (default = dev)
