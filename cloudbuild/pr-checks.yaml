@@ -32,6 +32,8 @@ steps:
         make test-all-components
     env:
       - SKIP=terraform-fmt,git-dirty
+      - CONTAINER_IMAGE_REGISTRY=dummy_value
+      - RESOURCE_SUFFIX=default
 
 options:
   logging: CLOUD_LOGGING_ONLY
