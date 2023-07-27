@@ -1,0 +1,7 @@
+---
+steps:
+  - name: 'gcr.io/kaniko-project/executor:latest'
+    args:
+      - --destination=${_DESTINATION_IMAGE_URI}
+      - --target=${_DOCKER_TARGET}
+      - --cache=true

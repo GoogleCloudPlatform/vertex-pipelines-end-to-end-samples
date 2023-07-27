@@ -22,8 +22,10 @@ from pipelines import generate_query
 from bigquery_components import extract_bq_to_dataset
 from vertex_components import upload_model
 
-TRAINING_IMAGE = os.environ["TRAINING_CONTAINER_IMAGE"]
-SERVING_IMAGE = os.environ["SERVING_CONTAINER_IMAGE"]
+CONTAINER_IMAGE_REGISTRY = os.environ["CONTAINER_IMAGE_REGISTRY"]
+RESOURCE_SUFFIX = os.environ.get("RESOURCE_SUFFIX", "default")
+TRAINING_IMAGE = f"{CONTAINER_IMAGE_REGISTRY}/training:{RESOURCE_SUFFIX}"
+SERVING_IMAGE = f"{CONTAINER_IMAGE_REGISTRY}/serving:{RESOURCE_SUFFIX}"
 
 
 @dsl.container_component
@@ -40,7 +42,7 @@ def train(
         image=TRAINING_IMAGE,
         command=["python"],
         args=[
-            "train.py",
+            "training/train.py",
             "--train-data",
             train_data.path,
             "--valid-data",
