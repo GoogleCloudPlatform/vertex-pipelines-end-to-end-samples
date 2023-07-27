@@ -78,8 +78,8 @@ def pipeline(
     # into different components of the pipeline
     time_column = "trip_start_timestamp"
     ingestion_table = "taxi_trips"
-    table_suffix = "_xgb_prediction" + str(resource_suffix)  # suffix to table names
-    ingested_table = "ingested_data" + table_suffix
+    table_suffix = "_xgb_prediction_" + str(resource_suffix)  # suffix to table names
+    ingested_table = "ingested_data_" + table_suffix
     monitoring_alert_email_addresses = []
     monitoring_skew_config = {"defaultSkewThreshold": {"value": 0.001}}
 
@@ -131,6 +131,9 @@ def pipeline(
             destination_uri=bigquery_destination_output_uri,
             source_format="bigquery",
             destination_format="bigquery",
+            instance_config={
+                "instanceType": "object",
+            },
             machine_type=batch_prediction_machine_type,
             starting_replica_count=batch_prediction_min_replicas,
             max_replica_count=batch_prediction_max_replicas,

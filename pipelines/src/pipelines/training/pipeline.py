@@ -22,7 +22,8 @@ from pipelines import generate_query
 from bigquery_components import extract_bq_to_dataset
 from vertex_components import upload_model
 
-IMAGE = os.environ.get("TRAINING_CONTAINER_IMAGE")
+TRAINING_IMAGE = os.environ["TRAINING_CONTAINER_IMAGE"]
+SERVING_IMAGE = os.environ["SERVING_CONTAINER_IMAGE"]
 
 
 @dsl.container_component
@@ -36,10 +37,10 @@ def train(
     hparams: dict,
 ):
     return dsl.ContainerSpec(
-        image=IMAGE,
+        image=TRAINING_IMAGE,
         command=["python"],
         args=[
-            "main.py",
+            "train.py",
             "--train-data",
             train_data.path,
             "--valid-data",
@@ -197,9 +198,7 @@ def pipeline(
         eval_metric=primary_metric,
         eval_lower_is_better=True,
         model=train_model.outputs["model"],
-        serving_container_image=(
-            "europe-docker.pkg.dev/vertex-ai/prediction/sklearn-cpu.0-24:latest"
-        ),
+        serving_container_image=SERVING_IMAGE,
         model_name=model_name,
         pipeline_job_id="{{$.pipeline_job_name}}",
         test_dataset=test_dataset,

@@ -5,4 +5,4 @@ ENV PIP_NO_CACHE_DIR=off \
 
 COPY requirements.txt requirements.txt
 RUN pip install -r requirements.txt
-COPY main.py main.py
+COPY train.py train.py

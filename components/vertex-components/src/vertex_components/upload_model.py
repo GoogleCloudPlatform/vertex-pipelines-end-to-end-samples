@@ -193,6 +193,8 @@ def upload_model(
         display_name=model_name,
         artifact_uri=model.uri,
         serving_container_image_uri=serving_container_image,
+        serving_container_predict_route="/predict",
+        serving_container_health_route="/healthz",
         parent_model=(
             champion_model.resource_name if champion_model is not None else None
         ),
