@@ -13,12 +13,12 @@
 # limitations under the License.
 
 import logging
-from typing import Callable
 
 import pytest
 import os
 from google.cloud import storage
 from kfp import compiler
+from kfp.components import BaseComponent
 
 from pipelines.trigger.main import trigger_pipeline_from_payload
 
@@ -151,7 +151,7 @@ def test_batch_prediction_job_uri(
 
 
 def pipeline_e2e_test(
-    pipeline_func: Callable,
+    pipeline_func: BaseComponent,
     common_tasks: dict,
     enable_caching: bool = None,
     **kwargs: dict,
@@ -168,11 +168,11 @@ def pipeline_e2e_test(
         **kwargs (dict): conditional tasks groups in dictionary
     """
 
-    pipeline_json = f"{pipeline_func.__name__}.json"
+    pipeline_yaml = f"{pipeline_func.name}.yaml"
 
     compiler.Compiler().compile(
         pipeline_func=pipeline_func,
-        package_path=pipeline_json,
+        package_path=pipeline_yaml,
         type_check=False,
     )
 
@@ -181,7 +181,7 @@ def pipeline_e2e_test(
         enable_caching = None
 
     payload = {
-        "attributes": {"template_path": pipeline_json, "enable_caching": enable_caching}
+        "attributes": {"template_path": pipeline_yaml, "enable_caching": enable_caching}
     }
 
     try:
