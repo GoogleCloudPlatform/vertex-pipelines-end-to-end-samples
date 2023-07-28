@@ -14,58 +14,48 @@
 ---
 steps:
 
-  - id: build-training-image
-    name: gcr.io/kaniko-project/executor:latest
+  - id: build-container-images
+    name: gcr.io/cloud-builders/docker
+    dir: /workspace/model
+    entrypoint: sh
     args:
-      - --context=dir:///workspace/model
-      - --destination=${_DEV_VERTEX_LOCATION}-docker.pkg.dev/${_DEV_VERTEX_PROJECT_ID}/vertex-images/training:${TAG_NAME}
-      - --destination=${_TEST_VERTEX_LOCATION}-docker.pkg.dev/${_TEST_VERTEX_PROJECT_ID}/vertex-images/training:${TAG_NAME}
-      - --destination=${_PROD_VERTEX_LOCATION}-docker.pkg.dev/${_PROD_VERTEX_PROJECT_ID}/vertex-images/training:${TAG_NAME}
-      - --target=training
-      - --cache=true
-      - --compressed-caching=false
-    waitFor: ['-']
-
-  - id: build-serving-image
-    name: gcr.io/kaniko-project/executor:latest
-    args:
-      - --context=dir:///workspace/model
-      - --destination=${_DEV_VERTEX_LOCATION}-docker.pkg.dev/${_DEV_VERTEX_PROJECT_ID}/vertex-images/serving:${TAG_NAME}
-      - --destination=${_TEST_VERTEX_LOCATION}-docker.pkg.dev/${_TEST_VERTEX_PROJECT_ID}/vertex-images/serving:${TAG_NAME}
-      - --destination=${_PROD_VERTEX_LOCATION}-docker.pkg.dev/${_PROD_VERTEX_PROJECT_ID}/vertex-images/serving:${TAG_NAME}
-      - --target=serving
-      - --cache=true
-      - --compressed-caching=false
-    waitFor: ['-']
+      - -c
+      - |
+        docker build --target=training -t training:latest . && \
+        docker build --target=serving -t serving:latest . && \
+        for proj in ${_DESTINATION_PROJECTS} ; do \
+          docker tag training:latest ${_VERTEX_LOCATION}-docker.pkg.dev/$$proj/vertex-images/training:${TAG_NAME} && \
+          docker tag serving:latest ${_VERTEX_LOCATION}-docker.pkg.dev/$$proj/vertex-images/serving:${TAG_NAME} && \
+          docker push ${_VERTEX_LOCATION}-docker.pkg.dev/$$proj/vertex-images/training:${TAG_NAME} && \
+          docker push ${_VERTEX_LOCATION}-docker.pkg.dev/$$proj/vertex-images/serving:${TAG_NAME}; \
+        done
 
   # Install poetry, install deps, compile pipelines
-  - name: python:3.9
+  - id: compile-and-publish-pipelines
+    name: python:3.9
     entrypoint: /bin/sh
     args:
       - -c
       - |
         make setup && \
-        make compile-pipeline pipeline=training && \
-        make compile-pipeline pipeline=prediction && \
-        cd pipelines && \
-        for dest in ${_PIPELINE_PUBLISH_AR_PATHS} ; do \
+        for proj in ${_DESTINATION_PROJECTS} ; do \
+          CONTAINER_IMAGE_REGISTRY=${_VERTEX_LOCATION}-docker.pkg.dev/$$proj/vertex-images \
+          make compile-pipeline pipeline=training && \
+          make compile-pipeline pipeline=prediction && \
+          cd pipelines && \
           poetry run python -m pipelines.utils.upload_pipeline \
-          --dest=$$dest \
+          --dest=https://${_VERTEX_LOCATION}-kfp.pkg.dev/$$proj/vertex-pipelines \
           --yaml=src/pipelines/training/pipeline.yaml \
           --tag=latest \
           --tag=${TAG_NAME} && \
           poetry run python -m pipelines.utils.upload_pipeline \
-          --dest=$$dest \
+          --dest=https://${_VERTEX_LOCATION}-kfp.pkg.dev/$$proj/vertex-pipelines \
           --yaml=src/pipelines/prediction/pipeline.yaml \
           --tag=latest \
           --tag=${TAG_NAME}; \
         done
     env:
       - RESOURCE_SUFFIX=default
-      - CONTAINER_IMAGE_REGISTRY=${_TEST_VERTEX_LOCATION}-docker.pkg.dev/${_TEST_VERTEX_PROJECT_ID}/vertex-images
-    waitFor:
-      - build-training-image
-      - build-serving-image
 
 options:
   logging: CLOUD_LOGGING_ONLY
