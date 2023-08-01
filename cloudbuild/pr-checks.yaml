@@ -22,6 +22,8 @@ steps:
     args:
       - -c
       - |
+        curl -sSL https://install.python-poetry.org | python3 - && \
+        export PATH="/builder/home/.local/bin:$$PATH" && \
         make setup && \
         git init && \
         git add . && \

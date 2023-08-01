@@ -42,6 +42,8 @@ steps:
     args:
       - -c
       - |
+        curl -sSL https://install.python-poetry.org | python3 - && \
+        export PATH="/builder/home/.local/bin:$$PATH" && \
         make setup && \
         make e2e-tests pipeline=training enable_pipeline_caching=False && \
         make e2e-tests pipeline=prediction enable_pipeline_caching=False

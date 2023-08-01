@@ -37,6 +37,8 @@ steps:
     args:
       - -c
       - |
+        curl -sSL https://install.python-poetry.org | python3 - && \
+        export PATH="/builder/home/.local/bin:$$PATH" && \
         make setup && \
         for proj in ${_DESTINATION_PROJECTS} ; do \
           CONTAINER_IMAGE_REGISTRY=${_VERTEX_LOCATION}-docker.pkg.dev/$$proj/vertex-images \
