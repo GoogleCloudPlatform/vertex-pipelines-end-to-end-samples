@@ -47,6 +47,24 @@ storage.googleapis.com \
 --project $GCP_PROJECT_ID
 ```
 
+### Google Cloud Storage
+
+Create a bucket to use for the Vertex Pipelines pipeline root.
+
+```
+gsutil mb -l ${GCP_REGION} -p ${GCP_PROJECT_ID} --pap=enforced gs://${GCP_PROJECT_ID}-pl-root && gsutil ubla set on gs://${GCP_PROJECT_ID}-pl-root
+```
+
+### Artifact Registry
+
+Create a new container image registry in Artifact Registry. This is where training and serving container images will be stored before they can be used in the E2E tests.
+
+```
+gcloud artifacts repositories create vertex-images \
+    --repository-format=docker \
+    --location=${GCP_REGION}
+```
+
 ### BigQuery 
 
 Create a new BigQuery dataset for the Chicago Taxi data:
@@ -100,11 +118,13 @@ The service account we have created for Cloud Build requires the following proje
 - roles/logging.logWriter
 - roles/storage.admin
 - roles/aiplatform.user
+- roles/artifactregistry.writer
 
 ```
 gcloud projects add-iam-policy-binding $GCP_PROJECT_ID --member="serviceAccount:cloud-build@${GCP_PROJECT_ID}.iam.gserviceaccount.com" --role="roles/logging.logWriter" --condition=None
 gcloud projects add-iam-policy-binding $GCP_PROJECT_ID --member="serviceAccount:cloud-build@${GCP_PROJECT_ID}.iam.gserviceaccount.com" --role="roles/storage.admin" --condition=None
 gcloud projects add-iam-policy-binding $GCP_PROJECT_ID --member="serviceAccount:cloud-build@${GCP_PROJECT_ID}.iam.gserviceaccount.com" --role="roles/aiplatform.user" --condition=None
+gcloud projects add-iam-policy-binding $GCP_PROJECT_ID --member="serviceAccount:cloud-build@${GCP_PROJECT_ID}.iam.gserviceaccount.com" --role="roles/artifactregistry.writer" --condition=None
 ```
 
 It also requires the "Service Account User" role for the Vertex Pipelines service account ([docs here](https://cloud.google.com/iam/docs/impersonating-service-accounts#impersonate-sa-level)):
@@ -144,13 +164,11 @@ Follow the [Google Cloud documentation](https://cloud.google.com/build/docs/auto
 
 ### Set up Cloud Build Triggers
 
-There are five Cloud Build triggers to set up.
+There are three Cloud Build triggers to set up.
 
-1. `pr-checks.yaml` (tensorflow)
-2. `pr-checks.yaml` (xgboost)
-3. `trigger-tests.yaml` 
-4. `e2e-test.yaml` (tensorflow)
-5. `e2e-test.yaml` (xgboost)
+1. `pr-checks.yaml`
+2. `trigger-tests.yaml` 
+3. `e2e-test.yaml`
 
 For each of the above, create a Cloud Build trigger with the following settings:
 
@@ -164,8 +182,6 @@ For each of the above, create a Cloud Build trigger with the following settings:
 
 |  Cloud Build Trigger          |  Substitution variables             |
 |-------------------------------|-------------------------------------|
-| `pr-checks.yaml` (tensorflow) |  _PIPELINE_TEMPLATE = `tensorflow`  |
-| `pr-checks.yaml` (xgboost)    |  _PIPELINE_TEMPLATE = `xgboost`     |
+| `pr-checks.yaml`              |                                     |
 | `trigger-tests.yaml`          |                                     |
-| `e2e-test.yaml` (tensorflow)  |  _PIPELINE_TEMPLATE = `tensorflow`<br>_PIPELINE_PUBLISH_GCS_PATH = `gs://<GCP PROJECT ID>-assets/e2e-test-tensorflow`<br>_TEST_ENABLE_PIPELINE_CACHING = `False`<br>_TEST_TRAIN_STATS_GCS_PATH = `gs://<GCP PROJECT ID>-pl-root/e2e-test-tensorflow/train-stats/train.stats`<br>_TEST_VERTEX_LOCATION = `<GCP REGION (same as buckets etc above)>`<br>_TEST_VERTEX_PIPELINE_ROOT = `gs://<GCP PROJECT ID>-pl-root`<br>_TEST_VERTEX_PROJECT_ID = `<GCP PROJECT ID>`<br>_TEST_VERTEX_SA_EMAIL = `vertex-pipelines@<GCP PROJECT ID>.iam.gserviceaccount.com`  |
-| `e2e-test.yaml` (xgboost)  |  _PIPELINE_TEMPLATE = `xgboost`<br>_TEST_ENABLE_PIPELINE_CACHING = `False`<br>_TEST_VERTEX_LOCATION = `<GCP REGION (same as buckets etc above)>`<br>_TEST_VERTEX_PIPELINE_ROOT = `gs://<GCP PROJECT ID>-pl-root`<br>_TEST_VERTEX_PROJECT_ID = `<GCP PROJECT ID>`<br>_TEST_VERTEX_SA_EMAIL = `vertex-pipelines@<GCP PROJECT ID>.iam.gserviceaccount.com`  |
+| `e2e-test.yaml`               |  _TEST_ENABLE_PIPELINE_CACHING = `False`<br>_TEST_VERTEX_LOCATION = `<GCP REGION (same as buckets etc above)>`<br>_TEST_VERTEX_PIPELINE_ROOT = `gs://<GCP PROJECT ID>-pl-root`<br>_TEST_VERTEX_PROJECT_ID = `<GCP PROJECT ID>`<br>_TEST_VERTEX_SA_EMAIL = `vertex-pipelines@<GCP PROJECT ID>.iam.gserviceaccount.com` |

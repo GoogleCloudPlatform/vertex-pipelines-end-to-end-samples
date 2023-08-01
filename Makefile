@@ -24,9 +24,7 @@ pre-commit: ## Runs the pre-commit checks over entire repo
 	poetry run pre-commit run --all-files
 
 setup: ## Set up local environment for Python development on pipelines
-	@pip install pip --upgrade && \
-	pip install poetry --upgrade && \
-	cd pipelines && \
+	@cd pipelines && \
 	poetry install --with dev
 
 test-trigger: ## Runs unit tests for the pipeline trigger code
