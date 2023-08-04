@@ -19,7 +19,6 @@ from google.protobuf.json_format import ParseDict
 from google.cloud.aiplatform_v1 import ModelEvaluation
 from google_cloud_pipeline_components.types.artifact_types import VertexModel
 
-
 import vertex_components
 
 upload_model = vertex_components.upload_model.python_func
@@ -61,14 +60,13 @@ def test_model_upload_no_champion(
     pipeline_job_id = "dummy-pipeline-job-id"
     test_dataset = Dataset(uri="test-dataset-uri")
     evaluation_name = "dummy evaluation name"
-    order_models_by = "dummy_order_models_by"
 
     upload_model(
         model=model,
         serving_container_image=serving_container_image,
         vertex_model=vertex_model,
-        project=project,
-        location=location,
+        project_id=project,
+        project_location=location,
         model_evaluation=model_evaluation,
         eval_metric=eval_metric,
         eval_lower_is_better=eval_lower_is_better,
@@ -76,13 +74,11 @@ def test_model_upload_no_champion(
         pipeline_job_id=pipeline_job_id,
         test_dataset=test_dataset,
         evaluation_name=evaluation_name,
-        order_models_by=order_models_by,
     )
 
     # Check that model lookup is performed, and no existing model is found
     mock_model_class.list.assert_called_once_with(
         filter=f'display_name="{model_name}"',
-        order_by=order_models_by,
         location=location,
         project=project,
     )
@@ -97,7 +93,7 @@ def test_model_upload_no_champion(
         artifact_uri="dummy-model-uri",
         serving_container_image_uri=serving_container_image,
         serving_container_predict_route="/predict",
-        serving_container_health_route="/healthz",
+        serving_container_health_route="/health",
         parent_model=None,
         is_default_version=True,
     )
@@ -135,6 +131,7 @@ def test_model_upload_challenger_wins(
     # create mock champion model
     mock_champion_model = mock.Mock()
     mock_champion_model.version_id = "123"
+    mock_champion_model.uri = "dummy-champion-model-uri"
     dummy_champion_eval = ModelEvaluation()
     dummy_champion_metrics = {
         "auc": 0.2,
@@ -174,14 +171,13 @@ def test_model_upload_challenger_wins(
     pipeline_job_id = "dummy-pipeline-job-id"
     test_dataset = Dataset(uri="test-dataset-uri")
     evaluation_name = "dummy evaluation name"
-    order_models_by = "dummy_order_models_by"
 
     upload_model(
         model=model,
         serving_container_image=serving_container_image,
         vertex_model=vertex_model,
-        project=project,
-        location=location,
+        project_id=project,
+        project_location=location,
         model_evaluation=model_evaluation,
         eval_metric=eval_metric,
         eval_lower_is_better=eval_lower_is_better,
@@ -189,13 +185,11 @@ def test_model_upload_challenger_wins(
         pipeline_job_id=pipeline_job_id,
         test_dataset=test_dataset,
         evaluation_name=evaluation_name,
-        order_models_by=order_models_by,
     )
 
     # Check that model lookup is performed, and no existing model is found
     mock_model_class.list.assert_called_once_with(
         filter=f'display_name="{model_name}"',
-        order_by=order_models_by,
         location=location,
         project=project,
     )
@@ -210,8 +204,8 @@ def test_model_upload_challenger_wins(
         artifact_uri="dummy-model-uri",
         serving_container_image_uri=serving_container_image,
         serving_container_predict_route="/predict",
-        serving_container_health_route="/healthz",
-        parent_model=mock_champion_model.resource_name,
+        serving_container_health_route="/health",
+        parent_model=mock_champion_model.uri,
         is_default_version=True,
     )
 
@@ -248,6 +242,7 @@ def test_model_upload_champion_wins(
     # Create mock champion model
     mock_champion_model = mock.Mock()
     mock_champion_model.version_id = "123"
+    mock_champion_model.uri = "dummy-champion-model-uri"
     dummy_champion_eval = ModelEvaluation()
     dummy_champion_metrics = {
         "auc": 0.8,
@@ -287,14 +282,13 @@ def test_model_upload_champion_wins(
     pipeline_job_id = "dummy-pipeline-job-id"
     test_dataset = Dataset(uri="test-dataset-uri")
     evaluation_name = "dummy evaluation name"
-    order_models_by = "dummy_order_models_by"
 
     upload_model(
         model=model,
         serving_container_image=serving_container_image,
         vertex_model=vertex_model,
-        project=project,
-        location=location,
+        project_id=project,
+        project_location=location,
         model_evaluation=model_evaluation,
         eval_metric=eval_metric,
         eval_lower_is_better=eval_lower_is_better,
@@ -302,13 +296,11 @@ def test_model_upload_champion_wins(
         pipeline_job_id=pipeline_job_id,
         test_dataset=test_dataset,
         evaluation_name=evaluation_name,
-        order_models_by=order_models_by,
     )
 
     # Check that model lookup is performed, and no existing model is found
     mock_model_class.list.assert_called_once_with(
         filter=f'display_name="{model_name}"',
-        order_by=order_models_by,
         location=location,
         project=project,
     )
@@ -323,8 +315,8 @@ def test_model_upload_champion_wins(
         artifact_uri="dummy-model-uri",
         serving_container_image_uri=serving_container_image,
         serving_container_predict_route="/predict",
-        serving_container_health_route="/healthz",
-        parent_model=mock_champion_model.resource_name,
+        serving_container_health_route="/health",
+        parent_model=mock_champion_model.uri,
         is_default_version=False,
     )
 

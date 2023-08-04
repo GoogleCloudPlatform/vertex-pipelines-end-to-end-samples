@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from kfp.dsl import Dataset, Input, Metrics, Model, Output, component
-from google_cloud_pipeline_components.types import artifact_types
+from google_cloud_pipeline_components.types.artifact_types import VertexModel
 
 
 @component(
@@ -25,59 +25,61 @@ from google_cloud_pipeline_components.types import artifact_types
 )
 def upload_model(
     model: Input[Model],
-    serving_container_image: str,
-    vertex_model: Output[artifact_types.VertexModel],
-    project: str,
-    location: str,
+    test_dataset: Input[Dataset],
     model_evaluation: Input[Metrics],
+    vertex_model: Output[VertexModel],
+    project_id: str,
+    project_location: str,
+    model_name: str,
     eval_metric: str,
     eval_lower_is_better: bool,
-    model_name: str,
     pipeline_job_id: str,
-    test_dataset: Input[Dataset],
+    serving_container_image: str,
     evaluation_name: str = "Imported evaluation",
-    order_models_by: str = "create_time desc",
 ) -> None:
     """
     Args:
-        challenger (Model): Challenger model.
-        challenger_evaluation (str): Resource URI of challenger model evaluation e.g.
-            `projects/.../locations/.../models/.../evaluations/...`
-        parent_model (str): Resource URI of parent model.
-        eval_metric (str): Metric to compare champion and challenger on.
-        eval_lower_is_better (bool): Usually True for losses and
-            False for classification metrics.
+        model (Model): Input challenger model.
+        test_dataset (Dataset): Test dataset used for evaluating challenger model.
+        vertex_model (VertexModel): Output model uploaded to Vertex AI Model Registry.
+        model_evaluation (Metrics): Evaluation metrics of challenger model.
         project_id (str): project id of the Google Cloud project.
         project_location (str): location of the Google Cloud project.
-        model_alias (str): alias of the parent model.
+        pipeline_job_id (str):
+        model_name (str): Name of champion and challenger model in
+            Vertex AI Model Registry.
+        eval_metric (str): Metric name to compare champion and challenger on.
+        eval_lower_is_better (bool): Usually True for losses and
+            False for classification metrics.
+        serving_container_image (str): Container URI for serving the challenger
+            model.
+        evaluation_name (str): Name of evaluation results which are displayed in the
+            Vertex AI UI of the challenger model.
     """
 
     import json
     import logging
     import google.cloud.aiplatform as aip
     from google.protobuf.json_format import MessageToDict
+    from google.cloud.aiplatform_v1 import ModelEvaluation, ModelServiceClient
+    from google.protobuf.json_format import ParseDict
 
     def lookup_model(
-        order_models_by: str,
-        location: str,
-        project: str,
-        model_name: str,
+        project_id: str, project_location: str, model_name: str
     ) -> aip.Model:
-
+        """Look up model in model registry."""
         logging.info(f"listing models with display name {model_name}")
-        logging.info(f"choosing model by order ({order_models_by})")
         models = aip.Model.list(
             filter=f'display_name="{model_name}"',
-            order_by=order_models_by,
-            location=location,
-            project=project,
+            location=project_location,
+            project=project_id,
         )
         logging.info(f"found {len(models)} models")
 
         if len(models) == 0:
             logging.info(
                 f"No model found with name {model_name}"
-                + f"(project: {project} location: {location})"
+                + f"(project: {project_id} location: {project_location})"
             )
             return None
         elif len(models) == 1:
@@ -88,10 +90,9 @@ def upload_model(
     def compare_models(
         champion_metrics: dict,
         challenger_metrics: dict,
-        eval_metric: str,
-        eval_lower_is_better,
+        eval_lower_is_better: bool,
     ) -> bool:
-
+        """Compare models by evaluating a primary metric."""
         logging.info(f"Comparing {eval_metric} of models")
         logging.debug(f"Champion metrics: {champion_metrics}")
         logging.debug(f"Challenger metrics: {challenger_metrics}")
@@ -103,29 +104,48 @@ def upload_model(
         challenger_wins = (
             (m_chall < m_champ) if eval_lower_is_better else (m_chall > m_champ)
         )
-
-        if challenger_wins:
-            logging.info("Challenger wins!")
-        else:
-            logging.info("Champion wins!")
+        logging.info(f"{'Challenger' if challenger_wins else 'Champion'} wins!")
 
         return challenger_wins
+
+    def upload_model_to_registry(
+        is_default_version: bool, parent_model_uri: str = None
+    ) -> Model:
+        """Upload model to registry."""
+        logging.info(f"Uploading model {model_name} (default: {is_default_version}")
+        uploaded_model = aip.Model.upload(
+            display_name=model_name,
+            artifact_uri=model.uri,
+            serving_container_image_uri=serving_container_image,
+            serving_container_predict_route="/predict",
+            serving_container_health_route="/health",
+            parent_model=parent_model_uri,
+            is_default_version=is_default_version,
+        )
+        logging.info(f"Uploaded model {uploaded_model}")
+
+        # Output google.VertexModel artifact
+        vertex_model.uri = (
+            f"https://{project_location}-aiplatform.googleapis.com/v1/"
+            f"{uploaded_model.versioned_resource_name}"
+        )
+        vertex_model.metadata["resourceName"] = uploaded_model.versioned_resource_name
+
+        return uploaded_model
 
     def import_evaluation(
         parsed_metrics: dict,
         challenger_model: aip.Model,
-        location: str,
-        evaluation_name: str = "Imported evaluation",
-    ):
-        from google.cloud.aiplatform_v1 import ModelEvaluation, ModelServiceClient
-        from google.protobuf.json_format import ParseDict
-
-        logging.info(f"Parsed metrics: {parsed_metrics}")
-
-        schema_template = (
-            "gs://google-cloud-aiplatform/schema/modelevaluation/%s_metrics_1.0.0.yaml"
+        project_location: str,
+        evaluation_name: str,
+    ) -> str:
+        """Import model evaluation."""
+        logging.info(f"Evaluation metrics: {parsed_metrics}")
+        problem_type = parsed_metrics.pop("problemType")
+        schema = (
+            f"gs://google-cloud-aiplatform/schema/modelevaluation/"
+            f"{problem_type}_metrics_1.0.0.yaml"
         )
-        schema = schema_template % parsed_metrics.pop("problemType")
         evaluation = {
             "displayName": evaluation_name,
             "metricsSchemaUri": schema,
@@ -138,80 +158,54 @@ def upload_model(
         }
 
         request = ParseDict(evaluation, ModelEvaluation()._pb)
-        logging.info(f"Request: {request}")
-
-        model_name = challenger_model.versioned_resource_name
-        logging.info(model_name)
-
+        logging.debug(f"Request: {request}")
+        challenger_name = challenger_model.versioned_resource_name
         client = ModelServiceClient(
-            client_options={"api_endpoint": location + "-aiplatform.googleapis.com"}
+            client_options={
+                "api_endpoint": project_location + "-aiplatform.googleapis.com"
+            }
         )
+        logging.info(f"Uploading model evaluation for {challenger_name}")
         response = client.import_model_evaluation(
-            parent=model_name,
+            parent=challenger_name,
             model_evaluation=request,
         )
-        logging.info(f"Response: {response}")
-        return (response.name,)
+        logging.debug(f"Response: {response}")
+        return response.name
 
     # Parse metrics to dict
     with open(model_evaluation.path, "r") as f:
-        metrics = json.load(f)
+        challenger_metrics = json.load(f)
 
     champion_model = lookup_model(
-        order_models_by=order_models_by,
-        location=location,
-        project=project,
-        model_name=model_name,
+        project_id=project_id, project_location=project_location, model_name=model_name
     )
 
-    if champion_model is not None:
+    challenger_wins = True
+    parent_model_uri = None
+    if champion_model is None:
+        logging.info("No champion model found, uploading new model.")
+    else:
         # Compare models
         logging.info(
             f"Model default version {champion_model.version_id} "
             "is being challenged by new model."
         )
         # Look up Vertex model evaluation for champion model
-        eval_champion = champion_model.get_model_evaluation()
-        champion_metrics = MessageToDict(eval_champion._gca_resource._pb)["metrics"]
-
-        # Take challenger metrics as input to this component
-        challenger_metrics = metrics
+        champion_eval = champion_model.get_model_evaluation()
+        champion_metrics = MessageToDict(champion_eval._gca_resource._pb)["metrics"]
 
         challenger_wins = compare_models(
             champion_metrics=champion_metrics,
             challenger_metrics=challenger_metrics,
-            eval_metric=eval_metric,
             eval_lower_is_better=eval_lower_is_better,
         )
+        parent_model_uri = champion_model.uri
 
-    else:
-        logging.info("No champion model found, uploading new model.")
-        challenger_wins = True
-
-    # Upload model to registry
-    uploaded_model = aip.Model.upload(
-        display_name=model_name,
-        artifact_uri=model.uri,
-        serving_container_image_uri=serving_container_image,
-        serving_container_predict_route="/predict",
-        serving_container_health_route="/healthz",
-        parent_model=(
-            champion_model.resource_name if champion_model is not None else None
-        ),
-        is_default_version=challenger_wins,
-    )
-
-    # Output google.VertexModel artifact
-    vertex_model.uri = (
-        f"https://{location}-aiplatform.googleapis.com/v1/"
-        f"{uploaded_model.versioned_resource_name}"
-    )
-    vertex_model.metadata["resourceName"] = uploaded_model.versioned_resource_name
-
-    # Import evaluation to model registry
+    model = upload_model_to_registry(challenger_wins, parent_model_uri)
     import_evaluation(
-        location=location,
-        parsed_metrics=metrics,
-        challenger_model=uploaded_model,
+        parsed_metrics=challenger_metrics,
+        challenger_model=model,
+        project_location=project_location,
         evaluation_name=evaluation_name,
     )
