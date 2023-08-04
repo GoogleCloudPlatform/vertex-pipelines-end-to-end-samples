@@ -194,14 +194,14 @@ def pipeline(
     ).set_display_name("Train model")
 
     upload_model_op = upload_model(
-        project=project_id,
-        location=project_location,
+        project_id=project_id,
+        project_location=project_location,
+        model=train_model.outputs["model"],
         model_evaluation=train_model.outputs["metrics"],
+        test_dataset=test_dataset,
         eval_metric=primary_metric,
         eval_lower_is_better=True,
-        model=train_model.outputs["model"],
         serving_container_image=SERVING_IMAGE,
         model_name=model_name,
         pipeline_job_id="{{$.pipeline_job_name}}",
-        test_dataset=test_dataset,
     ).set_display_name("Upload model")
