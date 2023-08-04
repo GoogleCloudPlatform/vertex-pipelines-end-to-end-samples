@@ -131,7 +131,6 @@ def test_model_upload_challenger_wins(
     # create mock champion model
     mock_champion_model = mock.Mock()
     mock_champion_model.version_id = "123"
-    mock_champion_model.uri = "dummy-champion-model-uri"
     dummy_champion_eval = ModelEvaluation()
     dummy_champion_metrics = {
         "auc": 0.2,
@@ -205,7 +204,7 @@ def test_model_upload_challenger_wins(
         serving_container_image_uri=serving_container_image,
         serving_container_predict_route="/predict",
         serving_container_health_route="/health",
-        parent_model=mock_champion_model.uri,
+        parent_model=mock_champion_model.resource_name,
         is_default_version=True,
     )
 
@@ -242,7 +241,6 @@ def test_model_upload_champion_wins(
     # Create mock champion model
     mock_champion_model = mock.Mock()
     mock_champion_model.version_id = "123"
-    mock_champion_model.uri = "dummy-champion-model-uri"
     dummy_champion_eval = ModelEvaluation()
     dummy_champion_metrics = {
         "auc": 0.8,
@@ -316,7 +314,7 @@ def test_model_upload_champion_wins(
         serving_container_image_uri=serving_container_image,
         serving_container_predict_route="/predict",
         serving_container_health_route="/health",
-        parent_model=mock_champion_model.uri,
+        parent_model=mock_champion_model.resource_name,
         is_default_version=False,
     )
 

@@ -200,7 +200,7 @@ def upload_model(
             challenger_metrics=challenger_metrics,
             eval_lower_is_better=eval_lower_is_better,
         )
-        parent_model_uri = champion_model.uri
+        parent_model_uri = champion_model.resource_name
 
     model = upload_model_to_registry(challenger_wins, parent_model_uri)
     import_evaluation(
