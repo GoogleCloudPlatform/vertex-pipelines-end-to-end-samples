@@ -14,33 +14,50 @@
 ---
 steps:
 
+  - id: build-container-images
+    name: gcr.io/cloud-builders/docker
+    dir: /workspace/model
+    entrypoint: sh
+    args:
+      - -c
+      - |
+        docker build --target=training -t training:latest . && \
+        docker build --target=serving -t serving:latest . && \
+        for proj in ${_DESTINATION_PROJECTS} ; do \
+          docker tag training:latest ${_VERTEX_LOCATION}-docker.pkg.dev/$$proj/vertex-images/training:${TAG_NAME} && \
+          docker tag serving:latest ${_VERTEX_LOCATION}-docker.pkg.dev/$$proj/vertex-images/serving:${TAG_NAME} && \
+          docker push ${_VERTEX_LOCATION}-docker.pkg.dev/$$proj/vertex-images/training:${TAG_NAME} && \
+          docker push ${_VERTEX_LOCATION}-docker.pkg.dev/$$proj/vertex-images/serving:${TAG_NAME}; \
+        done
+
   # Install poetry, install deps, compile pipelines
-  - name: python:3.7
+  - id: compile-and-publish-pipelines
+    name: python:3.9
     entrypoint: /bin/sh
     args:
       - -c
       - |
+        curl -sSL https://install.python-poetry.org | python3 - && \
+        export PATH="/builder/home/.local/bin:$$PATH" && \
         make setup && \
-        make compile-pipeline pipeline=training && \
-        make compile-pipeline pipeline=prediction
-    env:
-      - PIPELINE_TEMPLATE=${_PIPELINE_TEMPLATE}
-
-  # Copy pipelines and files to a new directory in GCS
-  # (via a new local directory)
-  # Directory name = git commit hash
-  - name: gcr.io/cloud-builders/gsutil
-    entrypoint: bash
-    args:
-      - -c
-      - |
-        mkdir -p ${TAG_NAME}/assets && \
-        cp pipelines/src/training.json ${TAG_NAME}/training.json && \
-        cp pipelines/src/prediction.json ${TAG_NAME}/prediction.json && \
-        cp -r pipelines/assets/* ${TAG_NAME}/assets/ && \
-        for dest in ${_PIPELINE_PUBLISH_GCS_PATHS} ; do \
-          gsutil cp -r ${TAG_NAME} $$dest ; \
+        for proj in ${_DESTINATION_PROJECTS} ; do \
+          CONTAINER_IMAGE_REGISTRY=${_VERTEX_LOCATION}-docker.pkg.dev/$$proj/vertex-images \
+          make compile-pipeline pipeline=training && \
+          make compile-pipeline pipeline=prediction && \
+          cd pipelines && \
+          poetry run python -m pipelines.utils.upload_pipeline \
+          --dest=https://${_VERTEX_LOCATION}-kfp.pkg.dev/$$proj/vertex-pipelines \
+          --yaml=src/pipelines/training/pipeline.yaml \
+          --tag=latest \
+          --tag=${TAG_NAME} && \
+          poetry run python -m pipelines.utils.upload_pipeline \
+          --dest=https://${_VERTEX_LOCATION}-kfp.pkg.dev/$$proj/vertex-pipelines \
+          --yaml=src/pipelines/prediction/pipeline.yaml \
+          --tag=latest \
+          --tag=${TAG_NAME}; \
         done
+    env:
+      - RESOURCE_SUFFIX=default
 
 options:
   logging: CLOUD_LOGGING_ONLY

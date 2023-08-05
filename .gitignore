@@ -165,3 +165,4 @@ env.sh
 
 # Compiled pipelines
 **/*pipeline.json
+**/*pipeline.yaml

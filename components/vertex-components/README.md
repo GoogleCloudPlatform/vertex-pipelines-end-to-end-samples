@@ -16,13 +16,10 @@ limitations under the License.
 
 # Vertex Components
 
-A python package which provides common KubeFlow components for interacting with Vertex AI.
+A Python package which provides common KubeFlow components for interacting with Vertex AI.
 Currently, the following components are implemented:
 
-- `custom_train_job`: Train a model in a [Custom Training Job](https://cloud.google.com/vertex-ai/docs/training/create-custom-job).
-- `import_model_evaluation`: Import model evaluation results to a model in the model registry.
-- `lookup_model`: Look up a model which was previously uploaded to the model registry.
+- `upload_model`: Uploads a new model version to the Vertex Model Registry, importing a model evaluation, and updating the "default" tag on the model if the new version (challenger) is superior to the previous (champion) model.
 - `model_batch_predict`: Run a [Batch Prediction Job](https://cloud.google.com/ai-platform/prediction/docs/batch-predict).
-- `update_best_model`: Using two model evaluations and a comparison metric, update the better model to the default model.
 
 These components either augment, extend, or add new functionalities that aren't found in [Google Cloud Pipeline Components list](https://cloud.google.com/vertex-ai/docs/pipelines/gcpc-list).

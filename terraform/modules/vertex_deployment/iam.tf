@@ -26,28 +26,6 @@ resource "google_storage_bucket_iam_member" "pipelines_sa_pipeline_root_bucket_i
   role   = each.key
 }
 
-# Give pipelines SA read-only access to objects in "assets" bucket
-resource "google_storage_bucket_iam_member" "pipelines_sa_pipeline_assets_bucket_iam" {
-  for_each = toset([
-    "roles/storage.objectViewer",
-    "roles/storage.legacyBucketReader",
-  ])
-  bucket = google_storage_bucket.pipeline_assets_bucket.name
-  member = google_service_account.pipelines_sa.member
-  role   = each.key
-}
-
-# Give cloud functions SA access to read compiled pipelines from bucket
-resource "google_storage_bucket_iam_member" "cloudfunction_sa_pipeline_assets_bucket_iam" {
-  for_each = toset([
-    "roles/storage.objectViewer",
-    "roles/storage.legacyBucketReader",
-  ])
-  bucket = google_storage_bucket.pipeline_assets_bucket.name
-  member = google_service_account.vertex_cloudfunction_sa.member
-  role   = each.key
-}
-
 # Give cloud functions SA access to use the pipelines SA for triggering pipelines
 resource "google_service_account_iam_member" "cloudfunction_sa_can_use_pipelines_sa" {
   service_account_id = google_service_account.pipelines_sa.name

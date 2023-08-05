@@ -13,106 +13,103 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
  -->
- # Pipelines
+# ML Pipelines
 
-## Introduction
+There are two ML pipelines defined in this repository: a training pipeline (located in [pipelines/src/pipelines/training/pipeline.py](/pipelines/src/pipelines/training/pipeline.py)) and a batch prediction pipeline (located in [pipelines/src/pipelines/prediction/pipeline.py](/pipelines/src/pipelines/prediction/pipeline.py)).
 
-This repository provides templates and reference implementations of [Vertex AI Pipelines](https://cloud.google.com/vertex-ai/docs/pipelines/) for production-grade training and batch prediction pipelines on GCP for:
-- [TensorFlow](https://www.tensorflow.org/api_docs)
-- [XGBoost](https://xgboost.readthedocs.io/en/stable/) (using the [Scikit-Learn wrapper interface for XGBoost](https://xgboost.readthedocs.io/en/latest/python/python_api.html#module-xgboost.sklearn))
+## Training pipeline
 
-Further useful documentation:
-- [KubeFlow Pipelines SDK](https://www.kubeflow.org/docs/components/pipelines/sdk/sdk-overview/)
-- [Google Cloud Pipeline Components - Vertex Training Wrapper](https://github.com/kubeflow/pipelines/blob/master/components/google-cloud/google_cloud_pipeline_components/experimental/custom_job/utils.py)
-- [Vertex AI](https://cloud.google.com/vertex-ai)
+A screenshot of the completed ML pipeline is shown below.
 
-The sections below provide a general description of the ML pipelines (training and prediction) for both the TensorFlow template and XGBoost template. These two templates are similar in most ways and a complete overview of their key differences are given in their own README files:
-- [TensorFlow pipelines README](src/pipelines/tensorflow/README.md)
-- [XGBoost pipelines README](src/pipelines/xgboost/README.md)
+![Screenshot of the training pipeline in Vertex Pipelines](/docs/images/training_pipeline.png)
 
-## Training Pipeline
-### Prerequisites for training pipeline
+In the next sections we will walk through the different pipeline steps.
 
-Optional: an existing champion model
+### Ingestion / preprocessing step
 
-### Components in training pipeline
+The first pipeline step runs a SQL script in BigQuery to extract data from the source table and load it into tables according to a train/test/validation split.
 
-The training pipeline can be broken down into the following sequence of components at a high level:
+The SQL query for this can be found in [pipelines/src/pipelines/training/queries/preprocessing.sql](/pipelines/src/pipelines/training/queries/preprocessing.sql).
 
-| Step No |           Step Name            | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | Input(s)                                                                                                                                                                                                                          | Output(s)                                                                              |
-|:-------:| :----------------------------: | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------- |
-|    1    |        Generate Queries        | Generate base preprocessing & train-test-validation split queries for Google BigQuery. This component only needs a `.sql` file and all parametrized values in that `.sql` file (`source_dataset`, `source_table`, `filter_column`, and so on)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |                                                                                                                                                                                                                                   |                                                                                        |
-|    2    |       BQ Query to Table        | This component takes the generated query from the previous component & runs it on Google BigQuery to create the required table (preprocessed data/ train-test-validation data).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              | Output from **Generate Queries**                                                                                                                                                                                                  | New Google BigQuery table created                                                      |
-|    3    |     Extract BQ to Dataset      | Creates CSV file/s in Google Cloud Storage from the Google BigQuery tables created in the previous component                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 | BigQuery table created from **BQ Query to Table**                                                                                                                                                                                 | BigQuery table converted to Google Cloud Storage objects as CSV/JSONL files and corresponding file directory and path |
-|    4    |        Vertex Training         | Run a Vertex Training job with train-validation data using a training component wrapped in a ContainerOp from `google-cloud-pipeline-components`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | <ul><li>*Train/Validation data* - Google Cloud Storage CSV files for `train_data` + `valid_data` from **Extract BQ to Dataset**</li><li>*Model Parameters* - Specific model parameters for model training</li></ul>               | Trained challenger model object/s or binaries stored in Google Cloud Storage           |
-|    5    |  Challenger Model Predictions  | Use the trained model to get challenger predictions for evaluation purposes                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | <ul><li>*Test data* - Google Cloud Storage CSV files for `test_data` from **Extract BQ to Dataset**</li><li>*Trained Model* - Trained challenger model binaries stored in Google Cloud Storage from **Vertex Training**</li></ul> | Challenger predictions on test data stored as CSV files in Google Cloud Storage        |
-|    6    |  Calculate Evaluation Metrics  | Use predictions from previous component to compute user-defined evaluation metrics. This component uses TFMA.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | <ul><li>Test data predictions stored as CSV files in Google Cloud Storage from **Challenger Model Predictions**</li><li>Data slices if required</li><ul>                                                                                                                           | Evaluation metrics stored in Google Cloud Storage. Plots for all evaluation metrics and slices stored as HTML files in Google CLoud Storage                                       |
-|    7    |          Lookup Model          | Fetch the required model and its resource name if a previous champion model exists in Vertex AI                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | Base model name to check if it exists in Vertex AI                                                                                                                                                                                | Model resource name as a string if a champion model exists else an empty string        |
-|    8    | Champion-Challenger Comparison | All model training activities until this point were for a new challenger model. Basic idea is to compare this newly trained challenger model with an existing champion model & decide deployment of this challenger model based on performance comparison. <ul><li>*If champion model does not exist* - Upload Challenger model as the new Champion model to Vertex AI</li><li>*If champion model exists* -<ul><li>**Calculate evaluation metrics** - Compute user-defined evaluation metrics on the same `test_data`</li><li>**Compare Models** - Compare computed evaluation metrics for the champion model<ul><li>*If challenger model performance is better* - Upload Challenger model as the new Champion model to Vertex AI</li><li>*If champion model performance is better* - End pipeline (Champion model remains as is in Vertex AI)</li></ul></li></ul></li></ul> |                                                                                                                                                                                                                                   |                                                                                        |
+As you can see in this SQL query, there are some placeholder values (marked by the curly brace syntax `{{ }}`). When the pipeline runs, these are replaced with values provided from the ML pipeline.
 
-Each of these components can be connected using `.after({component_name})` or if the output of a preceding component is used as input for that component
-Every component can be set with a display name using `.set_display_name({display_name})`. Note that this applies to both the training pipeline and the prediction pipeline. 
+In the pipeline definition, the `generate_query` function is run at pipeline compile time to generate a SQL query (as a string) from the template file (`preprocessing.sql`). The placeholders (`{{ }}` values) are replaced with KFP placeholders that represent pipeline parameters, or values passed from other pipeline components at runtime. In turn, these placeholders are automatically replaced with the actual values at runtime by Vertex Pipelines.
 
+The `preprocessing` step in the pipeline uses this string (`preprocessing_query`) in the `BigqueryQueryJobOp` component (provided by [Google Cloud Pipeline Components](https://cloud.google.com/vertex-ai/docs/pipelines/components-introduction))
 
-## Prediction Pipeline
-### Prerequisites for prediction pipeline
+### Extraction steps
 
-- A champion model
-- A successful run of the training pipeline
+Once the data has been split into three tables (for train/test/validation split), each table is downloaded to Google Cloud Storage as a CSV file. This is done so that there is a copy of the train/test/validation data for each pipeline run that you have a record of.
 
-### Components in prediction pipeline
+(Alternatively, you could choose to omit this step, leave the data in BigQuery and consume the data directly from BigQuery for your training step).
 
-The prediction pipeline can be broken down into the following sequence of components at a high level:
+This step is performed using a custom KFP component located in [components/bigquery-components/src/bigquery_components/extract_bq_to_dataset.py](/components/bigquery-components/src/bigquery_components/extract_bq_to_dataset.py).
 
-| Step No |                        Name                        | Description                                                                                                                                                                                                                                                                                                  | Input(s)                                                                                                                                                                                                                          | Output(s)                                                                     |
-|:-------:| :------------------------------------------------: | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :---------------------------------------------------------------------------- |
-|    1    |                  Generate Queries                  | Generate base preprocessing & prediction data creation queries for Google BigQuery. This component only needs a `.sql` file & all parametrized values in that `.sql` file (source_dataset, source_table, filter_column etc)                                                                                     |                                                                                                                                                                                                                                   |                                                                               |
-|    2    |                 BQ Query to Table                  | This component takes the generated query from the previous component & runs it on Google BigQuery to create the required table (preprocessed data/ prediction data).                                                                                                                                            | Output from **Generate Queries**                                                                                                                                                                                                  | New Google BigQuery table created                                             |
-|    3    |               Extract BQ to Dataset                | Creates CSV/JSONL file/s in Google Cloud Storage from the Google BigQuery tables created in the previous component                                                                                                                                                                                           | BigQuery table created from *BQ Query to Table*. Full table name required i.e `{project_id}.{dataset_id}.{table_id}`                                                                                                              | BigQuery table converted to Google Cloud Storage objects as CSV/JSONL files, and corresponding file directory and path  |
-|    4    |                    Lookup Model                    | Fetch the required model resource name for a champion model in Vertex AI. Since the prediction pipeline will always run after the training pipeline, a champion model will always exist                                                                                                                         | Base champion model name as a string                                                                                                                                                                                              | Champion model resource name as a string                                      |
-|    5    | Vertex Batch Predictions from Google Cloud Storage | Run a Vertex Batch Prediction job with prediction data as input in Tensorflow prediction Pipeline                                                                                                                                                                                                                                                 | <ul><li>*Prediction data* - The uris of Google Cloud Storage CSV/JSONL files for `prediction_data` from **Extract BQ to Dataset**</li><li>*Model* - Champion model as per Vertex AI</li></ul>                             | A batch prediction job artifact with metadata: resourceName(batch prediction job ID) and gcsOutputDirectory(output JSONL files in Google Cloud Storage) |
-|    6    |       Vertex Batch Predictions from BigQuery       | Run a Vertex Batch Prediction job with prediction data as input in XGBoost prediction Pipeline                                                                                                                                                                                                                                                 | <ul><li>*Prediction data* - Google BigQuery table of `prediction_data` from **Extract BQ to Dataset**</li><li>*Model Resource name* - Champion model as per Vertex AI</li></ul>                                             | A batch prediction job artifact with metadata: resourceName(batch prediction job ID) and bigqueryOutputTable(output BigQuery tables) |
-|    7    |                 Load Dataset to BQ                 | Upload the batch predictions stored in Google Cloud Storage to a BigQuery table in Tensorflow prediction Pipeline                                                                                                                                                                                                                              | Batch predictions stored as JSONL files in Google Cloud Storage from **Vertex Batch Predictions**  The specific URL could be read from metadata from batch prediction job                                                                                                                               | Google BigQuery table with the batch predictions & input instances/features   |
+### Training step
 
-Each of these components can be connected using `.after({component_name})` or if the output of a preceding component is used as input for that component
-Every component can be set with a display name using `.set_display_name({display_name})`. Note that this applies to both the training pipeline and the prediction pipeline. 
+The training step is defined as a [KFP container component](https://www.kubeflow.org/docs/components/pipelines/v2/components/container-components/) in the [pipeline.py](/pipelines/src/pipelines/training/pipeline.py) file.
 
-The final loading stage has an optional argument `dataset_location` which is the location to run the loading job and must match the location of the destination table. It is defaulted to "EU" in the [component definition](pipeline_components/bigquery/bigquery/upload_prediction/component.py). 
+The container image used for this component is built using CI/CD (or the `make build-container target=training` command if you want to build it during development).
 
-## Trigger
+The source code for this container image (and the serving container image) can be found in the [model](/model/) directory. Dependencies are managed using Poetry. The model training script can be found at [model/training/train.py](/model/training/train.py) and can be modified to suit your use case.
 
-- Trigger script can be found [here](src/pipelines/trigger)
+The training script trains a simple XGBoost model wrapped in a scikit-learn pipeline, and saves it as `model.joblib`.
 
-## Pipeline configuration
+![Architecture of the XGBoost model](/docs/images/xgboost_architecture.png)
 
-In order to orchestrate machine learning (ML) pipelines on Vertex AI, you need to configure a few things.
+The model is evaluated and metrics are saved as a JSON file. In the Vertex pipeline, the model appears as a KFP Model artifact, and the JSON file appears as a KFP Metrics artifact.
 
-### env.sh
+### Upload model step
 
-The first thing to do is to copy `env.sh.example` to `env.sh`, and fill in the values of `env.sh` with the values relevant to your development/sandbox environment. These environment variables will be used when you trigger pipeline runs in Vertex AI.
+The upload model step uploads the model to the Vertex model registry. This step uses a custom KFP component that can be 
+found in [components/vertex-components/src/vertex_components/upload_model.py](/components/vertex-components/src/vertex_components/upload_model.py). It does the following:
 
-### Pipeline input parameters
+1. Checks if there is an existing "champion" model with the same name in the Vertex Model Registry
+1. If there is, fetch its latest model evaluation and compare it with the model evaluation of the newly trained "challenger" model
+1. If the new model performs better, or if there is no existing champion model, upload the newly trained "challenger" model and tag it with the `default` alias to designate it as the new champion model
+1. If the new model performs worse than the existing "champion" model, upload the new model to the registry, but don't tag it with the `default` alias
+1. Import the model evaluation of the newly-trained model and attach it to the newly-uploaded model in the Vertex Registry
 
-The ML pipelines have input parameters. As you can see in the pipeline definition files (`pipelines/<xgboost|tensorflow>/<training|prediction>/pipeline.py`), they have default values, and some of these default values are derived from environment variables (which in turn are defined in `env.sh` as described above).
+| :bulb: Quick note on Champion-Challenger comparisons    |
+|:-------------------|
+| In practice, you should be aware of that and give the model a specific name related to the ML project you are working on once the new model is not comparable with the previous models. 
+For example, when you want to train a new model using different features, the best practice is to change your model name in the pipeline input parameters. |
 
-When triggering ad hoc runs in your dev/sandbox environment, or when running the E2E tests in CI, these default values are used. For the test and production deployments, the pipeline parameters are defined in the Terraform code for the Cloud Scheduler jobs (`envs/<test|prod>/variables.auto.tfvars`).
+## Batch prediction pipeline
 
-### Python packages and Docker images
+A screenshot of the completed ML pipeline is shown below.
 
-You can specify the Python base image and packages required for KFP components in the `@component` decorator using the `base_image` and `packages_to_install` arguments respectively.
+![Screenshot of the prediction pipeline in Vertex Pipelines](/docs/images/prediction_pipeline.png)
+In the next sections we will walk through the different pipeline steps.
 
-### Compute resources configuration in pipeline
-In general there are two methods to configure compute resources in each pipeline. 
-Firstly, by setting the `machine_type` variable in [XGBoost training pipeline](src/pipelines/xgboost/training/pipeline.py), [XGBoost prediction pipeline](src/pipelines/xgboost/prediction/pipeline.py), [TensorFlow training pipeline](src/pipelines/tensorflow/training/pipeline.py), [TensorFlow prediction pipeline](src/pipelines/tensorflow/prediction/pipeline.py). The default value is `n1-standard-4` with 4 core CPUs and 15GB memory.
-Secondly, in order to manage the requirements of each step in your pipeline, you can set up machine type on the pipeline steps. 
-This is because some steps might need more computational resources than others. 
-You can increase CPU and memory limits by applying `.set_cpu_limit({CPU_LIMIT})` and `.set_memory_limit('MEMORY_LIMIT')` for any component. 
-- CPU_LIMIT: The maximum CPU limit for this operator. This string value can be a number (integer value for number of CPUs), or a number followed by "m", which means 1/1000. You can specify at most 96 CPUs.
-- MEMORY_LIMIT: The maximum memory limit for this operator. This string value can be a number, or a number followed by "K" (kilobyte), "M" (megabyte), or "G" (gigabyte). At most 624GB is supported.
+### Ingestion / preprocessing step
 
-For more information, please refer to the guide on [specifying machine types for a pipeline step](https://cloud.google.com/vertex-ai/docs/pipelines/machine-types). 
+The first pipeline step runs a SQL script in BigQuery to extract data from the source table and load it into a different BigQuery table, ready for predictions to generated.
+
+The SQL query for this can be found in [pipelines/src/pipelines/prediction/queries/preprocessing.sql](/pipelines/src/pipelines/prediction/queries/preprocessing.sql).
+
+As you can see in this SQL query, there are some placeholder values (marked by the curly brace syntax `{{ }}`). When the pipeline runs, these are replaced with values provided from the ML pipeline.
+
+In the pipeline definition, the `generate_query` function is run at pipeline compile time to generate a SQL query (as a string) from the template file (`preprocessing.sql`). The placeholders (`{{ }}` values) are replaced with KFP placeholders that represent pipeline parameters, or values passed from other pipeline components at runtime. In turn, these placeholders are automatically replaced with the actual values at runtime by Vertex Pipelines.
+
+The `preprocessing` step in the pipeline uses this string (`preprocessing_query`) in the `BigqueryQueryJobOp` component (provided by [Google Cloud Pipeline Components](https://cloud.google.com/vertex-ai/docs/pipelines/components-introduction))
+
+### Lookup model
+
+This step looks up the "champion" model from the Vertex Model Registry. It uses a custom KFP component that can be found in [components/vertex-components/src/vertex_components/lookup_model.py](/components/vertex-components/src/vertex_components/lookup_model.py). It uses the Vertex AI Python SDK to list models with a given model name and retrieve the model version that uses the `default` alias, indicating that it is the "champion" model.
+
+### Batch Prediction
+
+This step submits a Vertex Batch Prediction job that generates predictions from the BigQuery table from the ingestion/preprocessing step. It uses a custom KFP component that can be found in [components/vertex-components/src/vertex_components/model_batch_predict.py](/components/vertex-components/src/vertex_components/model_batch_predict.py). It uses Vertex Model Monitoring for batch prediction to monitor the data for drift.
+
+## Pipeline input parameters
+
+The ML pipelines have input parameters. As you can see in the pipeline definition files (`src/pipelines/<training|prediction>/pipeline.py`), they have default values, and some of these default values are derived from environment variables (which in turn are defined in `env.sh` as described above).
+
+When triggering ad hoc runs in your dev/sandbox environment, or when running the E2E tests in CI, these default values are used. For the test and production deployments, the pipeline parameters are defined in the Terraform code for the Cloud Scheduler jobs (`envs/<test|prod>/scheduled_jobs.auto.tfvars`).
 
 ### Cache Usage in pipeline
+
 When Vertex AI Pipelines runs a pipeline, it checks to see whether or not an execution exists in Vertex ML Metadata with the interface (cache key) of each pipeline step (component).
 If the component is exactly the same and the arguments are exactly the same as in some previous execution, then the task can be skipped and the outputs of the old step can be used. 
 Since most of the ML projects take a long time and expensive computation resources, it is cost-effective to use cache when you are sure that the output of components is correct. 
@@ -120,14 +117,3 @@ In terms of [how to control cache reuse behavior](https://cloud.google.com/verte
 If you want to control caching behavior for individual components, add `.set_caching_options(<True|False>)` after each component when building a pipeline.
 To change the caching behaviour of ALL components within a pipeline, you can specify this when you trigger the pipeline like so: `make run pipeline=<training|prediction> enable_caching=<true|false>`
 It is suggested to start by disabling caching of components during development, until you have a good idea of how the caching behaviour works, as it can lead to unexpected results.
-
-Note:
-Disable caching if you want to use new data:
-When caching is enabled for the pipeline, changing `timestamp` or source of data (such as `ingestion_dataset_id`) will only change the output of 
-corresponding step, for example `Ingest data`. While for the other components, which take the same arguments, they will use caches instead of using the new data. 
-
-### Champion / Challenger evaluation
-
-In the training pipelines, a Champion-Challenger evaluation is conducted via the models with same name pattern in the same project. Explore [`lookup_model.py`](../pipeline_components/aiplatform/aiplatform/lookup_model/component.py) for more detailed information.
-In practice, you should be aware of that and give the model a specific name related to the ML project you are working on once the new model is not comparable with the previous models. 
-For example, when you want to train a new model using different features, the best practice is to change you model name in the pipeline input parameters.

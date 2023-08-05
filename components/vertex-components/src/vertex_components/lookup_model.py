@@ -12,12 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from kfp.v2.dsl import component, Output, Model
+from kfp.dsl import component, Output, Model
 from typing import NamedTuple
 
 
 @component(
-    base_image="python:3.7",
+    base_image="python:3.9",
     packages_to_install=["google-cloud-aiplatform==1.24.1"],
 )
 def lookup_model(

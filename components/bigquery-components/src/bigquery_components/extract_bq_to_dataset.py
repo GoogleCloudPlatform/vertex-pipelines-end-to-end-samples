@@ -12,11 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from kfp.v2.dsl import Dataset, Output, component
+from kfp.dsl import Dataset, Output, component
 
 
 @component(
-    base_image="python:3.7",
+    base_image="python:3.9",
     packages_to_install=["google-cloud-bigquery==2.30.0"],
 )
 def extract_bq_to_dataset(

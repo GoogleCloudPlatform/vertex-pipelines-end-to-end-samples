@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "model"
+version = "0.1.0"
+description = ""
+authors = ["Your Name <you@example.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.9"
+scikit-learn = "^1.3.0"
+xgboost = "^1.7.6"
+pandas = "^2.0.3"
+
+
+[tool.poetry.group.serving.dependencies]
+fastapi = {extras = ["uvicorn"], version = "^0.100.0"}
+uvicorn = "^0.23.1"
+google-cloud-storage = "^2.10.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
