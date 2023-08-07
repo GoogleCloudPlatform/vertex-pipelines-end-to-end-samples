@@ -142,9 +142,15 @@ def pipeline(
         test_table=test_table,
     )
 
-    preprocessing = BigqueryQueryJobOp(
-        project=project_id, location=dataset_location, query=preprocessing_query
-    ).set_display_name("Ingest & preprocess data")
+    preprocessing = (
+        BigqueryQueryJobOp(
+            project=project_id,
+            location=dataset_location,
+            query=preprocessing_query,
+        )
+        .set_caching_options(False)
+        .set_display_name("Ingest & preprocess data")
+    )
 
     # data extraction to gcs
 

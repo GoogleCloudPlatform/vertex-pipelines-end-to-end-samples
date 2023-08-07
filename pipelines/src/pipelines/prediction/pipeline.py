@@ -99,9 +99,15 @@ def pipeline(
         filter_start_value=timestamp,
     )
 
-    preprocessing = BigqueryQueryJobOp(
-        project=project_id, location=dataset_location, query=preprocessing_query
-    ).set_display_name("Ingest data")
+    preprocessing = (
+        BigqueryQueryJobOp(
+            project=project_id,
+            location=dataset_location,
+            query=preprocessing_query,
+        )
+        .set_caching_options(False)
+        .set_display_name("Ingest data")
+    )
 
     # lookup champion model
     champion_model = (
@@ -141,6 +147,7 @@ def pipeline(
             monitoring_alert_email_addresses=monitoring_alert_email_addresses,
             monitoring_skew_config=monitoring_skew_config,
         )
+        .set_caching_options(False)
         .after(preprocessing)
         .set_display_name("Batch prediction job")
     )
