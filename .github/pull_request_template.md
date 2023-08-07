@@ -1,5 +1,5 @@
 <!-- 
-Copyright 2022 Google LLC
+Copyright 2023 Google LLC
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -24,10 +24,7 @@ Please explain how you have tested the new changes.
 # Checklist
 
 - [ ] I have commented my code, particularly in hard-to-understand areas
-- [ ] I have successfully run the E2E tests, and have included the links to the pipeline runs below
 - [ ] I have added tests that prove my fix is effective or that my feature works
-- [ ] New and existing unit tests pass locally with my changes
+- [ ] New and existing unit tests pass locally with my changes (`make test-trigger` and `make test-all-components`)
+- [ ] I have successfully run the E2E tests
 - [ ] I have updated any relevant documentation to reflect my changes
-- [ ] I have assigned a reviewer and messaged them
-
-# Pipeline run links:
