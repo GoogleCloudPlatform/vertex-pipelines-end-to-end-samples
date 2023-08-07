@@ -20,7 +20,7 @@ from google.cloud import storage
 from kfp import compiler
 from kfp.components import BaseComponent
 
-from pipelines.trigger.main import trigger_pipeline_from_payload
+from pipelines.utils.trigger_pipeline import trigger_pipeline
 
 project_id = os.environ["VERTEX_PROJECT_ID"]
 project_location = os.environ["VERTEX_LOCATION"]
@@ -153,7 +153,6 @@ def test_batch_prediction_job_uri(
 def pipeline_e2e_test(
     pipeline_func: BaseComponent,
     common_tasks: dict,
-    enable_caching: bool = None,
     **kwargs: dict,
 ):
     """
@@ -168,24 +167,19 @@ def pipeline_e2e_test(
         **kwargs (dict): conditional tasks groups in dictionary
     """
 
-    pipeline_yaml = f"{pipeline_func.name}.yaml"
+    template_path = f"{pipeline_func.name}.yaml"
 
     compiler.Compiler().compile(
         pipeline_func=pipeline_func,
-        package_path=pipeline_yaml,
+        package_path=template_path,
         type_check=False,
     )
 
-    # If empty value for enable_caching provided on commandline default to None
-    if enable_caching == "":
-        enable_caching = None
-
-    payload = {
-        "attributes": {"template_path": pipeline_yaml, "enable_caching": enable_caching}
-    }
-
     try:
-        pl = trigger_pipeline_from_payload(payload)
+        pl = trigger_pipeline(
+            template_path=template_path,
+            display_name=f"{pipeline_func.name}-E2E-test",
+        )
 
         pl.wait()
 

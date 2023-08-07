@@ -12,21 +12,46 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import argparse
+from typing import List
 from kfp.registry import RegistryClient
 
-if __name__ == "__main__":
 
+def upload_pipeline(host: str, file_name: str, tags: List[str]) -> tuple[str, str]:
+    """Upload a compiled YAML pipeline to Artifact Registry
+
+    Args:
+        host (str): URL of the Artifact Registry repository
+        file_name (str): File path to the compiled YAML pipeline
+        tags (List[str]): List of tags to use for the uploaded pipeline
+
+    Returns:
+        A tuple of the package name and the version.
+    """
+
+    client = RegistryClient(
+        host=host,
+    )
+
+    return client.upload_pipeline(
+        file_name=file_name,
+        tags=tags,
+    )
+
+
+def main(args: List[str] = None):
+    """CLI entrypoint for the upload_pipeline.py script"""
     parser = argparse.ArgumentParser()
     parser.add_argument("--dest", type=str, required=True)
     parser.add_argument("--yaml", type=str, required=True)
     parser.add_argument("--tag", type=str, action="append")
-    args = parser.parse_args()
+    parsed_args = parser.parse_args(args)
 
-    client = RegistryClient(
-        host=args.dest,
+    upload_pipeline(
+        host=parsed_args.dest,
+        file_name=parsed_args.yaml,
+        tags=parsed_args.tag,
     )
 
-    templateName, versionName = client.upload_pipeline(
-        file_name=args.yaml,
-        tags=args.tag,
-    )
+
+if __name__ == "__main__":
+    main()

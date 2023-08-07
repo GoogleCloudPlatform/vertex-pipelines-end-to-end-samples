@@ -16,7 +16,7 @@ from pipelines.training.pipeline import pipeline
 from tests.e2e.test_e2e import pipeline_e2e_test
 
 
-def test_pipeline_run(enable_caching) -> None:
+def test_pipeline_run() -> None:
     """
     Tests if pipeline is run successfully
     Triggers pipeline synchronously.
@@ -32,6 +32,5 @@ def test_pipeline_run(enable_caching) -> None:
     """
     pipeline_e2e_test(
         pipeline,
-        enable_caching=enable_caching,
         common_tasks={},
     )
