@@ -15,8 +15,10 @@
 import base64
 import json
 import os
+import re
 from distutils.util import strtobool
 from google.cloud import aiplatform
+from kfp.registry import RegistryClient
 
 
 def cf_handler(event, context):
@@ -58,6 +60,26 @@ def cf_handler(event, context):
     # For below options, we want an empty string to become None, so we add "or None"
     encryption_spec_key_name = os.environ.get("VERTEX_CMEK_IDENTIFIER") or None
     network = os.environ.get("VERTEX_NETWORK") or None
+
+    # If template_path is an AR URL and a tag is used, resolve to exact version
+    # Workaround for known issue
+    # https://github.com/googleapis/python-aiplatform/issues/2181
+    _VALID_AR_URL = re.compile(
+        r"https://([\w\-]+)-kfp\.pkg\.dev/([\w\-]+)/([\w\-]+)/([\w\-]+)/([\w\-.]+)",
+        re.IGNORECASE,
+    )
+    match = _VALID_AR_URL.match(template_path)
+    if match and "sha256:" not in template_path:
+        region = match.group(1)
+        project = match.group(2)
+        repo = match.group(3)
+        package_name = match.group(4)
+        tag = match.group(5)
+        host = f"https://{region}-kfp.pkg.dev/{project}/{repo}"
+        client = RegistryClient(host=host)
+        metadata = client.get_tag(package_name, tag)
+        version = metadata["version"][metadata["version"].find("sha256:") :]
+        template_path = f"{host}/{package_name}/{version}"
 
     # Instantiate PipelineJob object
     pl = aiplatform.pipeline_jobs.PipelineJob(

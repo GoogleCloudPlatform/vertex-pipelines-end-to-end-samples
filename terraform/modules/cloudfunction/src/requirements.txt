@@ -13,3 +13,4 @@
 # limitations under the License.
 
 google-cloud-aiplatform[pipelines]==1.24.1
+kfp==2.1.2
