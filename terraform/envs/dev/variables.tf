@@ -27,7 +27,6 @@ variable "region" {
 variable "cloud_schedulers_config" {
   description = "Map of configurations for cloud scheduler jobs (each a different pipeline schedule)."
   type = map(object({
-    name                = string
     description         = string
     schedule            = string
     time_zone           = string
