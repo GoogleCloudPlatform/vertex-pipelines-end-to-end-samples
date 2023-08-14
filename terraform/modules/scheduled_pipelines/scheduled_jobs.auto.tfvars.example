@@ -45,7 +45,6 @@ cloud_schedulers_config = {
       project_location = "europe-west2"
       ingestion_project_id = "my-project-id"
       model_name = "xgboost_with_preprocessing"
-      dataset_id = "preprocessing"
       dataset_location = "europe-west2"
       ingestion_dataset_id = "chicago_taxi_trips"
       timestamp = "2022-12-01 00:00:00"
