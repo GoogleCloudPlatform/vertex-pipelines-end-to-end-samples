@@ -14,6 +14,7 @@
 
 from unittest import mock
 import pytest
+from pipelines.utils.upload_pipeline import main, upload_pipeline
 
 
 @pytest.mark.parametrize(
@@ -39,8 +40,6 @@ def test_main(mock_upload_pipeline, input_tags):
     if input_tags:
         args.extend([f"--tag={tag}" for tag in input_tags])
 
-    from pipelines.utils.upload_pipeline import main
-
     main(args)
 
     mock_upload_pipeline.assert_called_with(
@@ -57,8 +56,6 @@ def test_upload_pipeline(mock_registry_client):
     dest = "https://europe-west1-kfp.pkg.dev/dummy-project/dummy-repo"
 
     input_tags = ["dummy_tag1", "dummy_tag2"]
-
-    from pipelines.utils.upload_pipeline import upload_pipeline
 
     upload_pipeline(
         host=dest,

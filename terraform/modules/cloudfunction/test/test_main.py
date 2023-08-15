@@ -17,6 +17,7 @@ import pytest
 import os
 import base64
 import json
+from src.main import cf_handler
 
 
 @pytest.mark.parametrize(
@@ -71,8 +72,6 @@ def test_trigger_pipeline_local_yaml(
     }
 
     with mock.patch.dict(os.environ, env_vars):
-
-        from src.main import cf_handler
 
         cf_handler(event, None)
 
@@ -132,7 +131,6 @@ def test_trigger_pipeline_ar_yaml_with_tag(mock_pipelinejob, mock_registryclient
     }
 
     with mock.patch.dict(os.environ, env_vars):
-        from src.main import cf_handler
 
         cf_handler(event, None)
 
