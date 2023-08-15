@@ -69,12 +69,12 @@ test-all-components-coverage: ## Run tests with coverage
 		$(MAKE) test-components-coverage GROUP=$$(basename $$component_group) ; \
 	done
 
-run: ## Compile pipeline and run pipeline in sandbox environment. Must specify pipeline=<training|prediction>. Optionally specify enable_pipeline_caching=<true|false> (defaults to default Vertex caching behaviour)
+run: ## Compile pipeline and run pipeline in sandbox environment. Must specify pipeline=<training|prediction>. Optionally specify ENABLE_PIPELINE_CACHING=<true|false> (defaults to default Vertex caching behaviour)
 	@ $(MAKE) compile-pipeline && \
 	cd pipelines/src && \
 	poetry run python -m pipelines.utils.trigger_pipeline --template_path=pipelines/${pipeline}/pipeline.yaml --display_name=${pipeline}
 
-e2e-tests: ## Perform end-to-end (E2E) pipeline tests. Must specify pipeline=<training|prediction>. Optionally specify enable_pipeline_caching=<true|false> (defaults to default Vertex caching behaviour).
+e2e-tests: ## Perform end-to-end (E2E) pipeline tests. Must specify pipeline=<training|prediction>. Optionally specify ENABLE_PIPELINE_CACHING=<true|false> (defaults to default Vertex caching behaviour).
 	@ cd pipelines && \
 	poetry run pytest --log-cli-level=INFO tests/$(pipeline)
 

@@ -21,14 +21,14 @@ from pipelines.utils.trigger_pipeline import trigger_pipeline
 
 @pytest.mark.parametrize(
     "test_enable_caching_input,enable_caching_expected",
-    # test for different values of "enable_pipeline_caching" env var (left)
+    # test for different values of "ENABLE_PIPELINE_CACHING" env var (left)
     # vs actual value passed to PipelineJob enable_caching (right)
     [
         ("True", True),
         ("true", True),
         ("False", False),
         ("false", False),
-        (None, None),  # enable_pipeline_caching env var not set
+        (None, None),  # ENABLE_PIPELINE_CACHING env var not set
     ],
 )
 @mock.patch("google.cloud.aiplatform.PipelineJob")
@@ -56,7 +56,7 @@ def test_trigger_pipeline(
     }
 
     if enable_caching is not None:
-        env_vars["enable_pipeline_caching"] = enable_caching
+        env_vars["ENABLE_PIPELINE_CACHING"] = enable_caching
 
     with mock.patch.dict(os.environ, env_vars):
 

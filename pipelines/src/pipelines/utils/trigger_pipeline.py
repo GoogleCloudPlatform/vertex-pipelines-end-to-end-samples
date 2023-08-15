@@ -36,7 +36,7 @@ def trigger_pipeline(
     pipeline_root = os.environ["VERTEX_PIPELINE_ROOT"]
     service_account = os.environ["VERTEX_SA_EMAIL"]
 
-    enable_caching = os.environ.get("enable_pipeline_caching", None)
+    enable_caching = os.environ.get("ENABLE_PIPELINE_CACHING", None)
     if enable_caching:
         enable_caching = bool(strtobool(enable_caching))
 
