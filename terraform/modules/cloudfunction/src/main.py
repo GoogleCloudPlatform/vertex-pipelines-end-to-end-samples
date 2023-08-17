@@ -70,7 +70,7 @@ def cf_handler(event, context):
     )
     match = _VALID_AR_URL.match(template_path)
     if match and "sha256:" not in template_path:
-        region, project, repo, package_name, tag = match.group(1,2,3,4,5)
+        region, project, repo, package_name, tag = match.group(1, 2, 3, 4, 5)
         host = f"https://{region}-kfp.pkg.dev/{project}/{repo}"
         client = RegistryClient(host=host)
         metadata = client.get_tag(package_name, tag)
