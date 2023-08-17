@@ -14,7 +14,6 @@
 
 import argparse
 import os
-from distutils.util import strtobool
 from google.cloud import aiplatform
 
 
@@ -37,8 +36,15 @@ def trigger_pipeline(
     service_account = os.environ["VERTEX_SA_EMAIL"]
 
     enable_caching = os.environ.get("ENABLE_PIPELINE_CACHING")
-    if enable_caching:
-        enable_caching = bool(strtobool(enable_caching))
+    if enable_caching is not None:
+        true_ = ["1", "true"]
+        false_ = ["0", "false"]
+        if enable_caching.lower() not in true_ + false_:
+            raise ValueError(
+                "ENABLE_PIPELINE_CACHING env variable must be "
+                "'true', 'false', '1' or '0', or not set."
+            )
+        enable_caching = enable_caching.lower() in true_
 
     # For below options, we want an empty string to become None, so we add "or None"
     encryption_spec_key_name = os.environ.get("VERTEX_CMEK_IDENTIFIER") or None

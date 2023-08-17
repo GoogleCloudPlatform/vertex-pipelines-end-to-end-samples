@@ -28,6 +28,8 @@ from pipelines.utils.trigger_pipeline import trigger_pipeline
         ("true", True),
         ("False", False),
         ("false", False),
+        ("1", True),
+        ("0", False),
         (None, None),  # ENABLE_PIPELINE_CACHING env var not set
     ],
 )
@@ -78,4 +80,35 @@ def test_trigger_pipeline(
         mock_pipelinejob.return_value.submit.assert_called_with(
             service_account=service_account,
             network=network,
+        )
+
+
+@mock.patch("google.cloud.aiplatform.PipelineJob")
+def test_trigger_pipeline_invalid_caching_env_var(mock_pipelinejob):
+
+    template_path = "path/to/template.yaml"
+    enable_caching = "invalid_value"
+    pipeline_root = "gs://my-pipeline-root/abc123"
+    encryption_spec_key_name = "dummy_encryption_spec_key_name"
+    project_id = "dummy_project_id"
+    region = "dummy_region"
+    service_account = "dummy_sa@dummy_project_id.iam.gserviceaccount.com"
+    network = "dummy_network"
+    display_name = "my first pipeline"
+
+    env_vars = {
+        "VERTEX_PROJECT_ID": project_id,
+        "VERTEX_LOCATION": region,
+        "VERTEX_SA_EMAIL": service_account,
+        "VERTEX_NETWORK": network,
+        "VERTEX_CMEK_IDENTIFIER": encryption_spec_key_name,
+        "VERTEX_PIPELINE_ROOT": pipeline_root,
+        "ENABLE_PIPELINE_CACHING": enable_caching,
+    }
+
+    with mock.patch.dict(os.environ, env_vars), pytest.raises(ValueError):
+
+        trigger_pipeline(
+            template_path=template_path,
+            display_name=display_name,
         )
