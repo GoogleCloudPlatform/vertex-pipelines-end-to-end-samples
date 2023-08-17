@@ -19,8 +19,8 @@ steps:
       - |
         curl -sSL https://install.python-poetry.org | python3 - && \
         export PATH="/builder/home/.local/bin:$$PATH" && \
-        make setup && \
-        make test-trigger
+        make install && \
+        make test
     entrypoint: /bin/sh
 
 options:
