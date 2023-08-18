@@ -1,4 +1,4 @@
-# Copyright 2022 Google LLC
+# Copyright 2023 Google LLC
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -27,9 +27,9 @@ setup: ## Set up local environment for Python development on pipelines
 	@cd pipelines && \
 	poetry install --with dev
 
-test-trigger: ## Runs unit tests for the pipeline trigger code
+test-utils: ## Runs unit tests for the util scripts
 	@cd pipelines && \
-	poetry run python -m pytest tests/trigger
+	poetry run python -m pytest tests/utils
 
 compile-pipeline: ## Compile the pipeline to pipeline.yaml. Must specify pipeline=<training|prediction>
 	@cd pipelines/src && \
@@ -69,14 +69,14 @@ test-all-components-coverage: ## Run tests with coverage
 		$(MAKE) test-components-coverage GROUP=$$(basename $$component_group) ; \
 	done
 
-run: ## Compile pipeline and run pipeline in sandbox environment. Must specify pipeline=<training|prediction>. Optionally specify enable_pipeline_caching=<true|false> (defaults to default Vertex caching behaviour)
+run: ## Compile pipeline and run pipeline in sandbox environment. Must specify pipeline=<training|prediction>. Optionally specify ENABLE_PIPELINE_CACHING=<true|false> (defaults to default Vertex caching behaviour)
 	@ $(MAKE) compile-pipeline && \
 	cd pipelines/src && \
-	poetry run python -m pipelines.trigger --template_path=pipelines/${pipeline}/pipeline.yaml --enable_caching=$(enable_pipeline_caching)
+	poetry run python -m pipelines.utils.trigger_pipeline --template_path=pipelines/${pipeline}/pipeline.yaml --display_name=${pipeline}
 
-e2e-tests: ## Perform end-to-end (E2E) pipeline tests. Must specify pipeline=<training|prediction>. Optionally specify enable_pipeline_caching=<true|false> (defaults to default Vertex caching behaviour).
+e2e-tests: ## Perform end-to-end (E2E) pipeline tests. Must specify pipeline=<training|prediction>. Optionally specify ENABLE_PIPELINE_CACHING=<true|false> (defaults to default Vertex caching behaviour).
 	@ cd pipelines && \
-	poetry run pytest --log-cli-level=INFO tests/$(pipeline) --enable_caching=$(enable_pipeline_caching)
+	poetry run pytest --log-cli-level=INFO tests/$(pipeline)
 
 env ?= dev
 deploy-infra: ## Deploy the Terraform infrastructure to your project. Requires VERTEX_PROJECT_ID and VERTEX_LOCATION env variables to be set in env.sh. Optionally specify env=<dev|test|prod> (default = dev)

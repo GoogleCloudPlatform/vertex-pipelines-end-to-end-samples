@@ -80,10 +80,8 @@ Create a new branch off the main/master branch e.g. `git checkout -b test-env-sc
 
 ```
 cloud_schedulers_config = {
-  # Uncomment and amend as required
 
   xgboost_training = {
-    name         = "xgboost-training-pipeline-trigger"
     description  = "Trigger my training pipeline in Vertex"
     schedule     = "0 0 1 * *"
     time_zone    = "UTC"
@@ -102,8 +100,7 @@ cloud_schedulers_config = {
     },
   },
 
-    xgboost_prediction = {
-    name         = "xgboost-prediction-pipeline-trigger"
+  xgboost_prediction = {
     description  = "Trigger my prediction pipeline in Vertex"
     schedule     = "0 0 * * *"
     time_zone    = "UTC"

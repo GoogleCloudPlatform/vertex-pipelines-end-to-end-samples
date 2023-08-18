@@ -48,7 +48,7 @@ module "scheduler" {
   source              = "../../modules/scheduled_pipelines"
   project_id          = var.project_id
   region              = var.region
-  name                = each.value.name
+  name                = each.key
   description         = lookup(each.value, "description", null)
   schedule            = each.value.schedule
   time_zone           = lookup(each.value, "time_zone", "UTC")

@@ -17,7 +17,6 @@
 cloud_schedulers_config = {
 
   xgboost_training = {
-    name         = "xgboost-training-pipeline-trigger"
     description  = "Trigger my training pipeline in Vertex"
     schedule     = "0 0 * * 0"
     time_zone    = "UTC"
@@ -28,7 +27,6 @@ cloud_schedulers_config = {
       project_location = "europe-west2"
       ingestion_project_id = "my-project-id"
       model_name = "xgboost_with_preprocessing"
-      model_label = "label_name"
       dataset_id = "preprocessing"
       dataset_location = "europe-west2"
       ingestion_dataset_id = "chicago_taxi_trips"
@@ -37,7 +35,6 @@ cloud_schedulers_config = {
   },
 
   xgboost_prediction = {
-    name         = "xgboost-prediction-pipeline-trigger"
     description  = "Trigger my prediction pipeline in Vertex"
     schedule     = "0 0 * * 0"
     time_zone    = "UTC"
@@ -45,11 +42,9 @@ cloud_schedulers_config = {
     enable_caching = null
     pipeline_parameters = {
       project_id = "my-project-id"
-      project_location = "europe-west4"
+      project_location = "europe-west2"
       ingestion_project_id = "my-project-id"
       model_name = "xgboost_with_preprocessing"
-      model_label = "label_name"
-      dataset_id = "preprocessing"
       dataset_location = "europe-west2"
       ingestion_dataset_id = "chicago_taxi_trips"
       timestamp = "2022-12-01 00:00:00"
