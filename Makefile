@@ -93,8 +93,3 @@ test: ## Run unit tests for a component group or for all component groups and th
 			cd ../.. ;\
 		done ; \
 	fi
-
-
-e2e-tests: ## Perform end-to-end (E2E) pipeline tests. Must specify pipeline=<training|prediction>. Optionally specify ENABLE_PIPELINE_CACHING=<true|false> (defaults to default Vertex caching behaviour).
-	@ cd pipelines && \
-	poetry run pytest --log-cli-level=INFO tests/$(pipeline)
