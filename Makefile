@@ -63,8 +63,9 @@ build: ## Build and push training and/or serving container(s) image using Docker
 	done 
 
 
-compile ?=true
-build ?= true 
+compile ?= true
+build ?= true
+wait ?= false
 run: ## Compile or build pipeline and run pipeline in sandbox environment. Set compile=false to skip recompiling the pipeline and set build=false to skip rebuilding container images
 	@if [ "${compile}" ]; then \
 		$(MAKE) compile ; \
@@ -73,7 +74,7 @@ run: ## Compile or build pipeline and run pipeline in sandbox environment. Set c
 		$(MAKE) build ; \
 	fi && \
 	cd pipelines/src  \
-	poetry run python -m pipelines.utils.trigger_pipeline --template_path=pipelines/${pipeline}/pipeline.yaml --display_name=${pipeline}
+	poetry run python -m pipelines.utils.trigger_pipeline --template_path=pipelines/${pipeline}/pipeline.yaml --display_name=${pipeline} --wait=${wait}
 
 
 test: ## Run unit tests for a component group or for all component groups and the pipeline trigger code.
