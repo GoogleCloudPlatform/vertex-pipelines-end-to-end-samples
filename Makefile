@@ -51,7 +51,7 @@ compile: ## Compile the pipeline to pipeline.yaml. Must specify pipeline=<traini
 	poetry run kfp dsl compile --py pipelines/${pipeline}/pipeline.py --output pipelines/${pipeline}/pipeline.yaml --function pipeline
 
 targets ?= "training serving"
-build: ## Build and push training/serving container image using Docker. Specify target=<training|serving>
+build: ## Build and push training and/or serving container(s) image using Docker. Specify targets=<training serving> e.g. targets=training or targets=training serving (default)
 	@cd model && \
 	for target in $$targets ; do \
 		echo "Building $$target image" && \
@@ -76,7 +76,7 @@ run: ## Compile pipeline and run pipeline in sandbox environment. Must specify p
 	poetry run python -m pipelines.trigger --template_path=pipelines/${pipeline}/pipeline.yaml --enable_caching=$(enable_pipeline_caching)
 
 
-test:
+test: ## Run unit tests for a component group or for all component groups and the pipeline trigger code.
 	@if [ -n "${GROUP}" ]; then \
 		echo "Test components under components/${GROUP}" && \
 		cd components/${GROUP} && \
