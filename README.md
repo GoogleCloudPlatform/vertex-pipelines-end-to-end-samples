@@ -177,13 +177,14 @@ make build target=serving
 You can run the training pipeline (for example) with:
 
 ```bash
-make run pipeline=training
+make run pipeline=training [ wait=<true|false> ]
 ```
 
 This will execute the pipeline using the chosen template on Vertex AI, namely it will:
 
 1. Compile the pipeline using the Kubeflow Pipelines SDK
-1. Trigger the pipeline with the help of `pipelines/trigger/main.py`
+2. Trigger the pipeline with the help of `pipelines/trigger/main.py`
+3. (optional) Wait for pipeline to finish before returning if `wait` is set to `true` (default is true)
 
 #### Pipeline input parameters
 
@@ -193,7 +194,7 @@ When triggering ad hoc runs in your dev/sandbox environment, or when running the
 
 ## Testing
 
-Unit tests and end-to-end (E2E) pipeline tests are performed using [pytest](https://docs.pytest.org). 
+Unit tests and end-to-end (E2E) pipeline tests are performed using [pytest](https://docs.pytest.org).
 The unit tests for custom KFP components are run on each pull request, as well as the E2E tests. To run them on your local machine:
 
 ```
@@ -203,12 +204,6 @@ make test
 Alternatively, only test one of the component groups by running:
 ```
 make test GROUP=vertex-components
-```
-
-To run end-to-end tests of a single pipeline, you can use:
-
-```
-make e2e-tests pipeline=<training|prediction>
 ```
 
 There are also unit tests for the utility scripts in [pipelines/src/pipelines/utils](/pipelines/src/pipelines/utils/). To run them on your local machine:
@@ -241,10 +236,10 @@ vertex-pipelines-end-to-end-samples
 
 Make sure that you give the ML pipeline a unique name in the `@pipeline` decorator.
 
-To run your pipeline, use `make run` as before:
+To run your pipeline, use `make run` as before (optionally adding parameter to wait until pipeline is finished before returning - defaults to true):
 
 ```bash
-make run pipeline=your_new_pipeline
+make run pipeline=your_new_pipeline [ wait=<true|false> ]
 ```
 
 You will also need to add an E2E test - copy and paste the `training` or `prediction` example in [pipelines/tests/](/pipelines/tests/).

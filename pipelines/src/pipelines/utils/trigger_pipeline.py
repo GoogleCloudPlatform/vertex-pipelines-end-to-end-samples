@@ -20,7 +20,7 @@ from google.cloud import aiplatform
 def trigger_pipeline(
     template_path: str,
     display_name: str,
-    wait: str = "True",
+    wait: str = "true",
 ) -> aiplatform.PipelineJob:
     """Trigger a Vertex Pipeline run from a (local) compiled pipeline definition.
 
@@ -70,6 +70,7 @@ def trigger_pipeline(
     )
 
     if wait.lower() == "true":
+        # Wait for pipeline to finish running before returning
         pl.wait()
     elif wait.lower() != "false":
         raise ValueError("wait variable must be 'true', 'false', or not set.")
