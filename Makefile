@@ -65,7 +65,7 @@ build: ## Build and push training and/or serving container(s) image using Docker
 
 compile ?=true
 build ?= true 
-run: ## Compile pipeline and run pipeline in sandbox environment. Must specify pipeline=<training|prediction>. Optionally specify enable_pipeline_caching=<true|false> (defaults to default Vertex caching behaviour)
+run: ## Compile or build pipeline and run pipeline in sandbox environment. Compile and build set to true by default
 	@if [ "${compile}" ]; then \
 		$(MAKE) compile ; \
 	fi && \
