@@ -20,14 +20,14 @@ from google.cloud import aiplatform
 def trigger_pipeline(
     template_path: str,
     display_name: str,
-    wait: str = "true",
+    wait: bool = False,
 ) -> aiplatform.PipelineJob:
     """Trigger a Vertex Pipeline run from a (local) compiled pipeline definition.
 
     Args:
         template_path (str): file path to the compiled YAML pipeline
         display_name (str): Display name to use for the PipelineJob
-        wait (str): Wait for the pipeline to finish running
+        wait (bool): Wait for the pipeline to finish running
 
     Returns:
         aiplatform.PipelineJob: the Vertex PipelineJob object
@@ -69,11 +69,10 @@ def trigger_pipeline(
         network=network,
     )
 
-    if wait.lower() == "true":
+    if wait:
         # Wait for pipeline to finish running before returning
         pl.wait()
-    elif wait.lower() != "false":
-        raise ValueError("wait variable must be 'true', 'false', or not set.")
+
     return pl
 
 
@@ -99,8 +98,14 @@ if __name__ == "__main__":
     # Get commandline args
     args = parser.parse_args()
 
+    if args.wait.lower() == "true":
+        wait = True
+    elif args.wait.lower() != "false":
+        raise ValueError("wait variable must be 'true' or 'false'")
+    wait = False
+
     trigger_pipeline(
         template_path=args.template_path,
         display_name=args.display_name,
-        wait=args.wait,
+        wait=wait,
     )

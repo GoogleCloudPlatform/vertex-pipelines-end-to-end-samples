@@ -184,7 +184,7 @@ This will execute the pipeline using the chosen template on Vertex AI, namely it
 
 1. Compile the pipeline using the Kubeflow Pipelines SDK
 2. Trigger the pipeline with the help of `pipelines/trigger/main.py`
-3. (optional) Wait for pipeline to finish before returning if `wait` is set to `true` (default is true)
+3. (optional) Wait for pipeline to finish before returning if `wait` is set to `true` (default is false)
 
 #### Pipeline input parameters
 
@@ -236,7 +236,7 @@ vertex-pipelines-end-to-end-samples
 
 Make sure that you give the ML pipeline a unique name in the `@pipeline` decorator.
 
-To run your pipeline, use `make run` as before (optionally adding parameter to wait until pipeline is finished before returning - defaults to true):
+To run your pipeline, use `make run` as before (optionally adding parameter to wait until pipeline is finished before returning - defaults to false):
 
 ```bash
 make run pipeline=your_new_pipeline [ wait=<true|false> ]
