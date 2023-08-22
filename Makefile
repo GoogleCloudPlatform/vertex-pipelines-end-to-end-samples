@@ -65,7 +65,7 @@ build: ## Build and push training and/or serving container(s) image using Docker
 
 compile ?=true
 build ?= true 
-run: ## Compile or build pipeline and run pipeline in sandbox environment. Compile and build set to true by default
+run: ## Compile or build pipeline and run pipeline in sandbox environment. Set compile=false to skip recompiling the pipeline and set build=false to skip rebuilding container images
 	@if [ "${compile}" ]; then \
 		$(MAKE) compile ; \
 	fi && \
@@ -73,7 +73,7 @@ run: ## Compile or build pipeline and run pipeline in sandbox environment. Compi
 		$(MAKE) build ; \
 	fi && \
 	cd pipelines/src  \
-	poetry run python -m pipelines.trigger --template_path=pipelines/${pipeline}/pipeline.yaml --enable_caching=$(enable_pipeline_caching)
+	poetry run python -m pipelines.utils.trigger_pipeline --template_path=pipelines/${pipeline}/pipeline.yaml --display_name=${pipeline}
 
 
 test: ## Run unit tests for a component group or for all component groups and the pipeline trigger code.
@@ -84,7 +84,7 @@ test: ## Run unit tests for a component group or for all component groups and th
 	else \
 		echo "Testing scripts" && \
 		cd pipelines && \
-		poetry run python -m pytest tests/trigger &&\
+		poetry run python -m pytest tests/utils &&\
 		cd .. && \
 		for i in components/*/ ; do \
 			echo "Test components under $$i" && \
@@ -95,6 +95,6 @@ test: ## Run unit tests for a component group or for all component groups and th
 	fi
 
 
-e2e-tests: ## Perform end-to-end (E2E) pipeline tests. Must specify pipeline=<training|prediction>. Optionally specify enable_pipeline_caching=<true|false> (defaults to default Vertex caching behaviour).
+e2e-tests: ## Perform end-to-end (E2E) pipeline tests. Must specify pipeline=<training|prediction>. Optionally specify ENABLE_PIPELINE_CACHING=<true|false> (defaults to default Vertex caching behaviour).
 	@ cd pipelines && \
-	poetry run pytest --log-cli-level=INFO tests/$(pipeline) --enable_caching=$(enable_pipeline_caching)
+	poetry run pytest --log-cli-level=INFO tests/$(pipeline)
