@@ -28,9 +28,11 @@ steps:
         git init && \
         git add . && \
         make pre-commit && \
-        make compile pipeline=training && \
-        make compile pipeline=prediction && \
-        make test
+        make test-utils && \
+        make compile-pipeline pipeline=training && \
+        make compile-pipeline pipeline=prediction && \
+        make setup-all-components && \
+        make test-all-components
     env:
       - SKIP=terraform-fmt,git-dirty
       - CONTAINER_IMAGE_REGISTRY=dummy_value

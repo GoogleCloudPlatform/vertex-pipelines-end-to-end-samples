@@ -19,7 +19,7 @@ from google_cloud_pipeline_components.types.artifact_types import VertexModel
 @component(
     base_image="python:3.9",
     packages_to_install=[
-        "google-cloud-aiplatform==1.28.1",
+        "google-cloud-aiplatform==1.30.1",
         "google-cloud-pipeline-components==2.1.0",
     ],
 )

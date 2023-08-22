@@ -214,10 +214,10 @@ To run end-to-end tests of a single pipeline, you can use:
 make e2e-tests pipeline=<training|prediction> [ enable_caching=<true|false> ]
 ```
 
-There are also unit tests for the pipeline triggering code/Cloud Function. To run them on your local machine:
+There are also unit tests for the utility scripts in [pipelines/src/pipelines/utils](/pipelines/src/pipelines/utils/). To run them on your local machine:
 
 ```
-make test-trigger
+make test-utils
 ```
 
 ## Customize pipelines

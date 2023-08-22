@@ -18,7 +18,7 @@ from typing import NamedTuple
 
 @component(
     base_image="python:3.9",
-    packages_to_install=["google-cloud-aiplatform==1.24.1"],
+    packages_to_install=["google-cloud-aiplatform==1.30.1"],
 )
 def lookup_model(
     model_name: str,

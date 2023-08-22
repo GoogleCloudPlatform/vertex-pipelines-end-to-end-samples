@@ -25,10 +25,11 @@ resource "google_cloud_scheduler_job" "scheduled_pipeline" {
 
   pubsub_target {
     topic_name = var.topic_name
-    attributes = {
-      template_path  = var.template_path,
-      enable_caching = var.enable_caching
-    }
-    data = base64encode(jsonencode(var.pipeline_parameters))
+    data = base64encode(jsonencode({
+      template_path       = var.template_path,
+      display_name        = var.name,
+      enable_caching      = var.enable_caching,
+      pipeline_parameters = var.pipeline_parameters,
+    }))
   }
 }

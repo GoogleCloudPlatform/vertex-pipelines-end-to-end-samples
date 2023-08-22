@@ -33,6 +33,22 @@ resource "google_service_account_iam_member" "cloudfunction_sa_can_use_pipelines
   member             = google_service_account.vertex_cloudfunction_sa.member
 }
 
+# Give cloud functions SA access to KFP Artifact Registry to access compiled pipelines
+resource "google_artifact_registry_repository_iam_member" "cloudfunction_sa_can_access_ar" {
+  project    = google_artifact_registry_repository.vertex-pipelines.project
+  location   = google_artifact_registry_repository.vertex-pipelines.location
+  repository = google_artifact_registry_repository.vertex-pipelines.name
+  role       = "roles/artifactregistry.reader"
+  member     = google_service_account.vertex_cloudfunction_sa.member
+}
+
+# Give cloud functions SA access to pipeline root bucket to check it exists
+resource "google_storage_bucket_iam_member" "cloudfunction_sa_can_get_pl_root_bucket" {
+  bucket = google_storage_bucket.pipeline_root_bucket.name
+  role   = "roles/storage.legacyBucketReader"
+  member = google_service_account.vertex_cloudfunction_sa.member
+}
+
 ## Project IAM roles ##
 
 # Vertex Pipelines SA project roles

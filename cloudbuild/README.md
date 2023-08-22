@@ -21,7 +21,7 @@ limitations under the License.
 There are six CI/CD pipelines
 
 1. `pr-checks.yaml` - runs pre-commit checks and unit tests on the custom KFP components, and checks that the ML pipelines (training and prediction) can compile.
-1. `trigger-tests.yaml` - runs unit tests for the pipeline trigger script / Cloud Function located in [pipelines/src/pipelines/trigger](/pipelines/src/pipelines/trigger/). If you don't need to change this code, you can ignore this CI/CD pipeline.
+1. `trigger-tests.yaml` - runs unit tests for the Cloud Function located in [terraform/modules/cloudfunction](/terraform/modules/cloudfunction/). If you don't need to change this code, you can ignore this CI/CD pipeline.
 1. `e2e-test.yaml` - runs end-to-end tests of the training and prediction pipeline.
 1. `release.yaml` - compiles training and prediction pipelines, then copies the compiled pipelines to the chosen GCS destination (versioned by git tag).
 1. `terraform-plan.yaml` - Checks the Terraform configuration under `terraform/envs/<env>` (e.g. `terraform/envs/test`), and produces a summary of any proposed changes that will be applied on merge to the main branch.
