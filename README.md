@@ -194,7 +194,7 @@ When triggering ad hoc runs in your dev/sandbox environment, or when running the
 
 ## Testing
 
-Unit tests and end-to-end (E2E) pipeline tests are performed using [pytest](https://docs.pytest.org).
+Unit tests are performed using [pytest](https://docs.pytest.org).
 The unit tests for custom KFP components are run on each pull request, as well as the E2E tests. To run them on your local machine:
 
 ```
