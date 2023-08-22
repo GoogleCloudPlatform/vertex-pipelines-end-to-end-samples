@@ -183,8 +183,8 @@ make run pipeline=training [ wait=<true|false> ]
 This will execute the pipeline using the chosen template on Vertex AI, namely it will:
 
 1. Compile the pipeline using the Kubeflow Pipelines SDK
-2. Trigger the pipeline with the help of `pipelines/trigger/main.py`
-3. (optional) Wait for pipeline to finish before returning if `wait` is set to `true` (default is false)
+1. Trigger the pipeline with the help of `pipelines/trigger/main.py`
+1. (optional) Wait for pipeline to finish before returning if `wait` is set to `true` (default is false)
 
 #### Pipeline input parameters
 
