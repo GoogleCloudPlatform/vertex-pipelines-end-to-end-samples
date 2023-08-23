@@ -49,7 +49,7 @@ This step is performed using a custom KFP component located in [components/bigqu
 
 The training step is defined as a [KFP container component](https://www.kubeflow.org/docs/components/pipelines/v2/components/container-components/) in the [pipeline.py](/pipelines/src/pipelines/training/pipeline.py) file.
 
-The container image used for this component is built using CI/CD (or the `make build-container target=training` command if you want to build it during development).
+The container image used for this component is built using CI/CD (or the `make build target=training` command if you want to build it during development).
 
 The source code for this container image (and the serving container image) can be found in the [model](/model/) directory. Dependencies are managed using Poetry. The model training script can be found at [model/training/train.py](/model/training/train.py) and can be modified to suit your use case.
 
@@ -115,5 +115,5 @@ If the component is exactly the same and the arguments are exactly the same as i
 Since most of the ML projects take a long time and expensive computation resources, it is cost-effective to use cache when you are sure that the output of components is correct. 
 In terms of [how to control cache reuse behavior](https://cloud.google.com/vertex-ai/docs/pipelines/configure-caching), in generally, you can do it for either a component or the entire pipeline (for all components). 
 If you want to control caching behavior for individual components, add `.set_caching_options(<True|False>)` after each component when building a pipeline.
-To change the caching behaviour of ALL components within a pipeline, you can specify this when you trigger the pipeline like so: `make run pipeline=<training|prediction> enable_caching=<true|false>`
+To change the caching behaviour of ALL components within a pipeline, you can specify this when you trigger the pipeline like so: `make run pipeline=<training|prediction>`
 It is suggested to start by disabling caching of components during development, until you have a good idea of how the caching behaviour works, as it can lead to unexpected results.
