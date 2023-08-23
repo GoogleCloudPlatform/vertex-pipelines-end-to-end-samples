@@ -38,7 +38,7 @@ When you open the Pull Request, the CI pipeline (`pr-checks.yaml`) should be tri
 
 | :bulb: Remember    |
 |:-------------------|
-| Make sure to update any unit tests and end-to-end tests in line with your changes to the pipelines |
+| Make sure to update any unit tests in line with your changes to the pipelines |
 
 | :exclamation: IMPORTANT    |
 |:---------------------------|

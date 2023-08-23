@@ -195,7 +195,7 @@ When triggering ad hoc runs in your dev/sandbox environment, or when running the
 ## Testing
 
 Unit tests are performed using [pytest](https://docs.pytest.org).
-The unit tests for custom KFP components are run on each pull request, as well as the E2E tests. To run them on your local machine:
+The unit tests for custom KFP components are run on each pull request. To run them on your local machine:
 
 ```
 make test
@@ -241,8 +241,6 @@ To run your pipeline, use `make run` as before (optionally adding parameter to w
 ```bash
 make run pipeline=your_new_pipeline [ wait=<true|false> ]
 ```
-
-You will also need to add an E2E test - copy and paste the `training` or `prediction` example in [pipelines/tests/](/pipelines/tests/).
 
 Some of the scripts e.g. CI/CD pipelines assume only a training and prediction pipeline. You will need to adapt these to add in the compile, run and upload steps for your new pipeline in [cloudbuild/pr-checks.yaml](/cloudbuild/pr-checks.yaml), [cloudbuild/e2e-test.yaml](/cloudbuild/e2e-test.yaml) and [cloudbuild/release.yaml](/cloudbuild/release.yaml).
 
