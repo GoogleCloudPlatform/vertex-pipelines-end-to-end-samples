@@ -45,8 +45,8 @@ steps:
         curl -sSL https://install.python-poetry.org | python3 - && \
         export PATH="/builder/home/.local/bin:$$PATH" && \
         make install && \
-        make run pipeline=training wait=true && \
-        make run pipeline=prediction wait=true
+        make run pipeline=training build=false wait=true && \
+        make run pipeline=prediction build=false wait=true
     env:
       - ENABLE_PIPELINE_CACHING=${_TEST_ENABLE_PIPELINE_CACHING}
       - VERTEX_LOCATION=${_TEST_VERTEX_LOCATION}
