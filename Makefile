@@ -50,7 +50,7 @@ compile: ## Compile the pipeline to pipeline.yaml. Must specify pipeline=<traini
 	@cd pipelines/src && \
 	poetry run kfp dsl compile --py pipelines/${pipeline}/pipeline.py --output pipelines/${pipeline}/pipeline.yaml --function pipeline
 
-targets ?= "training serving"
+targets ?= training serving
 build: ## Build and push training and/or serving container(s) image using Docker. Specify targets=<training serving> e.g. targets=training or targets="training serving" (default)
 	@cd model && \
 	for target in $$targets ; do \
@@ -67,13 +67,13 @@ compile ?= true
 build ?= true
 wait ?= false
 run: ## Run pipeline in sandbox environment. Must specify pipeline=<training|prediction>. Optionally specify ENABLE_PIPELINE_CACHING=<true|false> (defaults to default Vertex caching behaviour) and wait=<true|false> (default = false). Set compile=false to skip recompiling the pipeline and set build=false to skip rebuilding container images
-	@if [ "${compile}" ]; then \
+	@if [ $(compile) = "true" ]; then \
 		$(MAKE) compile ; \
 	fi && \
-	if [ "${build}" ]; then \
+	if [ $(build) = "true" ]; then \
 		$(MAKE) build ; \
 	fi && \
-	cd pipelines/src  \
+	cd pipelines/src && \
 	poetry run python -m pipelines.utils.trigger_pipeline --template_path=pipelines/${pipeline}/pipeline.yaml --display_name=${pipeline} --wait=${wait}
 
 
