@@ -66,7 +66,7 @@ build: ## Build and push training and/or serving container(s) image using Docker
 compile ?= true
 build ?= true
 wait ?= false
-run: ## Compile or build pipeline and run pipeline in sandbox environment. Set compile=false to skip recompiling the pipeline and set build=false to skip rebuilding container images
+run: ## Run pipeline in sandbox environment. Must specify pipeline=<training|prediction>. Optionally specify ENABLE_PIPELINE_CACHING=<true|false> (defaults to default Vertex caching behaviour) and wait=<true|false> (default = false). Set compile=false to skip recompiling the pipeline and set build=false to skip rebuilding container images
 	@if [ "${compile}" ]; then \
 		$(MAKE) compile ; \
 	fi && \
