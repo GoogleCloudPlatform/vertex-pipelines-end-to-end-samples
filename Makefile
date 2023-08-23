@@ -51,7 +51,7 @@ compile: ## Compile the pipeline to pipeline.yaml. Must specify pipeline=<traini
 	poetry run kfp dsl compile --py pipelines/${pipeline}/pipeline.py --output pipelines/${pipeline}/pipeline.yaml --function pipeline
 
 targets ?= "training serving"
-build: ## Build and push training and/or serving container(s) image using Docker. Specify targets=<training serving> e.g. targets=training or targets=training serving (default)
+build: ## Build and push training and/or serving container(s) image using Docker. Specify targets=<training serving> e.g. targets=training or targets="training serving" (default)
 	@cd model && \
 	for target in $$targets ; do \
 		echo "Building $$target image" && \
