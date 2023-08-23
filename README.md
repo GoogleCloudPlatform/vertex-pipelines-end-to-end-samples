@@ -70,10 +70,9 @@ How to deploy this infrastructure is covered in a [later section](#deploying-inf
 1. Install the correct Python version: `pyenv install`
 1. Install poetry - follow the instructions in the [poetry documentation](https://python-poetry.org/docs/#installation)
 1. Configure poetry to use the Python version from pyenv: `poetry config virtualenvs.prefer-active-python true`
-1. Install poetry dependencies for ML pipelines: `make setup`
+1. Install poetry dependencies for ML pipelines: `make install`
 1. Install pre-commit hooks: `cd pipelines && poetry run pre-commit install`
 1. Copy `env.sh.example` to `env.sh`, and update the environment variables in `env.sh` for your dev environment (particularly `VERTEX_PROJECT_ID`, `VERTEX_LOCATION` and `RESOURCE_SUFFIX`)
-1. (Optional) If you want to make changes to the KFP components under [/components](/components/), set up the Python virtual environments for these by running `make setup-all-components`
 1. Authenticate to Google Cloud
     1. `gcloud auth login`
     1. `gcloud auth application-default login`
@@ -111,9 +110,9 @@ Install Terraform on your local machine. We recommend using [`tfswitch`](https:/
 Now you can deploy the infrastructure using Terraform:
 
 ```bash
-make deploy-infra env=dev VERTEX_PROJECT_ID=<DEV PROJECT ID>
-make deploy-infra env=test VERTEX_PROJECT_ID=<TEST PROJECT ID>
-make deploy-infra env=prod VERTEX_PROJECT_ID=<PROD PROJECT ID>
+make deploy env=dev VERTEX_PROJECT_ID=<DEV PROJECT ID>
+make deploy env=test VERTEX_PROJECT_ID=<TEST PROJECT ID>
+make deploy env=prod VERTEX_PROJECT_ID=<PROD PROJECT ID>
 ```
 
 #### Optional - Tearing down infrastructure
@@ -121,9 +120,9 @@ make deploy-infra env=prod VERTEX_PROJECT_ID=<PROD PROJECT ID>
 To tear down the infrastructure you have created with Terraform, run these commands:
 
 ```bash
-make destroy-infra env=dev VERTEX_PROJECT_ID=<DEV PROJECT ID>
-make destroy-infra env=test VERTEX_PROJECT_ID=<TEST PROJECT ID>
-make destroy-infra env=prod VERTEX_PROJECT_ID=<PROD PROJECT ID>
+make undeploy env=dev VERTEX_PROJECT_ID=<DEV PROJECT ID>
+make undeploy env=test VERTEX_PROJECT_ID=<TEST PROJECT ID>
+make undeploy env=prod VERTEX_PROJECT_ID=<PROD PROJECT ID>
 ```
 
 ### Example ML pipelines
@@ -161,16 +160,16 @@ bq mk --transfer_config \
 
 The [model/](/model/) directory contains the code for custom training and serving container images, including the model training script at [model/training/train.py](model/training/train.py). You can modify this to suit your own use case.
 
-Build the training container image and push it to Artifact Registry with:
+Build the training and serving container images and push them to Artifact Registry with:
 
 ```bash
-make build-container target=training
+make build
 ```
 
-Do the same for the serving container image:
+Optionally specify the `target` variable to only build one of the images. For example, to build only the serving image:
 
 ```bash
-make build-container target=serving
+make build target=serving
 ```
 
 ### Running Pipelines
@@ -198,26 +197,24 @@ Unit tests and end-to-end (E2E) pipeline tests are performed using [pytest](http
 The unit tests for custom KFP components are run on each pull request, as well as the E2E tests. To run them on your local machine:
 
 ```
-make setup-all-components
-make test-all-components
+make test
 ```
 
-Alternatively, only setup and install one of the component groups by running:
+Alternatively, only test one of the component groups by running:
 ```
-make setup-components GROUP=vertex-components
-make test-components GROUP=vertex-components
+make test GROUP=vertex-components
 ```
 
 To run end-to-end tests of a single pipeline, you can use:
 
 ```
-make e2e-tests pipeline=<training|prediction> [ enable_caching=<true|false> ]
+make e2e-tests pipeline=<training|prediction>
 ```
 
 There are also unit tests for the utility scripts in [pipelines/src/pipelines/utils](/pipelines/src/pipelines/utils/). To run them on your local machine:
 
 ```
-make test-utils
+make test
 ```
 
 ## Customize pipelines

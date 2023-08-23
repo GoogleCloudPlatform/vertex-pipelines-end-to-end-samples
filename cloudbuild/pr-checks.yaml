@@ -24,15 +24,13 @@ steps:
       - |
         curl -sSL https://install.python-poetry.org | python3 - && \
         export PATH="/builder/home/.local/bin:$$PATH" && \
-        make setup && \
+        make install && \
         git init && \
         git add . && \
         make pre-commit && \
-        make test-utils && \
-        make compile-pipeline pipeline=training && \
-        make compile-pipeline pipeline=prediction && \
-        make setup-all-components && \
-        make test-all-components
+        make compile pipeline=training && \
+        make compile pipeline=prediction && \
+        make test
     env:
       - SKIP=terraform-fmt,git-dirty
       - CONTAINER_IMAGE_REGISTRY=dummy_value

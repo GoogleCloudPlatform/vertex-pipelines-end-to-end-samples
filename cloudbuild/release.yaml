@@ -39,11 +39,11 @@ steps:
       - |
         curl -sSL https://install.python-poetry.org | python3 - && \
         export PATH="/builder/home/.local/bin:$$PATH" && \
-        make setup && \
+        make install && \
         for proj in ${_DESTINATION_PROJECTS} ; do \
           CONTAINER_IMAGE_REGISTRY=${_VERTEX_LOCATION}-docker.pkg.dev/$$proj/vertex-images \
-          make compile-pipeline pipeline=training && \
-          make compile-pipeline pipeline=prediction && \
+          make compile pipeline=training && \
+          make compile pipeline=prediction && \
           cd pipelines && \
           poetry run python -m pipelines.utils.upload_pipeline \
           --dest=https://${_VERTEX_LOCATION}-kfp.pkg.dev/$$proj/vertex-pipelines \
