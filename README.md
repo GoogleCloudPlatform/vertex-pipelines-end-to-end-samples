@@ -160,13 +160,13 @@ bq mk --transfer_config \
 
 The [model/](/model/) directory contains the code for custom training and serving container images, including the model training script at [model/training/train.py](model/training/train.py). You can modify this to suit your own use case.
 
-Build the training and serving container image and push to Artifact Registry with:
+Build the training and serving container images and push them to Artifact Registry with:
 
 ```bash
 make build
 ```
 
-Do this to only build one image (for example):
+Optionally specify the `target` variable to only build one of the images. For example, to build only the serving image:
 
 ```bash
 make build target=serving
@@ -177,7 +177,7 @@ make build target=serving
 You can run the training pipeline (for example) with:
 
 ```bash
-make run pipeline=training 
+make run pipeline=training
 ```
 
 This will execute the pipeline using the chosen template on Vertex AI, namely it will:
@@ -197,7 +197,6 @@ Unit tests and end-to-end (E2E) pipeline tests are performed using [pytest](http
 The unit tests for custom KFP components are run on each pull request, as well as the E2E tests. To run them on your local machine:
 
 ```
-make install
 make test
 ```
 
