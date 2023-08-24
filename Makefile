@@ -69,13 +69,18 @@ wait ?= false
 run: ## Run pipeline in sandbox environment. Must specify pipeline=<training|prediction>. Optionally specify ENABLE_PIPELINE_CACHING=<true|false> (defaults to default Vertex caching behaviour) and wait=<true|false> (default = false). Set compile=false to skip recompiling the pipeline and set build=false to skip rebuilding container images
 	@if [ $(compile) = "true" ]; then \
 		$(MAKE) compile ; \
+	elif [ $(compile) != "false" ]; then \
+		echo "ValueError: compile must be either true or false" ; \
+		exit ; \
 	fi && \
 	if [ $(build) = "true" ]; then \
 		$(MAKE) build ; \
+	elif [ $(build) != "false" ]; then \
+		echo "ValueError: build must be either true or false" ; \
+		exit ; \
 	fi && \
 	cd pipelines/src && \
 	poetry run python -m pipelines.utils.trigger_pipeline --template_path=pipelines/${pipeline}/pipeline.yaml --display_name=${pipeline} --wait=${wait}
-
 
 test: ## Run unit tests for a specific component group or for all component groups and the pipeline trigger code. Specify GROUP=<vertex-components|bigquery-components>
 	@if [ -n "${GROUP}" ]; then \
