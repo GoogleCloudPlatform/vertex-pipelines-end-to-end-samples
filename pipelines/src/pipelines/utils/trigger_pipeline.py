@@ -98,9 +98,9 @@ if __name__ == "__main__":
     # Get commandline args
     args = parser.parse_args()
 
-    if args.wait.lower() == "true":
+    if args.wait == "true":
         wait = True
-    elif args.wait.lower() == "false":
+    elif args.wait == "false":
         wait = False
     else:
         raise ValueError("wait variable must be 'true' or 'false'")
