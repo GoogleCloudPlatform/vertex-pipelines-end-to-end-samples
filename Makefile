@@ -77,7 +77,7 @@ run: ## Run pipeline in sandbox environment. Must specify pipeline=<training|pre
 	poetry run python -m pipelines.utils.trigger_pipeline --template_path=pipelines/${pipeline}/pipeline.yaml --display_name=${pipeline} --wait=${wait}
 
 
-test: ## Run unit tests for a component group or for all component groups and the pipeline trigger code.
+test: ## Run unit tests for a specific component group or for all component groups and the pipeline trigger code. Specify GROUP=<vertex-components|bigquery-components>
 	@if [ -n "${GROUP}" ]; then \
 		echo "Test components under components/${GROUP}" && \
 		cd components/${GROUP} && \
