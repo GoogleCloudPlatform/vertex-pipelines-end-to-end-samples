@@ -100,9 +100,10 @@ if __name__ == "__main__":
 
     if args.wait.lower() == "true":
         wait = True
-    elif args.wait.lower() != "false":
+    elif args.wait.lower() == "false":
+        wait = False
+    else:
         raise ValueError("wait variable must be 'true' or 'false'")
-    wait = False
 
     trigger_pipeline(
         template_path=args.template_path,
