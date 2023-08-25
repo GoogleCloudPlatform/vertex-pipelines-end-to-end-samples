@@ -50,7 +50,7 @@ compile: ## Compile the pipeline to pipeline.yaml. Must specify pipeline=<traini
 	@cd pipelines/src && \
 	poetry run kfp dsl compile --py pipelines/${pipeline}/pipeline.py --output pipelines/${pipeline}/pipeline.yaml --function pipeline
 
-targets ?= "training serving"
+targets ?= training serving
 build: ## Build and push training and/or serving container(s) image using Docker. Specify targets=<training serving> e.g. targets=training or targets="training serving" (default)
 	@cd model && \
 	for target in $$targets ; do \
@@ -63,20 +63,26 @@ build: ## Build and push training and/or serving container(s) image using Docker
 	done 
 
 
-compile ?=true
-build ?= true 
-run: ## Compile or build pipeline and run pipeline in sandbox environment. Set compile=false to skip recompiling the pipeline and set build=false to skip rebuilding container images
-	@if [ "${compile}" ]; then \
+compile ?= true
+build ?= true
+wait ?= false
+run: ## Run pipeline in sandbox environment. Must specify pipeline=<training|prediction>. Optionally specify wait=<true|false> (default = false). Set compile=false to skip recompiling the pipeline and set build=false to skip rebuilding container images
+	@if [ $(compile) = "true" ]; then \
 		$(MAKE) compile ; \
+	elif [ $(compile) != "false" ]; then \
+		echo "ValueError: compile must be either true or false" ; \
+		exit ; \
 	fi && \
-	if [ "${build}" ]; then \
+	if [ $(build) = "true" ]; then \
 		$(MAKE) build ; \
+	elif [ $(build) != "false" ]; then \
+		echo "ValueError: build must be either true or false" ; \
+		exit ; \
 	fi && \
-	cd pipelines/src  \
-	poetry run python -m pipelines.utils.trigger_pipeline --template_path=pipelines/${pipeline}/pipeline.yaml --display_name=${pipeline}
+	cd pipelines/src && \
+	poetry run python -m pipelines.utils.trigger_pipeline --template_path=pipelines/${pipeline}/pipeline.yaml --display_name=${pipeline} --wait=${wait}
 
-
-test: ## Run unit tests for a component group or for all component groups and the pipeline trigger code.
+test: ## Run unit tests for a specific component group or for all component groups and the pipeline trigger code. Optionally specify GROUP=<component group e.g. vertex-components>
 	@if [ -n "${GROUP}" ]; then \
 		echo "Test components under components/${GROUP}" && \
 		cd components/${GROUP} && \
@@ -93,8 +99,3 @@ test: ## Run unit tests for a component group or for all component groups and th
 			cd ../.. ;\
 		done ; \
 	fi
-
-
-e2e-tests: ## Perform end-to-end (E2E) pipeline tests. Must specify pipeline=<training|prediction>. Optionally specify ENABLE_PIPELINE_CACHING=<true|false> (defaults to default Vertex caching behaviour).
-	@ cd pipelines && \
-	poetry run pytest --log-cli-level=INFO tests/$(pipeline)
