@@ -24,15 +24,22 @@ pre-commit: ## Runs the pre-commit checks over entire repo
 	poetry run pre-commit run --all-files
 
 env ?= dev
+AUTO_APPROVE_FLAG :=
 deploy: ## Deploy the Terraform infrastructure to your project. Requires VERTEX_PROJECT_ID and VERTEX_LOCATION env variables to be set in env.sh. Optionally specify env=<dev|test|prod> (default = dev)
-	@ cd terraform/envs/$(env) && \
+	@if [ "$(auto-approve)" = "true" ]; then \
+		AUTO_APPROVE_FLAG="-auto-approve"; \
+	fi; \
+	cd terraform/envs/$(env) && \
 	terraform init -backend-config='bucket=${VERTEX_PROJECT_ID}-tfstate' && \
-	terraform apply -var 'project_id=${VERTEX_PROJECT_ID}' -var 'region=${VERTEX_LOCATION}'
+	terraform apply -var 'project_id=${VERTEX_PROJECT_ID}' -var 'region=${VERTEX_LOCATION}' $$AUTO_APPROVE_FLAG
 
 undeploy: ## DESTROY the Terraform infrastructure in your project. Requires VERTEX_PROJECT_ID and VERTEX_LOCATION env variables to be set in env.sh. Optionally specify env=<dev|test|prod> (default = dev)
-	@ cd terraform/envs/$(env) && \
+	@if [ "$(auto-approve)" = "true" ]; then \
+		AUTO_APPROVE_FLAG="-auto-approve"; \
+	fi; \
+	cd terraform/envs/$(env) && \
 	terraform init -backend-config='bucket=${VERTEX_PROJECT_ID}-tfstate' && \
-	terraform destroy -var 'project_id=${VERTEX_PROJECT_ID}' -var 'region=${VERTEX_LOCATION}'
+	terraform destroy -var 'project_id=${VERTEX_PROJECT_ID}' -var 'region=${VERTEX_LOCATION}' $$AUTO_APPROVE_FLAG
 
 install: ## Set up local environment for Python development on pipelines
 	@cd pipelines && \
