@@ -66,7 +66,7 @@ build: ## Build and push training and/or serving container(s) image using Docker
 		--region=${VERTEX_LOCATION} \
 		--project=${VERTEX_PROJECT_ID} \
 		--gcs-source-staging-dir=gs://${VERTEX_PROJECT_ID}-staging/source \
-		--substitutions=_DOCKER_TARGET=${target},_DESTINATION_IMAGE_URI=${CONTAINER_IMAGE_REGISTRY}/${target}:${RESOURCE_SUFFIX} ; \
+		--substitutions=_DOCKER_TARGET=$$target,_DESTINATION_IMAGE_URI=${CONTAINER_IMAGE_REGISTRY}/$$target:${RESOURCE_SUFFIX} ; \
 	done 
 
 
