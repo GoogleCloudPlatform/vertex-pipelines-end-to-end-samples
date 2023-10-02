@@ -17,40 +17,29 @@ SELECT
 )
 -- Ingest data between 2 and 3 months ago
 ,filtered_data AS (
-    SELECT
-    *
-    FROM `{{ source_dataset }}.{{ source_table }}`, filter_start_values
+SELECT
+  *
+FROM `{{ source_dataset }}.{{ source_table }}`, filter_start_values
     WHERE
-         DATE({{ filter_column }}) BETWEEN
+         DATE(TIMESTAMP({{ filter_column }}) )BETWEEN
          DATE_SUB(DATE(CAST(filter_start_values.filter_start_value AS DATETIME)), INTERVAL 3 MONTH) AND
          DATE_SUB(DATE(filter_start_value), INTERVAL 2 MONTH)
 )
 -- Use the average trip_seconds as a replacement for NULL or 0 values
 ,mean_time AS (
-    SELECT CAST(avg(trip_seconds) AS INT64) as avg_trip_seconds
+    SELECT CAST(avg(duration) AS INT64) as avg_duration_seconds
     FROM filtered_data
 )
+
 SELECT
-    CAST(EXTRACT(DAYOFWEEK FROM trip_start_timestamp) AS FLOAT64) AS dayofweek,
-    CAST(EXTRACT(HOUR FROM trip_start_timestamp) AS FLOAT64) AS hourofday,
-    ST_DISTANCE(
-        ST_GEOGPOINT(pickup_longitude, pickup_latitude),
-        ST_GEOGPOINT(dropoff_longitude, dropoff_latitude)) AS trip_distance,
-    trip_miles,
-    CAST( CASE WHEN trip_seconds is NULL then m.avg_trip_seconds
-               WHEN trip_seconds <= 0 then m.avg_trip_seconds
-               ELSE trip_seconds 
-               END AS FLOAT64) AS trip_seconds,
-    payment_type,
-    company,
-    (fare + tips + tolls + extras) AS `{{ target_column }}`,
+  start_station_name,
+  IF(EXTRACT(dayofweek FROM start_date) BETWEEN 2 AND 6,'weekday','weekend') AS dayofweek,
+    CAST(EXTRACT(HOUR FROM start_date) AS FLOAT64) AS hourofday,
+    CAST( CASE WHEN duration is NULL then m.avg_duration_seconds
+               WHEN duration <= 0 then m.avg_duration_seconds
+               ELSE duration
+               END AS FLOAT64) AS `{{ target_column }}`,
 FROM filtered_data AS t, mean_time AS m
-WHERE
-    trip_miles > 0 AND fare > 0 AND fare < 1500
-    {% for field in ['fare', 'trip_start_timestamp', 'pickup_longitude',
-                'pickup_latitude', 'dropoff_longitude', 'dropoff_latitude','payment_type','company'] %}
-        AND `{{ field }}` IS NOT NULL
-    {% endfor %}
 );
 
 -- Drop and creation of train, testing and validations tables
