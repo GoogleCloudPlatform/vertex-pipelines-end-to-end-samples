@@ -66,10 +66,12 @@ def pipeline(
     project_id: str = os.environ.get("VERTEX_PROJECT_ID"),
     project_location: str = os.environ.get("VERTEX_LOCATION"),
     ingestion_project_id: str = os.environ.get("VERTEX_PROJECT_ID"),
+    datasource_project_id: str = "bigquery-public-data",
+    ingestion_dataset_id: str = "london_bicycles",
+    ingestion_dataset_location: str = "EU",
     model_name: str = "simple_xgboost",
-    dataset_id: str = "preprocessing",
+    dataset_id: str = "preprocessing2",
     dataset_location: str = os.environ.get("VERTEX_LOCATION"),
-    ingestion_dataset_id: str = "chicago_taxi_trips",
     timestamp: str = "2022-12-01 00:00:00",
     resource_suffix: str = os.environ.get("RESOURCE_SUFFIX"),
     test_dataset_uri: str = "",
@@ -101,9 +103,9 @@ def pipeline(
 
     # Create variables to ensure the same arguments are passed
     # into different components of the pipeline
-    label_column_name = "total_fare"
-    time_column = "trip_start_timestamp"
-    ingestion_table = "taxi_trips"
+    label_column_name = "duration_seconds"
+    time_column = "start_date"
+    ingestion_table = "cycle_hire"
     table_suffix = f"_xgb_training_{resource_suffix}"  # suffix to table names
     ingested_table = "ingested_data" + table_suffix
     preprocessed_table = "preprocessed_data" + table_suffix
@@ -128,12 +130,12 @@ def pipeline(
     queries_folder = pathlib.Path(__file__).parent / "queries"
 
     preprocessing_query = generate_query(
-        queries_folder / "preprocessing.sql",
-        source_dataset=f"{ingestion_project_id}.{ingestion_dataset_id}",
+        queries_folder / "preprocessing_2.sql",
+        source_dataset=f"{datasource_project_id}.{ingestion_dataset_id}",
         source_table=ingestion_table,
         preprocessing_dataset=f"{ingestion_project_id}.{dataset_id}",
         ingested_table=ingested_table,
-        dataset_region=project_location,
+        dataset_region=ingestion_dataset_location,
         filter_column=time_column,
         target_column=label_column_name,
         filter_start_value=timestamp,
