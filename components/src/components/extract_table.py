@@ -19,7 +19,7 @@ from kfp.dsl import Dataset, Output, component
     base_image="python:3.9",
     packages_to_install=["google-cloud-bigquery==2.30.0"],
 )
-def extract_bq_to_dataset(
+def extract_table(
     bq_client_project_id: str,
     source_project_id: str,
     dataset_id: str,

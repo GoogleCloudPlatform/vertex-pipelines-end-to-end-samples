@@ -19,9 +19,9 @@ from google.protobuf.json_format import ParseDict
 from google.cloud.aiplatform_v1 import ModelEvaluation
 from google_cloud_pipeline_components.types.artifact_types import VertexModel
 
-import vertex_components
+import components
 
-upload_model = vertex_components.upload_model.python_func
+upload_model = components.upload_model.python_func
 
 
 @mock.patch("google.cloud.aiplatform_v1.ModelServiceClient")

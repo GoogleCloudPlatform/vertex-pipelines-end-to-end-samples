@@ -17,6 +17,47 @@ limitations under the License.
 
 There are two ML pipelines defined in this repository: a training pipeline (located in [pipelines/src/pipelines/training/pipeline.py](/pipelines/src/pipelines/training/pipeline.py)) and a batch prediction pipeline (located in [pipelines/src/pipelines/prediction/pipeline.py](/pipelines/src/pipelines/prediction/pipeline.py)).
 
+## Pipeline input parameters
+
+The ML pipelines have input parameters. 
+As you can see in the pipeline definition files (`pipelines/src/pipelines/<training|prediction>/pipeline.py`), they have default values, and some of these default values are derived from environment variables (which in turn are defined in `env.sh`).
+
+When triggering ad hoc runs in your dev/sandbox environment, or when running the E2E tests in CI, these default values are used. 
+For the test and production deployments, the pipeline parameters are defined in the Terraform code for the Cloud Scheduler jobs (`terraform/envs/<dev|test|prod>/scheduled_jobs.auto.tfvars`) - see the section on [Scheduling pipelines](#scheduling-pipelines).
+
+## Customize pipelines
+
+### Adding a new pipeline
+
+This repository contains a training and a (batch) prediction pipeline. To add another ML pipeline (e.g. for continuous evaluation), create a new directory under the `pipelines/src/pipelines` directory. Within your new pipeline folder, create a `pipeline.py` file - this is where you should provide your pipeline definition using the KFP DSL (in a function named `pipeline`).
+
+Alternatively, you can just copy and paste the `training` or `prediction` directory.
+
+See below for an example folder structure:
+
+```
+vertex-pipelines-end-to-end-samples
+|
+├── pipelines
+│   ├── src
+│   │   ├── pipelines
+│   │   │   ├── new_pipeline
+│   │   │   │   ├── pipeline.py
+│   │   │   │   └── queries
+│   │   │   │       └── my_query.sql
+```
+
+Make sure that you give the ML pipeline a unique name in the `@pipeline` decorator.
+
+To run your pipeline, use `make run` as before (optionally adding parameter to wait until pipeline is finished before returning - defaults to false):
+
+```bash
+make run pipeline=your_new_pipeline [ wait=<true|false> ]
+```
+
+Some of the scripts e.g. CI/CD pipelines assume only a training and prediction pipeline. You will need to adapt these to add in the compile, run and upload steps for your new pipeline in [cloudbuild/pr-checks.yaml](/cloudbuild/pr-checks.yaml), [cloudbuild/e2e-test.yaml](/cloudbuild/e2e-test.yaml) and [cloudbuild/release.yaml](/cloudbuild/release.yaml).
+
+
 ## Training pipeline
 
 A screenshot of the completed ML pipeline is shown below.
@@ -43,7 +84,7 @@ Once the data has been split into three tables (for train/test/validation split)
 
 (Alternatively, you could choose to omit this step, leave the data in BigQuery and consume the data directly from BigQuery for your training step).
 
-This step is performed using a custom KFP component located in [components/bigquery-components/src/bigquery_components/extract_bq_to_dataset.py](/components/bigquery-components/src/bigquery_components/extract_bq_to_dataset.py).
+This step is performed using a custom KFP component located in [components/bigquery-components/src/bigquery_components/extract_bq_to_dataset.py](/vertex_components/extract_bq_to_dataset.py).
 
 ### Training step
 
@@ -62,7 +103,7 @@ The model is evaluated and metrics are saved as a JSON file. In the Vertex pipel
 ### Upload model step
 
 The upload model step uploads the model to the Vertex model registry. This step uses a custom KFP component that can be 
-found in [components/vertex-components/src/vertex_components/upload_model.py](/components/vertex-components/src/vertex_components/upload_model.py). It does the following:
+found in [components/vertex-components/src/vertex_components/upload_model.py](//vertex_components/upload_model.py). It does the following:
 
 1. Checks if there is an existing "champion" model with the same name in the Vertex Model Registry
 1. If there is, fetch its latest model evaluation and compare it with the model evaluation of the newly trained "challenger" model
@@ -96,11 +137,11 @@ The `preprocessing` step in the pipeline uses this string (`preprocessing_query`
 
 ### Lookup model
 
-This step looks up the "champion" model from the Vertex Model Registry. It uses a custom KFP component that can be found in [components/vertex-components/src/vertex_components/lookup_model.py](/components/vertex-components/src/vertex_components/lookup_model.py). It uses the Vertex AI Python SDK to list models with a given model name and retrieve the model version that uses the `default` alias, indicating that it is the "champion" model.
+This step looks up the "champion" model from the Vertex Model Registry. It uses a custom KFP component that can be found in [components/vertex-components/src/vertex_components/lookup_model.py](//vertex_components/lookup_model.py). It uses the Vertex AI Python SDK to list models with a given model name and retrieve the model version that uses the `default` alias, indicating that it is the "champion" model.
 
 ### Batch Prediction
 
-This step submits a Vertex Batch Prediction job that generates predictions from the BigQuery table from the ingestion/preprocessing step. It uses a custom KFP component that can be found in [components/vertex-components/src/vertex_components/model_batch_predict.py](/components/vertex-components/src/vertex_components/model_batch_predict.py). It uses Vertex Model Monitoring for batch prediction to monitor the data for drift.
+This step submits a Vertex Batch Prediction job that generates predictions from the BigQuery table from the ingestion/preprocessing step. It uses a custom KFP component that can be found in [components/vertex-components/src/vertex_components/model_batch_predict.py](//vertex_components/model_batch_predict.py). It uses Vertex Model Monitoring for batch prediction to monitor the data for drift.
 
 ## Pipeline input parameters
 

@@ -2,15 +2,15 @@ import google.cloud.bigquery  # noqa
 from kfp.dsl import Dataset
 from unittest import mock
 
-import bigquery_components
+import components
 
-extract_bq_to_dataset = bigquery_components.extract_bq_to_dataset.python_func
+extract_bq_to_dataset = components.extract_table.python_func
 
 
 @mock.patch("google.cloud.bigquery.client.Client")
 @mock.patch("google.cloud.bigquery.table.Table")
 @mock.patch("google.cloud.bigquery.job.ExtractJobConfig")
-def test_extract_bq_to_dataset(mock_job_config, mock_table, mock_client, tmpdir):
+def test_extract_table(mock_job_config, mock_table, mock_client, tmpdir):
     """
     Checks that the extract_bq_to_dataset is called correctly
     """
@@ -40,7 +40,7 @@ def test_extract_bq_to_dataset(mock_job_config, mock_table, mock_client, tmpdir)
 @mock.patch("google.cloud.bigquery.table.Table")
 @mock.patch("google.cloud.bigquery.job.ExtractJobConfig")
 @mock.patch("pathlib.Path.exists")
-def test_extract_bq_to_dataset_skip_existing(
+def test_extract_table_skip_existing(
     mock_path_exists, mock_job_config, mock_table, mock_client, tmpdir
 ):
     """

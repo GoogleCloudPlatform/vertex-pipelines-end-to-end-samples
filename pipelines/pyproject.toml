@@ -3,7 +3,6 @@ name = "pipelines"
 version = "0.1.0"
 authors = ["Example User <user@example.com>"]
 description = "Vertex AI Pipelines end-to-end sample"
-readme = "README.md"
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
@@ -16,12 +15,12 @@ packages = [
 [tool.poetry.dependencies]
 python = ">=3.9,<3.11"
 Jinja2 = ">=3.0.1,<4.0.0"
-google-cloud-aiplatform = "1.30.1"
+google-cloud-aiplatform = ">=1.30.1"
 google-cloud-pipeline-components = "^2.1.0"
-bigquery-components = { path = "../components/bigquery-components", develop = true }
-vertex-components = { path = "../components/vertex-components", develop = true }
+components = { path = "../components", develop = true }
 kfp = "^2.0.1"
 pyyaml = "6.0.1"
+jupyter = "^1.0.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = ">=7.3.1,<8.0.0"

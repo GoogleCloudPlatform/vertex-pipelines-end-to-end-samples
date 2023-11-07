@@ -16,9 +16,9 @@ from kfp.dsl import Model
 from unittest import mock
 import pytest
 
-import vertex_components
+import components
 
-lookup_model = vertex_components.lookup_model.python_func
+lookup_model = components.lookup_model.python_func
 
 
 @mock.patch("google.cloud.aiplatform.Model")
