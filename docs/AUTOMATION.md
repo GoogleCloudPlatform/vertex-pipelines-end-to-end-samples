@@ -48,7 +48,9 @@ Your Cloud Build pipelines will need a service account to use. Create a new serv
 
 ### On Pull Request to `main` / `master` branch
 
-Set up a trigger for the `pr-checks.yaml` pipeline.
+Set up a trigger for the `pr-checks.yaml` pipeline. 
+We recommend to add `make pre-commit` (which is already part of the `Makefile`), to keep your ML use case code clean.
+By default pull requests don't execute pre-commit hooks to improve the ease of use for new users of the template.
 
 Set up a trigger for the `e2e-test.yaml` pipeline, and provide substitution values for the following variables:
 
