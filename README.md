@@ -86,7 +86,7 @@ gcloud services enable cloudresourcemanager.googleapis.com serviceusage.googleap
 make deploy env=dev VERTEX_PROJECT_ID=<DEV PROJECT ID>
 ```
 
-More details about infrastructure is explained in [this README](docs/PIPELINES.md).
+More details about infrastructure is explained in [this README](docs/INFRASTRUCTURE.md).
 It describes the scheduling of pipelines and how to tear down infrastructure.
 
 **Install dependencies:**
@@ -134,7 +134,7 @@ Execute the following command to run through steps 1-3:
 make run pipeline=training [ wait=<true|false> ] [ build=<true|false> ] [ compile=<true|false> ]
 ```
 
-The make run command has the following true/false flags:
+The command has the following true/false flags:
 
 - `build` - re-build containers for training & serving code (limit by setting targets=training to build only one of the containers)
 - `compile` - re-compile the pipeline to YAML
@@ -157,3 +157,6 @@ For details on setting up CI/CD, see [this README](/docs/AUTOMATION.md).
 ## Putting it all together
 
 For a full walkthrough of the journey from changing the ML pipeline code to having it scheduled and running in production, please see the guide [here](docs/PRODUCTION.md).
+
+We value your contribution, see [this guide](docs/CONTRIBUTION.md) for contributing to this project.
+
