@@ -1,9 +1,8 @@
 [tool.poetry]
-name = "bigquery-components"
+name = "components"
 version = "0.1.0"
 authors = ["Example User <user@example.com>"]
-description = "KubeFlow components for BigQuery"
-readme = "README.md"
+description = "KubeFlow components for Google Cloud"
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
@@ -12,10 +11,13 @@ classifiers = [
 
 [tool.poetry.dependencies]
 python = ">=3.9,<3.11"
-kfp = "^2.0.1"
+kfp = ">=2.0.1,<3.0.0"
+pyyaml = "6.0.1"
 
 [tool.poetry.group.dev.dependencies]
-google-cloud-bigquery = "2.30.0"
+google-cloud-aiplatform = ">=1.30.1"
+google-cloud-bigquery = ">=2.30.0"
+google-cloud-pipeline-components = "^2.1.0"
 pytest = ">=7.3.1,<8.0.0"
 
 [build-system]

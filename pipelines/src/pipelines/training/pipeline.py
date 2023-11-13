@@ -1,4 +1,4 @@
-# Copyright 2022 Google LLC
+# Copyright 2023 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,8 +19,7 @@ from google_cloud_pipeline_components.v1.bigquery import BigqueryQueryJobOp
 from kfp import dsl
 from kfp.dsl import Dataset, Input, Metrics, Model, Output, OutputPath
 from pipelines import generate_query
-from bigquery_components import extract_bq_to_dataset
-from vertex_components import upload_model
+from components import extract_table, upload_model
 
 CONTAINER_IMAGE_REGISTRY = os.environ["CONTAINER_IMAGE_REGISTRY"]
 RESOURCE_SUFFIX = os.environ.get("RESOURCE_SUFFIX", "default")
@@ -155,7 +154,7 @@ def pipeline(
     # data extraction to gcs
 
     train_dataset = (
-        extract_bq_to_dataset(
+        extract_table(
             bq_client_project_id=project_id,
             source_project_id=project_id,
             dataset_id=dataset_id,
@@ -167,7 +166,7 @@ def pipeline(
         .set_caching_options(False)
     ).outputs["dataset"]
     valid_dataset = (
-        extract_bq_to_dataset(
+        extract_table(
             bq_client_project_id=project_id,
             source_project_id=project_id,
             dataset_id=dataset_id,
@@ -179,7 +178,7 @@ def pipeline(
         .set_caching_options(False)
     ).outputs["dataset"]
     test_dataset = (
-        extract_bq_to_dataset(
+        extract_table(
             bq_client_project_id=project_id,
             source_project_id=project_id,
             dataset_id=dataset_id,

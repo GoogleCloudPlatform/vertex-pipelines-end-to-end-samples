@@ -24,27 +24,28 @@ pre-commit: ## Runs the pre-commit checks over entire repo
 	poetry run pre-commit run --all-files
 
 env ?= dev
+AUTO_APPROVE_FLAG :=
 deploy: ## Deploy the Terraform infrastructure to your project. Requires VERTEX_PROJECT_ID and VERTEX_LOCATION env variables to be set in env.sh. Optionally specify env=<dev|test|prod> (default = dev)
-	@ cd terraform/envs/$(env) && \
+	@if [ "$(auto-approve)" = "true" ]; then \
+		AUTO_APPROVE_FLAG="-auto-approve"; \
+	fi; \
+	cd terraform/envs/$(env) && \
 	terraform init -backend-config='bucket=${VERTEX_PROJECT_ID}-tfstate' && \
-	terraform apply -var 'project_id=${VERTEX_PROJECT_ID}' -var 'region=${VERTEX_LOCATION}'
+	terraform apply -var 'project_id=${VERTEX_PROJECT_ID}' -var 'region=${VERTEX_LOCATION}' $$AUTO_APPROVE_FLAG
 
 undeploy: ## DESTROY the Terraform infrastructure in your project. Requires VERTEX_PROJECT_ID and VERTEX_LOCATION env variables to be set in env.sh. Optionally specify env=<dev|test|prod> (default = dev)
-	@ cd terraform/envs/$(env) && \
+	@if [ "$(auto-approve)" = "true" ]; then \
+		AUTO_APPROVE_FLAG="-auto-approve"; \
+	fi; \
+	cd terraform/envs/$(env) && \
 	terraform init -backend-config='bucket=${VERTEX_PROJECT_ID}-tfstate' && \
-	terraform destroy -var 'project_id=${VERTEX_PROJECT_ID}' -var 'region=${VERTEX_LOCATION}'
+	terraform destroy -var 'project_id=${VERTEX_PROJECT_ID}' -var 'region=${VERTEX_LOCATION}' $$AUTO_APPROVE_FLAG
 
 install: ## Set up local environment for Python development on pipelines
 	@cd pipelines && \
 	poetry install --with dev && \
-	cd .. && \
-	for component_group in components/*/ ; do \
-		echo "Setup for $$component_group" && \
-		cd "$$component_group" && \
-		poetry install --with dev && \
-		cd ../.. ;\
-	done ; \
-
+	cd ../components && \
+	poetry install --with dev
 
 compile: ## Compile the pipeline to pipeline.yaml. Must specify pipeline=<training|prediction>
 	@cd pipelines/src && \
@@ -82,20 +83,17 @@ run: ## Run pipeline in sandbox environment. Must specify pipeline=<training|pre
 	cd pipelines/src && \
 	poetry run python -m pipelines.utils.trigger_pipeline --template_path=pipelines/${pipeline}/pipeline.yaml --display_name=${pipeline} --wait=${wait}
 
-test: ## Run unit tests for a specific component group or for all component groups and the pipeline trigger code. Optionally specify GROUP=<component group e.g. vertex-components>
-	@if [ -n "${GROUP}" ]; then \
-		echo "Test components under components/${GROUP}" && \
-		cd components/${GROUP} && \
-		poetry run pytest ; \
-	else \
-		echo "Testing scripts" && \
-		cd pipelines && \
-		poetry run python -m pytest tests/utils &&\
-		cd .. && \
-		for i in components/*/ ; do \
-			echo "Test components under $$i" && \
-			cd "$$i" && \
-			poetry run pytest && \
-			cd ../.. ;\
-		done ; \
-	fi
+components ?= true
+test: ## Run unit tests. Specify components=<true|false> to test scripts and optionally components
+	@if [ $(components) = "true" ]; then \
+		echo "Testing components" && \
+		cd components && \
+		poetry run pytest && \
+		cd .. ;  \
+	elif [ $(components) != "false" ]; then \
+		echo "ValueError: components must be either true or false" ; \
+		exit ; \
+	fi && \
+	echo "Testing scripts" && \
+	cd pipelines && \
+	poetry run python -m pytest tests/utils

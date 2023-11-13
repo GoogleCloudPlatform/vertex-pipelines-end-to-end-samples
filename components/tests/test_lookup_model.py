@@ -1,4 +1,4 @@
-# Copyright 2022 Google LLC
+# Copyright 2023 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,9 +16,9 @@ from kfp.dsl import Model
 from unittest import mock
 import pytest
 
-import vertex_components
+import components
 
-lookup_model = vertex_components.lookup_model.python_func
+lookup_model = components.lookup_model.python_func
 
 
 @mock.patch("google.cloud.aiplatform.Model")

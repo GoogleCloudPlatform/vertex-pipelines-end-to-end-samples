@@ -1,4 +1,4 @@
-# Copyright 2022 Google LLC
+# Copyright 2023 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@ from google_cloud_pipeline_components.v1.bigquery import BigqueryQueryJobOp
 from kfp import dsl
 
 from pipelines import generate_query
-from vertex_components import lookup_model, model_batch_predict
+from components import lookup_model, model_batch_predict
 
 
 @dsl.pipeline(name="xgboost-prediction-pipeline")

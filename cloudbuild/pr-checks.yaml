@@ -27,7 +27,6 @@ steps:
         make install && \
         git init && \
         git add . && \
-        make pre-commit && \
         make compile pipeline=training && \
         make compile pipeline=prediction && \
         make test

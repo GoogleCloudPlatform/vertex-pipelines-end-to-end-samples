@@ -1,16 +1,30 @@
+# Copyright 2023 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import google.cloud.bigquery  # noqa
 from kfp.dsl import Dataset
 from unittest import mock
 
-import bigquery_components
+import components
 
-extract_bq_to_dataset = bigquery_components.extract_bq_to_dataset.python_func
+extract_bq_to_dataset = components.extract_table.python_func
 
 
 @mock.patch("google.cloud.bigquery.client.Client")
 @mock.patch("google.cloud.bigquery.table.Table")
 @mock.patch("google.cloud.bigquery.job.ExtractJobConfig")
-def test_extract_bq_to_dataset(mock_job_config, mock_table, mock_client, tmpdir):
+def test_extract_table(mock_job_config, mock_table, mock_client, tmpdir):
     """
     Checks that the extract_bq_to_dataset is called correctly
     """
@@ -40,7 +54,7 @@ def test_extract_bq_to_dataset(mock_job_config, mock_table, mock_client, tmpdir)
 @mock.patch("google.cloud.bigquery.table.Table")
 @mock.patch("google.cloud.bigquery.job.ExtractJobConfig")
 @mock.patch("pathlib.Path.exists")
-def test_extract_bq_to_dataset_skip_existing(
+def test_extract_table_skip_existing(
     mock_path_exists, mock_job_config, mock_table, mock_client, tmpdir
 ):
     """

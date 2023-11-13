@@ -1,11 +1,11 @@
-# Copyright 2022 Google LLC
-
+# Copyright 2023 Google LLC
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-
-#     https://www.apache.org/licenses/LICENSE-2.0
-
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,7 +19,7 @@ from kfp.dsl import Dataset, Output, component
     base_image="python:3.9",
     packages_to_install=["google-cloud-bigquery==2.30.0"],
 )
-def extract_bq_to_dataset(
+def extract_table(
     bq_client_project_id: str,
     source_project_id: str,
     dataset_id: str,

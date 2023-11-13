@@ -1,4 +1,4 @@
-# Copyright 2022 Google LLC
+# Copyright 2023 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import pytest
-import kfp.v2.dsl
+import kfp.dsl
 
 
 @pytest.fixture(autouse=True)
@@ -47,4 +47,4 @@ def mock_kfp_artifact(monkeypatch):
         return self.uri
 
     # mock the _get_path method of Artifact which is used by the property path
-    monkeypatch.setattr(kfp.v2.dsl.Artifact, "_get_path", _get_path)
+    monkeypatch.setattr(kfp.dsl.Artifact, "_get_path", _get_path)
