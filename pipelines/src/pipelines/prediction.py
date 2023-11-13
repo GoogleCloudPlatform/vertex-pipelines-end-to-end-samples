@@ -38,9 +38,9 @@ def pipeline(
     model_name: str = "xgb_regressor",
     dataset: str = "turbo_templates",
     timestamp: str = "2022-12-01 00:00:00",
-    machine_type: str = "n1-standard-4",
-    min_replicas: int = 3,
-    max_replicas: int = 10,
+    machine_type: str = "c2-standard-8",
+    min_replicas: int = 1,
+    max_replicas: int = 1,
 ):
     """
     Prediction pipeline which:

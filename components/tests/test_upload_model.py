@@ -48,6 +48,7 @@ def test_model_upload_no_champion(
     model = Model(uri="dummy-model-uri")
     serving_container_image = "dummy_image:latest"
     model_name = "dummy-model-name"
+    model_description = "dummy model_description"
     vertex_model = VertexModel.create(
         name=model_name, uri="chall_uri", model_resource_name="chall_resource_name"
     )
@@ -64,16 +65,17 @@ def test_model_upload_no_champion(
 
     upload_model(
         model=model,
+        model_description=model_description,
         serving_container_image=serving_container_image,
         vertex_model=vertex_model,
-        project_id=project,
-        project_location=location,
+        project=project,
+        location=location,
         model_evaluation=model_evaluation,
         eval_metric=eval_metric,
         eval_lower_is_better=eval_lower_is_better,
         model_name=model_name,
         pipeline_job_id=pipeline_job_id,
-        test_dataset=test_dataset,
+        test_data=test_dataset,
         evaluation_name=evaluation_name,
     )
 
@@ -91,6 +93,7 @@ def test_model_upload_no_champion(
     # Check model upload call
     mock_model_class.upload.assert_called_once_with(
         display_name=model_name,
+        description=model_description,
         artifact_uri="dummy-model-uri",
         serving_container_image_uri=serving_container_image,
         serving_container_predict_route="/predict",
@@ -158,6 +161,7 @@ def test_model_upload_challenger_wins(
     model = Model(uri="dummy-model-uri")
     serving_container_image = "dummy_image:latest"
     model_name = "dummy-model-name"
+    model_description = "dummy model_description"
     vertex_model = VertexModel.create(
         name=model_name, uri="chall_uri", model_resource_name="chall_resource_name"
     )
@@ -174,16 +178,17 @@ def test_model_upload_challenger_wins(
 
     upload_model(
         model=model,
+        model_description=model_description,
         serving_container_image=serving_container_image,
         vertex_model=vertex_model,
-        project_id=project,
-        project_location=location,
+        project=project,
+        location=location,
         model_evaluation=model_evaluation,
         eval_metric=eval_metric,
         eval_lower_is_better=eval_lower_is_better,
         model_name=model_name,
         pipeline_job_id=pipeline_job_id,
-        test_dataset=test_dataset,
+        test_data=test_dataset,
         evaluation_name=evaluation_name,
     )
 
@@ -201,6 +206,7 @@ def test_model_upload_challenger_wins(
     # Check model upload call
     mock_model_class.upload.assert_called_once_with(
         display_name=model_name,
+        description=model_description,
         artifact_uri="dummy-model-uri",
         serving_container_image_uri=serving_container_image,
         serving_container_predict_route="/predict",
@@ -268,6 +274,7 @@ def test_model_upload_champion_wins(
     model = Model(uri="dummy-model-uri")
     serving_container_image = "dummy_image:latest"
     model_name = "dummy-model-name"
+    model_description = "dummy model_description"
     vertex_model = VertexModel.create(
         name=model_name, uri="chall_uri", model_resource_name="chall_resource_name"
     )
@@ -284,16 +291,17 @@ def test_model_upload_champion_wins(
 
     upload_model(
         model=model,
+        model_description=model_description,
         serving_container_image=serving_container_image,
         vertex_model=vertex_model,
-        project_id=project,
-        project_location=location,
+        project=project,
+        location=location,
         model_evaluation=model_evaluation,
         eval_metric=eval_metric,
         eval_lower_is_better=eval_lower_is_better,
         model_name=model_name,
         pipeline_job_id=pipeline_job_id,
-        test_dataset=test_dataset,
+        test_data=test_dataset,
         evaluation_name=evaluation_name,
     )
 
@@ -311,6 +319,7 @@ def test_model_upload_champion_wins(
     # Check model upload call
     mock_model_class.upload.assert_called_once_with(
         display_name=model_name,
+        description=model_description,
         artifact_uri="dummy-model-uri",
         serving_container_image_uri=serving_container_image,
         serving_container_predict_route="/predict",

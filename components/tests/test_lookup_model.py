@@ -37,9 +37,8 @@ def test_lookup_model(mock_model, tmpdir):
     # Invoke the model look up
     found_model_resource_name, _ = lookup_model(
         model_name="my-model",
-        project_location="europe-west4",
-        project_id="my-project-id",
-        order_models_by="create_time desc",
+        location="europe-west4",
+        project="my-project-id",
         fail_on_model_not_found=False,
         model=Model(uri=mock_path),
     )
@@ -49,7 +48,6 @@ def test_lookup_model(mock_model, tmpdir):
     # Check the list method was called once with the correct arguments
     mock_model.list.assert_called_once_with(
         filter='display_name="my-model"',
-        order_by="create_time desc",
         location="europe-west4",
         project="my-project-id",
     )
@@ -64,9 +62,8 @@ def test_lookup_model_when_no_models(mock_model, tmpdir):
     mock_model.list.return_value = []
     exported_model_resource_name, _ = lookup_model(
         model_name="my-model",
-        project_location="europe-west4",
-        project_id="my-project-id",
-        order_models_by="create_time desc",
+        location="europe-west4",
+        project="my-project-id",
         fail_on_model_not_found=False,
         model=Model(uri=str(tmpdir)),
     )
@@ -87,9 +84,8 @@ def test_lookup_model_when_no_models_fail(mock_model, tmpdir):
     with pytest.raises(RuntimeError):
         lookup_model(
             model_name="my-model",
-            project_location="europe-west4",
-            project_id="my-project-id",
-            order_models_by="create_time desc",
+            location="europe-west4",
+            project="my-project-id",
             fail_on_model_not_found=True,
             model=Model(uri=str(tmpdir)),
         )

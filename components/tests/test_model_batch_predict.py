@@ -71,12 +71,13 @@ def test_model_batch_predict(
     Asserts model_batch_predict successfully creates requests given different arguments.
     """
     mock_model = Model(uri=tmpdir, metadata={"resourceName": ""})
+    gcp_resources_path = tmpdir / "gcp_resources.json"
 
-    (gcp_resources,) = model_batch_predict(
+    model_batch_predict(
         model=mock_model,
         job_display_name="",
-        project_location="",
-        project_id="",
+        location="",
+        project="",
         source_uri=source_uri,
         destination_uri=destination_format,
         source_format=source_format,
@@ -84,8 +85,9 @@ def test_model_batch_predict(
         monitoring_training_dataset=monitoring_training_dataset,
         monitoring_alert_email_addresses=monitoring_alert_email_addresses,
         monitoring_skew_config=monitoring_skew_config,
+        gcp_resources=str(gcp_resources_path)
     )
 
     create_job.assert_called_once()
     get_job.assert_called_once()
-    assert json.loads(gcp_resources)["resources"][0]["resourceUri"] == mock_job1.name
+    assert gcp_resources_path.exists()
