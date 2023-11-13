@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
  -->
 
-# Vertex Pipelines End-to-end Samples
+# Vertex Pipelines End-to-End Samples
 
 _AKA "Vertex AI Turbo Templates"_
 

@@ -45,11 +45,13 @@ install: ## Set up local environment for Python development on pipelines
 	@cd pipelines && \
 	poetry install --with dev && \
 	cd ../components && \
-	poetry install --with dev
+	poetry install --with dev && \
+	cd ../model && \
+	poetry install
 
 compile: ## Compile the pipeline to pipeline.yaml. Must specify pipeline=<training|prediction>
 	@cd pipelines/src && \
-	poetry run kfp dsl compile --py pipelines/${pipeline}/pipeline.py --output pipelines/${pipeline}/pipeline.yaml --function pipeline
+	poetry run kfp dsl compile --py pipelines/${pipeline}.py --output pipelines/${pipeline}.yaml --function pipeline
 
 targets ?= training serving
 build: ## Build and push training and/or serving container(s) image using Docker. Specify targets=<training serving> e.g. targets=training or targets="training serving" (default)
@@ -62,7 +64,6 @@ build: ## Build and push training and/or serving container(s) image using Docker
 		--gcs-source-staging-dir=gs://${VERTEX_PROJECT_ID}-staging/source \
 		--substitutions=_DOCKER_TARGET=$$target,_DESTINATION_IMAGE_URI=${CONTAINER_IMAGE_REGISTRY}/$$target:${RESOURCE_SUFFIX} ; \
 	done 
-
 
 compile ?= true
 build ?= true
@@ -81,7 +82,7 @@ run: ## Run pipeline in sandbox environment. Must specify pipeline=<training|pre
 		exit ; \
 	fi && \
 	cd pipelines/src && \
-	poetry run python -m pipelines.utils.trigger_pipeline --template_path=pipelines/${pipeline}/pipeline.yaml --display_name=${pipeline} --wait=${wait}
+	poetry run python -m pipelines.utils.trigger_pipeline --template_path=pipelines/${pipeline}.yaml --display_name=${pipeline} --wait=${wait}
 
 components ?= true
 test: ## Run unit tests. Specify components=<true|false> to test scripts and optionally components

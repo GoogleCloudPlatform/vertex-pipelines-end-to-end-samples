@@ -15,7 +15,7 @@ limitations under the License.
  -->
 # ML Pipelines
 
-There are two ML pipelines defined in this repository: a training pipeline (located in [pipelines/src/pipelines/training/pipeline.py](/pipelines/src/pipelines/training/pipeline.py)) and a batch prediction pipeline (located in [pipelines/src/pipelines/prediction/pipeline.py](/pipelines/src/pipelines/prediction/pipeline.py)).
+There are two ML pipelines defined in this repository: a training pipeline (located in `pipelines/src/pipelines/training.py` and a batch prediction pipeline (located in `pipelines/src/pipelines/prediction.py`).
 
 ## Pipeline input parameters
 
@@ -70,7 +70,7 @@ In the next sections we will walk through the different pipeline steps.
 
 The first pipeline step runs a SQL script in BigQuery to extract data from the source table and load it into tables according to a train/test/validation split.
 
-The SQL query for this can be found in [pipelines/src/pipelines/training/queries/preprocessing.sql](/pipelines/src/pipelines/training/queries/preprocessing.sql).
+The SQL query for this can be found in `pipelines/src/pipelines/queries/preprocessing.sql`.
 
 As you can see in this SQL query, there are some placeholder values (marked by the curly brace syntax `{{ }}`). When the pipeline runs, these are replaced with values provided from the ML pipeline.
 
@@ -88,7 +88,7 @@ This step is performed using a custom KFP component located in [components/bigqu
 
 ### Training step
 
-The training step is defined as a [KFP container component](https://www.kubeflow.org/docs/components/pipelines/v2/components/container-components/) in the [pipeline.py](/pipelines/src/pipelines/training/pipeline.py) file.
+The training step is defined as a [KFP container component](https://www.kubeflow.org/docs/components/pipelines/v2/components/container-components/) in the [pipeline.py](/pipelines/src/pipelines/training.py) file.
 
 The container image used for this component is built using CI/CD (or the `make build target=training` command if you want to build it during development).
 

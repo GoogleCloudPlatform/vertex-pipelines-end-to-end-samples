@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from kfp.dsl import Input, Model, component
-from typing import List, NamedTuple
+from kfp.dsl import Input, Model, component, OutputPath
+from typing import List
 
 
 @component(
@@ -25,9 +25,10 @@ from typing import List, NamedTuple
 )
 def model_batch_predict(
     model: Input[Model],
+    gcp_resources: OutputPath(str),
     job_display_name: str,
-    project_location: str,
-    project_id: str,
+    location: str,
+    project: str,
     source_uri: str,
     destination_uri: str,
     source_format: str,
@@ -39,15 +40,15 @@ def model_batch_predict(
     monitoring_alert_email_addresses: List[str] = None,
     monitoring_skew_config: dict = None,
     instance_config: dict = None,
-) -> NamedTuple("Outputs", [("gcp_resources", str)]):
+):
     """
     Trigger a batch prediction job and enable monitoring.
 
     Args:
         model (Input[Model]): Input model to use for calculating predictions.
         job_display_name: Name of the batch prediction job.
-        project_location (str): location of the Google Cloud project. Defaults to None.
-        project_id (str): project id of the Google Cloud project. Defaults to None.
+        location (str): location of the Google Cloud project. Defaults to None.
+        project (str): project id of the Google Cloud project. Defaults to None.
         source_uri (str): bq:// URI or a list of gcs:// URIs to read input instances.
         destination_uri (str): bq:// or gs:// URI to store output predictions.
         source_format (str): E.g. "bigquery", "jsonl", "csv". See:
@@ -67,7 +68,7 @@ def model_batch_predict(
             input instances to the instances that the Model accepts. See:
             https://cloud.google.com/vertex-ai/docs/reference/rest/v1beta1/projects.locations.batchPredictionJobs#instanceconfig
     Returns:
-        NamedTuple: gcp_resources for Vertex AI UI integration.
+        OutputPath: gcp_resources for Vertex AI UI integration.
     """
 
     import logging
@@ -118,7 +119,7 @@ def model_batch_predict(
     _POLLING_INTERVAL_IN_SECONDS = 20
     _CONNECTION_ERROR_RETRY_LIMIT = 5
 
-    api_endpoint = f"{project_location}-aiplatform.googleapis.com"
+    api_endpoint = f"{location}-aiplatform.googleapis.com"
 
     input_config = {"instancesFormat": source_format}
     output_config = {"predictionsFormat": destination_format}
@@ -167,10 +168,18 @@ def model_batch_predict(
     logging.info(request)
     client = JobServiceClient(client_options={"api_endpoint": api_endpoint})
     response = client.create_batch_prediction_job(
-        parent=f"projects/{project_id}/locations/{project_location}",
+        parent=f"projects/{project}/locations/{location}",
         batch_prediction_job=request,
     )
     logging.info(f"Submitted batch prediction job: {response.name}")
+
+    # output GCP resource for Vertex AI UI integration
+    batch_job_resources = GcpResources()
+    dr = batch_job_resources.resources.add()
+    dr.resource_type = "BatchPredictionJob"
+    dr.resource_uri = response.name
+    with open(gcp_resources, "w") as f:
+        f.write(MessageToJson(batch_job_resources))
 
     with execution_context.ExecutionContext(
         on_cancel=partial(
@@ -206,12 +215,3 @@ def model_batch_predict(
                 f"Waiting for {_POLLING_INTERVAL_IN_SECONDS} seconds for next poll."
             )
             time.sleep(_POLLING_INTERVAL_IN_SECONDS)
-
-    # return GCP resource for Vertex AI UI integration
-    batch_job_resources = GcpResources()
-    dr = batch_job_resources.resources.add()
-    dr.resource_type = "BatchPredictionJob"
-    dr.resource_uri = response.name
-    gcp_resources = MessageToJson(batch_job_resources)
-
-    return (gcp_resources,)

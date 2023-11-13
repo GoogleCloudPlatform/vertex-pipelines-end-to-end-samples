@@ -29,7 +29,7 @@ This document describes the full process from making a change to your pipeline c
 ## Making your changes to the pipelines
 
 1. Create a feature branch off the main/master branch: `git checkout -b my-feature-branch`
-1. Make changes to your pipeline code locally (e.g. [pipelines/src/pipelines/training/pipeline.py](/pipelines/src/pipelines/training/pipeline.py))
+1. Make changes to your pipeline code locally (e.g. `pipelines/src/pipelines/training.py`)
 1. Commit these changes to your feature branch
 1. Push your feature branch to GitHub
 1. Open a Pull Request (PR) from your feature branch to the main/master branch
@@ -51,7 +51,6 @@ To compile and publish your ML pipelines into your test and prod environments, y
 When the new tag is created, the `release.yaml` pipeline should be triggered. It will build and push the training and serving container images, compile the training and prediction pipelines, then upload the compiled ML pipelines to Artifact Registry in each environment (dev/test/prod).
 
 #### Example
-
 
 - You have set up the following Cloud Build variables / substitutions for the `release.yaml` CI/CD pipeline
   - `_PIPELINE_PUBLISH_AR_PATHS` = `https://<GCP region>-kfp.pkg.dev/<Project ID of dev project>/vertex-pipelines https://<GCP region>-kfp.pkg.dev/<Project ID of test project>/vertex-pipelines https://<GCP region>-kfp.pkg.dev/<Project ID of prod project>/vertex-pipelines`
