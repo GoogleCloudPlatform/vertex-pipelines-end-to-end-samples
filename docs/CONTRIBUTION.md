@@ -65,31 +65,6 @@ gcloud artifacts repositories create vertex-images \
     --location=${GCP_REGION}
 ```
 
-### BigQuery 
-
-Create a new BigQuery dataset for the Chicago Taxi data:
-
-```
-bq --location=${GCP_REGION} mk --dataset "${GCP_PROJECT_ID}:chicago_taxi_trips"
-```
-
-Create a new BigQuery dataset for data processing during the pipelines:
-
-```
-bq --location=${GCP_REGION} mk --dataset "${GCP_PROJECT_ID}:preprocessing"
-```
-
-Set up a BigQuery transfer job to mirror the Chicago Taxi dataset to your project
-
-```
-bq mk --transfer_config \
-  --project_id=${GCP_PROJECT_ID} \
-  --data_source="cross_region_copy" \
-  --target_dataset="chicago_taxi_trips" \
-  --display_name="Chicago taxi trip mirror" \
-  --params='{"source_dataset_id":"'"chicago_taxi_trips"'","source_project_id":"'"bigquery-public-data"'"}'
-```
-
 ### Service Accounts
 
 Two service accounts are required
