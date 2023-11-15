@@ -31,7 +31,7 @@ def mock_kfp_artifact(monkeypatch):
     Args:
         monkeypatch: Used to patch the decorator `@component` in `kfp.v2.dsl`.
             This prevents KFP from changing the Python functions when applying
-            pytests.
+            pytest.
 
     Returns:
         None

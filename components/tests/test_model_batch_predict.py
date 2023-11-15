@@ -11,8 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-import json
 import pytest
 from unittest import mock
 from kfp.dsl import Model
@@ -85,7 +83,7 @@ def test_model_batch_predict(
         monitoring_training_dataset=monitoring_training_dataset,
         monitoring_alert_email_addresses=monitoring_alert_email_addresses,
         monitoring_skew_config=monitoring_skew_config,
-        gcp_resources=str(gcp_resources_path)
+        gcp_resources=str(gcp_resources_path),
     )
 
     create_job.assert_called_once()
