@@ -22,10 +22,9 @@ from typing import NamedTuple
 )
 def lookup_model(
     model_name: str,
-    project_location: str,
-    project_id: str,
+    location: str,
+    project: str,
     model: Output[Model],
-    order_models_by: str = "create_time desc",
     fail_on_model_not_found: bool = False,
 ) -> NamedTuple("Outputs", [("model_resource_name", str), ("training_dataset", dict)]):
     """
@@ -33,15 +32,9 @@ def lookup_model(
 
     Args:
         model_name (str): display name of the model
-        project_location (str): location of the Google Cloud project
-        project_id (str): project id of the Google Cloud project
+        location (str): location of the Google Cloud project
+        project (str): project id of the Google Cloud project
         model (Output[Model]): a Vertex AI model
-        order_models_by (str): if multiple models are found based on the display name,
-            use a filter clause:
-            A comma-separated list of fields to order by, sorted in
-            ascending order. Use "desc" after a field name for descending.
-            Supported fields: `display_name`, `create_time`, `update_time`
-            Defaults to "create_time desc".
         fail_on_model_not_found (bool): if set to True, raise runtime error if
             model is not found
 
@@ -60,25 +53,23 @@ def lookup_model(
     logging.info(f"listing models with display name {model_name}")
     models = Model.list(
         filter=f'display_name="{model_name}"',
-        order_by=order_models_by,
-        location=project_location,
-        project=project_id,
+        location=location,
+        project=project,
     )
-    logging.info(f"found {len(models)} models")
+    logging.info(f"found {len(models)} model(s)")
 
     training_dataset = {}
     model_resource_name = ""
     if len(models) == 0:
         logging.error(
-            f"No model found with name {model_name}"
-            + f"(project: {project_id} location: {project_location})"
+            f"No model found with name {model_name} "
+            + f"(project: {project} location: {location})"
         )
         if fail_on_model_not_found:
             raise RuntimeError(f"Failed as model was not found")
     elif len(models) == 1:
         target_model = models[0]
         model_resource_name = target_model.resource_name
-        logging.info(f"choosing model by order ({order_models_by})")
         logging.info(f"model display name: {target_model.display_name}")
         logging.info(f"model resource name: {target_model.resource_name}")
         logging.info(f"model uri: {target_model.uri}")

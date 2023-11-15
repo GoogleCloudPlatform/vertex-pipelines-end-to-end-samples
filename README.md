@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
  -->
 
-# Vertex Pipelines End-to-end Samples
+# Vertex Pipelines End-to-End Samples
 
 _AKA "Vertex AI Turbo Templates"_
 
@@ -71,19 +71,19 @@ Before your CI/CD pipelines can deploy the infrastructure, you will need to set 
 ```bash
 export DEV_PROJECT_ID=my-dev-gcp-project
 export DEV_LOCATION=europe-west2
-gsutil mb -l DEV_LOCATION -p DEV_PROJECT_ID --pap=enforced gs://DEV_PROJECT_ID-tfstate && \
-  gsutil ubla set on gs://DEV_PROJECT_ID-tfstate
+gsutil mb -l $DEV_LOCATION -p $DEV_PROJECT_ID --pap=enforced gs://$DEV_PROJECT_ID-tfstate && \
+  gsutil ubla set on gs://$DEV_PROJECT_ID-tfstate
 ```
 
 Enable APIs in admin project:
 
 ```bash
 export ADMIN_PROJECT_ID=my-admin-gcp-project
-gcloud services enable cloudresourcemanager.googleapis.com serviceusage.googleapis.com --project=ADMIN_PROJECT_ID
+gcloud services enable cloudresourcemanager.googleapis.com serviceusage.googleapis.com --project=$ADMIN_PROJECT_ID
 ```
 
 ```bash
-make deploy env=dev VERTEX_PROJECT_ID=<DEV PROJECT ID>
+make deploy env=dev
 ```
 
 More details about infrastructure is explained in [this README](docs/INFRASTRUCTURE.md).
@@ -117,10 +117,10 @@ You can modify this to suit your own use case.
 Build the training and serving container images and push them to Artifact Registry with:
 
 ```bash
-make build [ targets=training serving ]
+make build [ images=training serving ]
 ```
 
-Optionally specify the `targets` variable to only build one of the images.
+Optionally specify the `images` variable to only build one of the images.
 
 **Execute pipelines:** Vertex AI Pipelines uses KubeFlow to orchestrate your training steps, as such you'll need to:
 
@@ -136,9 +136,16 @@ make run pipeline=training [ wait=<true|false> ] [ build=<true|false> ] [ compil
 
 The command has the following true/false flags:
 
-- `build` - re-build containers for training & serving code (limit by setting targets=training to build only one of the containers)
+- `build` - re-build containers for training & serving code (limit by setting images=training to build only one of the containers)
 - `compile` - re-compile the pipeline to YAML
 - `wait` - run the pipeline (a-)sync
+
+**Shortcuts:** Use these commands which support the same options as `run` to run the training or prediction pipeline:
+
+```bash
+make training
+make prediction
+```
 
 ## Test
 

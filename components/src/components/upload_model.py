@@ -25,26 +25,27 @@ from google_cloud_pipeline_components.types.artifact_types import VertexModel
 )
 def upload_model(
     model: Input[Model],
-    test_dataset: Input[Dataset],
+    test_data: Input[Dataset],
     model_evaluation: Input[Metrics],
     vertex_model: Output[VertexModel],
-    project_id: str,
-    project_location: str,
+    project: str,
+    location: str,
     model_name: str,
     eval_metric: str,
     eval_lower_is_better: bool,
     pipeline_job_id: str,
     serving_container_image: str,
+    model_description: str = None,
     evaluation_name: str = "Imported evaluation",
 ) -> None:
     """
     Args:
         model (Model): Input challenger model.
-        test_dataset (Dataset): Test dataset used for evaluating challenger model.
+        test_data (Dataset): Test dataset used for evaluating challenger model.
         vertex_model (VertexModel): Output model uploaded to Vertex AI Model Registry.
         model_evaluation (Metrics): Evaluation metrics of challenger model.
-        project_id (str): project id of the Google Cloud project.
-        project_location (str): location of the Google Cloud project.
+        project (str): project id of the Google Cloud project.
+        location (str): location of the Google Cloud project.
         pipeline_job_id (str):
         model_name (str): Name of champion and challenger model in
             Vertex AI Model Registry.
@@ -53,8 +54,9 @@ def upload_model(
             False for classification metrics.
         serving_container_image (str): Container URI for serving the challenger
             model.
-        evaluation_name (str): Name of evaluation results which are displayed in the
-            Vertex AI UI of the challenger model.
+        model_description (str): Optional. Description of model.
+        evaluation_name (str): Optional. Name of evaluation results which are
+            displayed in the Vertex AI UI of the challenger model.
     """
 
     import json
@@ -64,22 +66,20 @@ def upload_model(
     from google.cloud.aiplatform_v1 import ModelEvaluation, ModelServiceClient
     from google.protobuf.json_format import ParseDict
 
-    def lookup_model(
-        project_id: str, project_location: str, model_name: str
-    ) -> aip.Model:
+    def lookup_model(model_name: str) -> aip.Model:
         """Look up model in model registry."""
         logging.info(f"listing models with display name {model_name}")
         models = aip.Model.list(
             filter=f'display_name="{model_name}"',
-            location=project_location,
-            project=project_id,
+            location=location,
+            project=project,
         )
         logging.info(f"found {len(models)} models")
 
         if len(models) == 0:
             logging.info(
                 f"No model found with name {model_name}"
-                + f"(project: {project_id} location: {project_location})"
+                + f"(project: {project} location: {location})"
             )
             return None
         elif len(models) == 1:
@@ -115,6 +115,7 @@ def upload_model(
         logging.info(f"Uploading model {model_name} (default: {is_default_version}")
         uploaded_model = aip.Model.upload(
             display_name=model_name,
+            description=model_description,
             artifact_uri=model.uri,
             serving_container_image_uri=serving_container_image,
             serving_container_predict_route="/predict",
@@ -126,7 +127,7 @@ def upload_model(
 
         # Output google.VertexModel artifact
         vertex_model.uri = (
-            f"https://{project_location}-aiplatform.googleapis.com/v1/"
+            f"https://{location}-aiplatform.googleapis.com/v1/"
             f"{uploaded_model.versioned_resource_name}"
         )
         vertex_model.metadata["resourceName"] = uploaded_model.versioned_resource_name
@@ -136,7 +137,6 @@ def upload_model(
     def import_evaluation(
         parsed_metrics: dict,
         challenger_model: aip.Model,
-        project_location: str,
         evaluation_name: str,
     ) -> str:
         """Import model evaluation."""
@@ -153,7 +153,7 @@ def upload_model(
             "metadata": {
                 "pipeline_job_id": pipeline_job_id,
                 "evaluation_dataset_type": "gcs",
-                "evaluation_dataset_path": [test_dataset.uri],
+                "evaluation_dataset_path": [test_data.uri],
             },
         }
 
@@ -161,9 +161,7 @@ def upload_model(
         logging.debug(f"Request: {request}")
         challenger_name = challenger_model.versioned_resource_name
         client = ModelServiceClient(
-            client_options={
-                "api_endpoint": project_location + "-aiplatform.googleapis.com"
-            }
+            client_options={"api_endpoint": location + "-aiplatform.googleapis.com"}
         )
         logging.info(f"Uploading model evaluation for {challenger_name}")
         response = client.import_model_evaluation(
@@ -177,9 +175,7 @@ def upload_model(
     with open(model_evaluation.path, "r") as f:
         challenger_metrics = json.load(f)
 
-    champion_model = lookup_model(
-        project_id=project_id, project_location=project_location, model_name=model_name
-    )
+    champion_model = lookup_model(model_name=model_name)
 
     challenger_wins = True
     parent_model_uri = None
@@ -206,6 +202,5 @@ def upload_model(
     import_evaluation(
         parsed_metrics=challenger_metrics,
         challenger_model=model,
-        project_location=project_location,
         evaluation_name=evaluation_name,
     )

@@ -15,17 +15,12 @@
 -include env.sh
 export
 
-
-help: ## Display this help screen
+help: ## Display this help screen.
 	@grep -h -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
-    
-pre-commit: ## Runs the pre-commit checks over entire repo
-	cd pipelines && \
-	poetry run pre-commit run --all-files
 
 env ?= dev
 AUTO_APPROVE_FLAG :=
-deploy: ## Deploy the Terraform infrastructure to your project. Requires VERTEX_PROJECT_ID and VERTEX_LOCATION env variables to be set in env.sh. Optionally specify env=<dev|test|prod> (default = dev)
+deploy: ## Deploy infrastructure to your project. Optionally set env=<dev|test|prod> (default = dev).
 	@if [ "$(auto-approve)" = "true" ]; then \
 		AUTO_APPROVE_FLAG="-auto-approve"; \
 	fi; \
@@ -33,7 +28,7 @@ deploy: ## Deploy the Terraform infrastructure to your project. Requires VERTEX_
 	terraform init -backend-config='bucket=${VERTEX_PROJECT_ID}-tfstate' && \
 	terraform apply -var 'project_id=${VERTEX_PROJECT_ID}' -var 'region=${VERTEX_LOCATION}' $$AUTO_APPROVE_FLAG
 
-undeploy: ## DESTROY the Terraform infrastructure in your project. Requires VERTEX_PROJECT_ID and VERTEX_LOCATION env variables to be set in env.sh. Optionally specify env=<dev|test|prod> (default = dev)
+undeploy: ## DESTROY the infrastructure in your project. Optionally set env=<dev|test|prod> (default = dev).
 	@if [ "$(auto-approve)" = "true" ]; then \
 		AUTO_APPROVE_FLAG="-auto-approve"; \
 	fi; \
@@ -41,33 +36,35 @@ undeploy: ## DESTROY the Terraform infrastructure in your project. Requires VERT
 	terraform init -backend-config='bucket=${VERTEX_PROJECT_ID}-tfstate' && \
 	terraform destroy -var 'project_id=${VERTEX_PROJECT_ID}' -var 'region=${VERTEX_LOCATION}' $$AUTO_APPROVE_FLAG
 
-install: ## Set up local environment for Python development on pipelines
+install: ## Set up local Python environment for development.
 	@cd pipelines && \
 	poetry install --with dev && \
 	cd ../components && \
-	poetry install --with dev
+	poetry install --with dev && \
+	cd ../model && \
+	poetry install
 
-compile: ## Compile the pipeline to pipeline.yaml. Must specify pipeline=<training|prediction>
+compile: ## Compile pipeline. Must set pipeline=<training|prediction>.
 	@cd pipelines/src && \
-	poetry run kfp dsl compile --py pipelines/${pipeline}/pipeline.py --output pipelines/${pipeline}/pipeline.yaml --function pipeline
+	echo "Compiling $$pipeline pipeline" && \
+	poetry run kfp dsl compile --py pipelines/${pipeline}.py --output pipelines/${pipeline}.yaml --function pipeline
 
-targets ?= training serving
-build: ## Build and push training and/or serving container(s) image using Docker. Specify targets=<training serving> e.g. targets=training or targets="training serving" (default)
+images ?= training serving
+build: ## Build and push container(s). Set images=<training serving> e.g. images=training (default = training serving).
 	@cd model && \
-	for target in $$targets ; do \
-		echo "Building $$target image" && \
+	for image in $$images ; do \
+		echo "Building $$image image" && \
 		gcloud builds submit . \
 		--region=${VERTEX_LOCATION} \
 		--project=${VERTEX_PROJECT_ID} \
 		--gcs-source-staging-dir=gs://${VERTEX_PROJECT_ID}-staging/source \
-		--substitutions=_DOCKER_TARGET=$$target,_DESTINATION_IMAGE_URI=${CONTAINER_IMAGE_REGISTRY}/$$target:${RESOURCE_SUFFIX} ; \
+		--substitutions=_DOCKER_TARGET=$$image,_DESTINATION_IMAGE_URI=${CONTAINER_IMAGE_REGISTRY}/$$image:${RESOURCE_SUFFIX} ; \
 	done 
-
 
 compile ?= true
 build ?= true
 wait ?= false
-run: ## Run pipeline in sandbox environment. Must specify pipeline=<training|prediction>. Optionally specify wait=<true|false> (default = false). Set compile=false to skip recompiling the pipeline and set build=false to skip rebuilding container images
+run: ## Run pipeline. Must set pipeline=<training|prediction>. Optionally set wait=<true|false> (default = false), compile=<true|false> (default = true) to recompile pipeline, build=<true|false> (default = true) to rebuild container image(s), images=<training serving> (default = training serving) to set which images are rebuilt.
 	@if [ $(compile) = "true" ]; then \
 		$(MAKE) compile ; \
 	elif [ $(compile) != "false" ]; then \
@@ -81,12 +78,19 @@ run: ## Run pipeline in sandbox environment. Must specify pipeline=<training|pre
 		exit ; \
 	fi && \
 	cd pipelines/src && \
-	poetry run python -m pipelines.utils.trigger_pipeline --template_path=pipelines/${pipeline}/pipeline.yaml --display_name=${pipeline} --wait=${wait}
+	echo "Running $$pipeline pipeline" && \
+	poetry run python -m pipelines.utils.trigger_pipeline --template_path=pipelines/${pipeline}.yaml --display_name=${pipeline} --wait=${wait}
+
+training: ## Shortcut to run training pipeline. Rebuilds training and serving images. Supports same options as run.
+	$(MAKE) run pipeline=training images=training prediction
+
+prediction:	## Shortcut to run prediction pipeline. Doesn't rebuilt images. Supports same options as run.
+	$(MAKE) run pipeline=prediction build=false
 
 components ?= true
-test: ## Run unit tests. Specify components=<true|false> to test scripts and optionally components
+test: ## Run unit tests for pipelines. Optionally set components=<true|false> (default = true) to test components package.
 	@if [ $(components) = "true" ]; then \
-		echo "Testing components" && \
+		echo "Running unit tests in components" && \
 		cd components && \
 		poetry run pytest && \
 		cd .. ;  \
@@ -94,6 +98,10 @@ test: ## Run unit tests. Specify components=<true|false> to test scripts and opt
 		echo "ValueError: components must be either true or false" ; \
 		exit ; \
 	fi && \
-	echo "Testing scripts" && \
+	echo "Running unit tests in pipelines" && \
 	cd pipelines && \
-	poetry run python -m pytest tests/utils
+	poetry run python -m pytest
+
+pre-commit: ## Run pre-commit checks for pipelines.
+	cd pipelines && \
+	poetry run pre-commit run --all-files

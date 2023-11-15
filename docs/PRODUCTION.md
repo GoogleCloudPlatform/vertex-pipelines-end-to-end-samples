@@ -29,7 +29,7 @@ This document describes the full process from making a change to your pipeline c
 ## Making your changes to the pipelines
 
 1. Create a feature branch off the main/master branch: `git checkout -b my-feature-branch`
-1. Make changes to your pipeline code locally (e.g. [pipelines/src/pipelines/training/pipeline.py](/pipelines/src/pipelines/training/pipeline.py))
+1. Make changes to your pipeline code locally (e.g. `pipelines/src/pipelines/training.py`)
 1. Commit these changes to your feature branch
 1. Push your feature branch to GitHub
 1. Open a Pull Request (PR) from your feature branch to the main/master branch
@@ -51,7 +51,6 @@ To compile and publish your ML pipelines into your test and prod environments, y
 When the new tag is created, the `release.yaml` pipeline should be triggered. It will build and push the training and serving container images, compile the training and prediction pipelines, then upload the compiled ML pipelines to Artifact Registry in each environment (dev/test/prod).
 
 #### Example
-
 
 - You have set up the following Cloud Build variables / substitutions for the `release.yaml` CI/CD pipeline
   - `_PIPELINE_PUBLISH_AR_PATHS` = `https://<GCP region>-kfp.pkg.dev/<Project ID of dev project>/vertex-pipelines https://<GCP region>-kfp.pkg.dev/<Project ID of test project>/vertex-pipelines https://<GCP region>-kfp.pkg.dev/<Project ID of prod project>/vertex-pipelines`
@@ -81,44 +80,27 @@ Create a new branch off the main/master branch e.g. `git checkout -b test-env-sc
 ```
 cloud_schedulers_config = {
 
-  xgboost_training = {
-    description  = "Trigger my training pipeline in Vertex"
+  training = {
+    description  = "Trigger training pipeline in Vertex AI"
     schedule     = "0 0 1 * *"
     time_zone    = "UTC"
     template_path = "https://<GCP region>-kfp.pkg.dev/<Project ID of test project>/vertex-pipelines/xgboost-train-pipeline/v1.2"
     enable_caching = null
     pipeline_parameters = {
-      project_id = <Project ID of test project>
-      project_location = "europe-west2"
-      ingestion_project_id = <Project ID of test project>
-      model_name = "simple_xgboost"
-      model_label = "label_name"
-      dataset_id = "preprocessing"
-      dataset_location = "europe-west2"
-      ingestion_dataset_id = "chicago_taxi_trips"
-      timestamp = "2022-12-01 00:00:00"
+      // Add pipeline parameters which are expected by your pipeline here e.g.
+      // project = "my-project-id"
     },
   },
 
-  xgboost_prediction = {
-    description  = "Trigger my prediction pipeline in Vertex"
+  prediction = {
+    description  = "Trigger prediction pipeline in Vertex AI"
     schedule     = "0 0 * * *"
     time_zone    = "UTC"
     template_path = "https://<GCP region>-kfp.pkg.dev/<Project ID of test project>/vertex-pipelines/xgboost-prediction-pipeline/v1.2"
     enable_caching = null
     pipeline_parameters = {
-      project_id = <Project ID of test project>
-      project_location = "europe-west2"
-      ingestion_project_id = <Project ID of test project>
-      model_name = "simple_xgboost"
-      model_label = "label_name"
-      dataset_id = "preprocessing"
-      dataset_location = "europe-west2"
-      ingestion_dataset_id = "chicago_taxi_trips"
-      timestamp = "2022-12-01 00:00:00"
-      batch_prediction_machine_type = "n1-standard-4"
-      batch_prediction_min_replicas = 3
-      batch_prediction_max_replicas = 5
+      // Add pipeline parameters which are expected by your pipeline here e.g.
+      // project = "my-project-id"
     },
   },
 
