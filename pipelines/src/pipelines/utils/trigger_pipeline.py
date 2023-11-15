@@ -49,8 +49,8 @@ def trigger_pipeline(
         enable_caching = enable_caching.lower() in true_
 
     # For below options, we want an empty string to become None, so we add "or None"
-    encryption_spec_key_name = os.environ.get("VERTEX_CMEK_IDENTIFIER")
-    network = os.environ.get("VERTEX_NETWORK")
+    encryption_spec_key_name = os.environ.get("VERTEX_CMEK_IDENTIFIER") or None
+    network = os.environ.get("VERTEX_NETWORK") or None
 
     # Instantiate PipelineJob object
     pl = aiplatform.PipelineJob(

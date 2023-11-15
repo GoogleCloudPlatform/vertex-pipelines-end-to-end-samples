@@ -22,14 +22,14 @@ lookup_model = components.lookup_model.python_func
 
 
 @mock.patch("google.cloud.aiplatform.Model")
-def test_lookup_model(mock_model, tmpdir):
+def test_lookup_model(mock_model, tmp_path):
     """
     Assert lookup_model produces expected resource name, and that list method is
     called with the correct arguemnts
     """
 
     # Mock attribute and method
-    mock_path = tmpdir
+    mock_path = str(tmp_path / "model")
     mock_model.resource_name = "my-model-resource-name"
     mock_model.uri = mock_path
     mock_model.list.return_value = [mock_model]
@@ -54,7 +54,7 @@ def test_lookup_model(mock_model, tmpdir):
 
 
 @mock.patch("google.cloud.aiplatform.Model")
-def test_lookup_model_when_no_models(mock_model, tmpdir):
+def test_lookup_model_when_no_models(mock_model, tmp_path):
     """
     Checks that when there are no models and fail_on_model_found = False,
     lookup_model returns an empty string.
@@ -65,15 +65,14 @@ def test_lookup_model_when_no_models(mock_model, tmpdir):
         location="europe-west4",
         project="my-project-id",
         fail_on_model_not_found=False,
-        model=Model(uri=str(tmpdir)),
+        model=Model(uri=str(tmp_path / "model")),
     )
 
-    print(exported_model_resource_name)
     assert exported_model_resource_name == ""
 
 
 @mock.patch("google.cloud.aiplatform.Model")
-def test_lookup_model_when_no_models_fail(mock_model, tmpdir):
+def test_lookup_model_when_no_models_fail(mock_model, tmp_path):
     """
     Checks that when there are no models and fail_on_model_found = True,
     lookup_model raises a RuntimeError.
@@ -87,5 +86,5 @@ def test_lookup_model_when_no_models_fail(mock_model, tmpdir):
             location="europe-west4",
             project="my-project-id",
             fail_on_model_not_found=True,
-            model=Model(uri=str(tmpdir)),
+            model=Model(uri=str(tmp_path / "model")),
         )

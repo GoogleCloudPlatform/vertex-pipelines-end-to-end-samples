@@ -87,6 +87,8 @@ cloud_schedulers_config = {
     template_path = "https://<GCP region>-kfp.pkg.dev/<Project ID of test project>/vertex-pipelines/xgboost-train-pipeline/v1.2"
     enable_caching = null
     pipeline_parameters = {
+      // Add pipeline parameters which are expected by your pipeline here e.g.
+      // project = "my-project-id"
     },
   },
 
@@ -97,7 +99,8 @@ cloud_schedulers_config = {
     template_path = "https://<GCP region>-kfp.pkg.dev/<Project ID of test project>/vertex-pipelines/xgboost-prediction-pipeline/v1.2"
     enable_caching = null
     pipeline_parameters = {
-      // TODO: add all pipeline parameters which are expected by your pipeline
+      // Add pipeline parameters which are expected by your pipeline here e.g.
+      // project = "my-project-id"
     },
   },
 

@@ -57,7 +57,7 @@ mock_job1.state = JobState.JOB_STATE_SUCCEEDED
 def test_model_batch_predict(
     create_job,
     get_job,
-    tmpdir,
+    tmp_path,
     source_format,
     destination_format,
     source_uri,
@@ -68,24 +68,27 @@ def test_model_batch_predict(
     """
     Asserts model_batch_predict successfully creates requests given different arguments.
     """
-    mock_model = Model(uri=tmpdir, metadata={"resourceName": ""})
-    gcp_resources_path = tmpdir / "gcp_resources.json"
+    mock_model = Model(uri=str(tmp_path / "model"), metadata={"resourceName": ""})
+    gcp_resources_path = tmp_path / "gcp_resources.json"
 
-    model_batch_predict(
-        model=mock_model,
-        job_display_name="",
-        location="",
-        project="",
-        source_uri=source_uri,
-        destination_uri=destination_format,
-        source_format=source_format,
-        destination_format=destination_format,
-        monitoring_training_dataset=monitoring_training_dataset,
-        monitoring_alert_email_addresses=monitoring_alert_email_addresses,
-        monitoring_skew_config=monitoring_skew_config,
-        gcp_resources=str(gcp_resources_path),
-    )
+    try:
+        model_batch_predict(
+            model=mock_model,
+            job_display_name="",
+            location="",
+            project="",
+            source_uri=source_uri,
+            destination_uri=destination_format,
+            source_format=source_format,
+            destination_format=destination_format,
+            monitoring_training_dataset=monitoring_training_dataset,
+            monitoring_alert_email_addresses=monitoring_alert_email_addresses,
+            monitoring_skew_config=monitoring_skew_config,
+            gcp_resources=str(gcp_resources_path),
+        )
 
-    create_job.assert_called_once()
-    get_job.assert_called_once()
-    assert gcp_resources_path.exists()
+        create_job.assert_called_once()
+        get_job.assert_called_once()
+        assert gcp_resources_path.exists()
+    finally:
+        gcp_resources_path.unlink(missing_ok=True)
