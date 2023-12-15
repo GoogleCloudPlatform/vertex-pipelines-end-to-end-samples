@@ -48,7 +48,7 @@ When you open the Pull Request, the CI pipeline (`pr-checks.yaml`) should be tri
 
 To compile and publish your ML pipelines into your test and prod environments, you will need to [create a release](https://docs.github.com/en/repositories/releasing-projects-on-github/managing-releases-in-a-repository#creating-a-release).
 
-When the new tag is created, the `release.yaml` pipeline should be triggered. It will build and push the training and serving container images, compile the training and prediction pipelines, then upload the compiled ML pipelines to Artifact Registry in each environment (dev/test/prod).
+When the new tag is created, the `release.yaml` pipeline should be triggered. It will build and push the training and prediction container images, compile the training and prediction pipelines, then upload the compiled ML pipelines to Artifact Registry in each environment (dev/test/prod).
 
 #### Example
 

@@ -24,12 +24,12 @@ steps:
       - --compressed-caching=false
     waitFor: ['-']
 
-  - id: build-serving-image
+  - id: build-prediction-image
     name: gcr.io/kaniko-project/executor:latest
     args:
       - --context=dir:///workspace/model
-      - --destination=${_TEST_VERTEX_LOCATION}-docker.pkg.dev/${_TEST_VERTEX_PROJECT_ID}/vertex-images/serving:${COMMIT_SHA}
-      - --target=serving
+      - --destination=${_TEST_VERTEX_LOCATION}-docker.pkg.dev/${_TEST_VERTEX_PROJECT_ID}/vertex-images/prediction:${COMMIT_SHA}
+      - --target=prediction
       - --cache=true
       - --compressed-caching=false
     waitFor: ['-']
@@ -60,7 +60,7 @@ steps:
       - CONTAINER_IMAGE_REGISTRY=${_TEST_VERTEX_LOCATION}-docker.pkg.dev/${_TEST_VERTEX_PROJECT_ID}/vertex-images
     waitFor:
       - build-training-image
-      - build-serving-image
+      - build-prediction-image
 
 options:
   logging: CLOUD_LOGGING_ONLY

@@ -22,12 +22,12 @@ steps:
       - -c
       - |
         docker build --target=training -t training:latest . && \
-        docker build --target=serving -t serving:latest . && \
+        docker build --target=prediction -t prediction:latest . && \
         for proj in ${_DESTINATION_PROJECTS} ; do \
           docker tag training:latest ${_VERTEX_LOCATION}-docker.pkg.dev/$$proj/vertex-images/training:${TAG_NAME} && \
-          docker tag serving:latest ${_VERTEX_LOCATION}-docker.pkg.dev/$$proj/vertex-images/serving:${TAG_NAME} && \
+          docker tag prediction:latest ${_VERTEX_LOCATION}-docker.pkg.dev/$$proj/vertex-images/prediction:${TAG_NAME} && \
           docker push ${_VERTEX_LOCATION}-docker.pkg.dev/$$proj/vertex-images/training:${TAG_NAME} && \
-          docker push ${_VERTEX_LOCATION}-docker.pkg.dev/$$proj/vertex-images/serving:${TAG_NAME}; \
+          docker push ${_VERTEX_LOCATION}-docker.pkg.dev/$$proj/vertex-images/prediction:${TAG_NAME}; \
         done
 
   # Install poetry, install deps, compile pipelines

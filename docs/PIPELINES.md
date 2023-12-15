@@ -92,7 +92,7 @@ The training step is defined as a [KFP container component](https://www.kubeflow
 
 The container image used for this component is built using CI/CD (or the `make build target=training` command if you want to build it during development).
 
-The source code for this container image (and the serving container image) can be found in the [model](/model/) directory. Dependencies are managed using Poetry. The model training script can be found at [model/training/train.py](/model/training/train.py) and can be modified to suit your use case.
+The source code for this container image (and the prediction container image) can be found in the [model](/model/) directory. Dependencies are managed using Poetry. The model training script can be found at [model/training/train.py](/model/training/train.py) and can be modified to suit your use case.
 
 The training script trains a simple XGBoost model wrapped in a scikit-learn pipeline, and saves it as `model.joblib`.
 

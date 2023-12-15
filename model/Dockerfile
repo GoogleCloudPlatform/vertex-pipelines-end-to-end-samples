@@ -29,9 +29,9 @@ FROM builder AS training
 
 COPY training training
 
-FROM builder AS serving
+FROM builder AS prediction
 
-RUN poetry install --with serving
-COPY serving serving
+RUN poetry install --with prediction
+COPY prediction prediction
 
-CMD exec uvicorn serving.main:app --host "0.0.0.0" --port "$AIP_HTTP_PORT"
+CMD exec uvicorn prediction.main:app --host "0.0.0.0" --port "$AIP_HTTP_PORT"
