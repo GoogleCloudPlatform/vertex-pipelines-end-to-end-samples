@@ -102,10 +102,10 @@ run: ## Run a pipeline. Set pipeline=<training|prediction>. Optionally set compi
 		--template_path=pipelines/${pipeline}.yaml --display_name=${pipeline} --wait=${wait}
 
 training: ## Run training pipeline. Rebuilds training and prediction images. Supports same options as run.
-	$(MAKE) run pipeline=training
+	@$(MAKE) run pipeline=training
 
 prediction:	## Run prediction pipeline. Doesn't rebuilt images. Supports same options as run.
-	$(MAKE) run pipeline=prediction build=false
+	@$(MAKE) run pipeline=prediction build=false
 
 packages ?= pipelines components
 test: ## Run unit tests. Optionally set packages=<pipelines and/or components> (default="pipelines components").

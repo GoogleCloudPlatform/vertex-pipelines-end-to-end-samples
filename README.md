@@ -86,7 +86,7 @@ gcloud services enable cloudresourcemanager.googleapis.com serviceusage.googleap
 make deploy env=dev
 ```
 
-More details about infrastructure is explained in [this README](docs/INFRASTRUCTURE.md).
+More details about infrastructure is explained in [this guide](docs/Infrastructure.md).
 It describes the scheduling of pipelines and how to tear down infrastructure.
 
 **Install dependencies:**
@@ -110,7 +110,7 @@ gcloud auth application-default login
 
 ## Run
 
-This repository contains example ML training and prediction pipelines which are explained in [this README](docs/PIPELINES.md).
+This repository contains example ML training and prediction pipelines which are explained in [this guide](docs/Pipelines.md).
 
 **Build containers:** The [model/](/model/) directory contains the code for custom training and prediction container images, including the model training script at [model/training/train.py](model/training/train.py). 
 You can modify this to suit your own use case.
@@ -160,10 +160,10 @@ make test [ packages=<pipelines components> ]
 
 ## Automation
 
-For details on setting up CI/CD, see [this README](/docs/AUTOMATION.md).
+For details on setting up CI/CD, see [this guide](./docs/Automation.md).
 
 ## Putting it all together
 
-For a full walkthrough of the journey from changing the ML pipeline code to having it scheduled and running in production, please see the guide [here](./docs/PRODUCTION.md).
+For a full walkthrough of the journey from changing the ML pipeline code to having it scheduled and running in production, please see the guide [here](./docs/Production.md).
 
-We value your contribution, see [this guide](./docs/CONTRIBUTION.md) for contributing to this project.
+We value your contribution, see [this guide](./docs/Contribution.md) for contributing to this project.

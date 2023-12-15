@@ -1,5 +1,5 @@
 <!-- 
-Copyright 2022 Google LLC
+Copyright 2023 Google LLC
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ This document describes the full process from making a change to your pipeline c
 
 ## Pre-requisites
 
-- Suitable GCP environments set up - see the README section on [Deploying Cloud Infrastructure](/README.md#deploying-cloud-infrastructure)
+- Suitable GCP environments set up - see the [README](../README.md)
 - This repo forked / used as a template for a new GitHub repo
 - CI/CD set up - see the instructions [here](cloudbuild/README.md)
 - Access set up for the BigQuery datasets used in the example pipelines

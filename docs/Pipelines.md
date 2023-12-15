@@ -1,5 +1,5 @@
 <!-- 
-Copyright 2022 Google LLC
+Copyright 2023 Google LLC
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -15,14 +15,16 @@ limitations under the License.
  -->
 # ML Pipelines
 
-There are two ML pipelines defined in this repository: a training pipeline (located in `pipelines/src/pipelines/training.py` and a batch prediction pipeline (located in `pipelines/src/pipelines/prediction.py`).
+There are two ML pipelines defined in this repository: 
+- training pipeline (located in `pipelines/src/pipelines/training.py`
+- batch prediction pipeline (located in `pipelines/src/pipelines/prediction.py`)
 
 ## Pipeline input parameters
 
 The ML pipelines have input parameters. 
 As you can see in the pipeline definition files (`pipelines/src/pipelines/<training|prediction>/pipeline.py`), they have default values, and some of these default values are derived from environment variables (which in turn are defined in `env.sh`).
 
-When triggering ad hoc runs in your dev/sandbox environment, or when running the E2E tests in CI, these default values are used. 
+When triggering ad hoc runs in your dev (or sandbox) environment, or when running the E2E tests in CI, these default values are used. 
 For the test and production deployments, the pipeline parameters are defined in the Terraform code for the Cloud Scheduler jobs (`terraform/envs/<dev|test|prod>/scheduled_jobs.auto.tfvars`) - see the section on [Scheduling pipelines](#scheduling-pipelines).
 
 ## Customize pipelines
@@ -52,17 +54,16 @@ Make sure that you give the ML pipeline a unique name in the `@pipeline` decorat
 To run your pipeline, use `make run` as before (optionally adding parameter to wait until pipeline is finished before returning - defaults to false):
 
 ```bash
-make run pipeline=your_new_pipeline [ wait=<true|false> ]
+make run pipeline=your_new_pipeline
 ```
 
 Some of the scripts e.g. CI/CD pipelines assume only a training and prediction pipeline. You will need to adapt these to add in the compile, run and upload steps for your new pipeline in [cloudbuild/pr-checks.yaml](/cloudbuild/pr-checks.yaml), [cloudbuild/e2e-test.yaml](/cloudbuild/e2e-test.yaml) and [cloudbuild/release.yaml](/cloudbuild/release.yaml).
-
 
 ## Training pipeline
 
 A screenshot of the completed ML pipeline is shown below.
 
-![Screenshot of the training pipeline in Vertex Pipelines](/docs/images/training_pipeline.png)
+![Screenshot of the training pipeline in Vertex Pipelines](./images/training_pipeline.png)
 
 In the next sections we will walk through the different pipeline steps.
 
@@ -96,7 +97,7 @@ The source code for this container image (and the prediction container image) ca
 
 The training script trains a simple XGBoost model wrapped in a scikit-learn pipeline, and saves it as `model.joblib`.
 
-![Architecture of the XGBoost model](/docs/images/xgboost_architecture.png)
+![Architecture of the XGBoost model](./images/xgboost_architecture.png)
 
 The model is evaluated and metrics are saved as a JSON file. In the Vertex pipeline, the model appears as a KFP Model artifact, and the JSON file appears as a KFP Metrics artifact.
 
@@ -120,7 +121,8 @@ For example, when you want to train a new model using different features, the be
 
 A screenshot of the completed ML pipeline is shown below.
 
-![Screenshot of the prediction pipeline in Vertex Pipelines](/docs/images/prediction_pipeline.png)
+![Screenshot of the prediction pipeline in Vertex Pipelines](./images/prediction_pipeline.png)
+
 In the next sections we will walk through the different pipeline steps.
 
 ### Ingestion / preprocessing step
@@ -135,9 +137,10 @@ In the pipeline definition, the `generate_query` function is run at pipeline com
 
 The `preprocessing` step in the pipeline uses this string (`preprocessing_query`) in the `BigqueryQueryJobOp` component (provided by [Google Cloud Pipeline Components](https://cloud.google.com/vertex-ai/docs/pipelines/components-introduction))
 
-### Lookup model
+### Look up model
 
-This step looks up the "champion" model from the Vertex Model Registry. It uses a custom KFP component that can be found in [components/vertex-components/src/vertex_components/lookup_model.py](//vertex_components/lookup_model.py). It uses the Vertex AI Python SDK to list models with a given model name and retrieve the model version that uses the `default` alias, indicating that it is the "champion" model.
+This step looks up the "champion" model from the Vertex Model Registry. 
+It uses a custom KFP component that can be found in [components/vertex-components/src/vertex_components/lookup_model.py](//vertex_components/lookup_model.py). It uses the Vertex AI Python SDK to list models with a given model name and retrieve the model version that uses the `default` alias, indicating that it is the "champion" model.
 
 ### Batch Prediction
 
