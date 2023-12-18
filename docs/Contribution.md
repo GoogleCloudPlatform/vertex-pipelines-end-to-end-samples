@@ -1,6 +1,22 @@
+<!-- 
+Copyright 2023 Google LLC
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    https://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+ -->
 # Automated testing for Vertex Pipelines E2E samples
 
-This document details the steps required to set up automated testing with Cloud Build for the [E2E samples repo](https://github.com/GoogleCloudPlatform/vertex-pipelines-end-to-end-samples) (rather than setting up automated testing for your own repo derived from it). It is focused on the Vertex Pipelines components and pipelines themselves, not on the other elements of the codebase such as infrastructure setup.
+This document details the steps required to set up automated testing with Cloud Build for the [E2E samples repo](https://github.com/GoogleCloudPlatform/vertex-pipelines-end-to-end-samples) (rather than setting up automated testing for your own repo derived from it). 
+It is focused on the Vertex Pipelines components and pipelines themselves, not on the other elements of the codebase such as infrastructure setup.
 
 This guide assumes that you are working in a brand-new Google Cloud project, and that you have Owner permission for this project.
 

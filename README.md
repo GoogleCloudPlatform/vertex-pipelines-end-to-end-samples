@@ -30,14 +30,14 @@ The implementation includes:
 * **CI/CD** using Google Cloud Build for linting, testing, and deploying ML pipelines
 * **Developer scripts** (Makefile, Python scripts etc.)
 
-**Get started today by following [this step-by-step notebook tutorial](docs/notebooks)! 🚀**
+**Get started today by following [this step-by-step notebook tutorial](./docs/notebooks)! 🚀**
 In this three-part notebook series you'll deploy a Google Cloud project and run production-ready ML pipelines using Vertex AI without writing a single line of code.
 
 ## Cloud Architecture
 
 The diagram below shows the cloud architecture for this repository.
 
-![Cloud Architecture diagram](/docs/images/architecture.png)
+![Cloud Architecture diagram](./docs/images/architecture.png)
 
 There are four different Google Cloud projects in use
 
@@ -86,7 +86,7 @@ gcloud services enable cloudresourcemanager.googleapis.com serviceusage.googleap
 make deploy env=dev
 ```
 
-More details about infrastructure is explained in [this README](docs/INFRASTRUCTURE.md).
+More details about infrastructure is explained in [this guide](docs/Infrastructure.md).
 It describes the scheduling of pipelines and how to tear down infrastructure.
 
 **Install dependencies:**
@@ -110,14 +110,14 @@ gcloud auth application-default login
 
 ## Run
 
-This repository contains example ML training and prediction pipelines which are explained in [this README](docs/PIPELINES.md).
+This repository contains example ML training and prediction pipelines which are explained in [this guide](docs/Pipelines.md).
 
-**Build containers:** The [model/](/model/) directory contains the code for custom training and serving container images, including the model training script at [model/training/train.py](model/training/train.py). 
+**Build containers:** The [model/](/model/) directory contains the code for custom training and prediction container images, including the model training script at [model/training/train.py](model/training/train.py). 
 You can modify this to suit your own use case.
-Build the training and serving container images and push them to Artifact Registry with:
+Build the training and prediction container images and push them to Artifact Registry with:
 
 ```bash
-make build [ images=training serving ]
+make build [ images="training prediction" ]
 ```
 
 Optionally specify the `images` variable to only build one of the images.
@@ -131,13 +131,14 @@ Optionally specify the `images` variable to only build one of the images.
 Execute the following command to run through steps 1-3:
 
 ```bash
-make run pipeline=training [ wait=<true|false> ] [ build=<true|false> ] [ compile=<true|false> ]
+make run pipeline=training [ build=<true|false> ] [ compile=<true|false> ] [ cache=<true|false> ] [ wait=<true|false> ] 
 ```
 
 The command has the following true/false flags:
 
-- `build` - re-build containers for training & serving code (limit by setting images=training to build only one of the containers)
+- `build` - re-build containers for training & prediction code (limit by setting images=training to build only one of the containers)
 - `compile` - re-compile the pipeline to YAML
+- `cache` - cache pipeline steps
 - `wait` - run the pipeline (a-)sync
 
 **Shortcuts:** Use these commands which support the same options as `run` to run the training or prediction pipeline:
@@ -154,15 +155,15 @@ The unit tests are run on each pull request.
 To run them locally you can execute the following command and optionally enable or disable testing of components:
 
 ```
-make test [ components=<true|false> ]
+make test [ packages=<pipelines components> ]
 ```
 
 ## Automation
 
-For details on setting up CI/CD, see [this README](/docs/AUTOMATION.md).
+For details on setting up CI/CD, see [this guide](./docs/Automation.md).
 
 ## Putting it all together
 
-For a full walkthrough of the journey from changing the ML pipeline code to having it scheduled and running in production, please see the guide [here](docs/PRODUCTION.md).
+For a full walkthrough of the journey from changing the ML pipeline code to having it scheduled and running in production, please see the guide [here](./docs/Production.md).
 
-We value your contribution, see [this guide](docs/CONTRIBUTION.md) for contributing to this project.
+We value your contribution, see [this guide](./docs/Contribution.md) for contributing to this project.

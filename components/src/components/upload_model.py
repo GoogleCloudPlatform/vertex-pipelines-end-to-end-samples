@@ -52,8 +52,7 @@ def upload_model(
         eval_metric (str): Metric name to compare champion and challenger on.
         eval_lower_is_better (bool): Usually True for losses and
             False for classification metrics.
-        serving_container_image (str): Container URI for serving the challenger
-            model.
+        serving_container_image (str): Container URI for serving the model.
         model_description (str): Optional. Description of model.
         evaluation_name (str): Optional. Name of evaluation results which are
             displayed in the Vertex AI UI of the challenger model.

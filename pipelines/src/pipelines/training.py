@@ -36,7 +36,7 @@ HPARAMS = dict(
 )
 RESOURCE_SUFFIX = env.get("RESOURCE_SUFFIX", "default")
 TRAINING_IMAGE = f"{env['CONTAINER_IMAGE_REGISTRY']}/training:{RESOURCE_SUFFIX}"
-SERVING_IMAGE = f"{env['CONTAINER_IMAGE_REGISTRY']}/serving:{RESOURCE_SUFFIX}"
+PREDICTION_IMAGE = f"{env['CONTAINER_IMAGE_REGISTRY']}/prediction:{RESOURCE_SUFFIX}"
 
 
 @dsl.container_component
@@ -153,7 +153,7 @@ def pipeline(
         test_data=train_op.outputs["test_data"],
         eval_metric=PRIMARY_METRIC,
         eval_lower_is_better=True,
-        serving_container_image=SERVING_IMAGE,
+        serving_container_image=PREDICTION_IMAGE,
         model_name=model_name,
         model_description="Predict price of a taxi trip.",
         pipeline_job_id="{{$.pipeline_job_name}}",
