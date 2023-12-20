@@ -18,6 +18,8 @@ limitations under the License.
 
 _AKA "Vertex AI Turbo Templates"_
 
+![Shell](https://github.com/teamdatatonic/vertex-pipelines-end-to-end-samples/wiki/images/shell.gif)
+
 ## Introduction
 
 This repository provides a reference implementation of [Vertex Pipelines](https://cloud.google.com/vertex-ai/docs/pipelines/) for creating a production-ready MLOps solution on Google Cloud.
