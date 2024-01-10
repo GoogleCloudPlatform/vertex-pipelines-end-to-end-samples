@@ -24,6 +24,7 @@ from components import lookup_model, model_batch_predict
 RESOURCE_SUFFIX = env.get("RESOURCE_SUFFIX", "default")
 # set training-serving skew thresholds and emails to receive alerts:
 ALERT_EMAILS = []
+NOTIFICATION_CHANNELS = []
 SKEW_THRESHOLDS = {"defaultSkewThreshold": {"value": 0.001}}
 # or set different thresholds per feature:
 # SKEW_THRESHOLDS = {"skewThresholds": {"payment_type": {"value": 0.001}}, ... }
@@ -109,6 +110,7 @@ def pipeline(
             max_replica_count=max_replicas,
             monitoring_training_dataset=lookup_op.outputs["training_dataset"],
             monitoring_alert_email_addresses=ALERT_EMAILS,
+            notification_channels=NOTIFICATION_CHANNELS,
             monitoring_skew_config=SKEW_THRESHOLDS,
         )
         .after(prep_op)
