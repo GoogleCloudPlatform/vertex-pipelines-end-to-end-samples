@@ -38,6 +38,7 @@ def model_batch_predict(
     max_replica_count: int = 1,
     monitoring_training_dataset: dict = None,
     monitoring_alert_email_addresses: List[str] = None,
+    notification_channels: List[str] = [],
     monitoring_skew_config: dict = None,
     instance_config: dict = None,
 ):
@@ -62,6 +63,9 @@ def model_batch_predict(
             https://cloud.google.com/python/docs/reference/aiplatform/latest/google.cloud.aiplatform_v1beta1.types.ModelMonitoringObjectiveConfig.TrainingPredictionSkewDetectionConfig
         monitoring_alert_email_addresses (List[str]):
             Email addresses to send alerts to (optional).
+        notification_channels (List[str]):
+            Notification channels to send alerts to (optional).
+            Format: projects/<project>/notificationChannels/<notification_channel>
         monitoring_training_dataset (dict): Metadata of training dataset. See:
             https://cloud.google.com/python/docs/reference/aiplatform/latest/google.cloud.aiplatform_v1beta1.types.ModelMonitoringObjectiveConfig.TrainingDataset
         instance_config (dict): Configuration defining how to transform batch prediction
@@ -152,7 +156,9 @@ def model_batch_predict(
 
         message["modelMonitoringConfig"] = {
             "alertConfig": {
-                "emailAlertConfig": {"userEmails": monitoring_alert_email_addresses}
+                "emailAlertConfig": {"userEmails": monitoring_alert_email_addresses},
+                "notificationChannels": notification_channels,
+                "enableLogging": True,
             },
             "objectiveConfigs": [
                 {
