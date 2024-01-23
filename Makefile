@@ -1,4 +1,4 @@
-# Copyright 2022 Google LLC
+# Copyright 2023 Google LLC
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,79 +15,110 @@
 -include env.sh
 export
 
-help: ## Display this help screen
-	@grep -h -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
-    
-pre-commit: ## Runs the pre-commit checks over entire repo
-	@cd pipelines && \
-	pipenv run pre-commit run --all-files
-
-setup: ## Set up local environment for Python development on pipelines
-	@pip install pipenv && \
-	cd pipelines && \
-	pipenv install --dev
-
-test-trigger: ## Runs unit tests for the pipeline trigger code
-	@cd pipelines && \
-	pipenv run python -m pytest tests/trigger
-
-compile-pipeline: ## Compile the pipeline to training.json or prediction.json. Must specify pipeline=<training|prediction>
-	@cd pipelines/src && \
-	pipenv run python -m pipelines.${PIPELINE_TEMPLATE}.${pipeline}.pipeline
-
-setup-components: ## Run unit tests for a component group
-	@cd "components/${GROUP}" && \
-	pipenv install --dev
-
-setup-all-components: ## Run unit tests for all pipeline components
-	@set -e && \
-	for component_group in components/*/ ; do \
-		echo "Setup components under $$component_group" && \
-		$(MAKE) setup-components GROUP=$$(basename $$component_group) ; \
-	done
-
-test-components: ## Run unit tests for a component group
-	@cd "components/${GROUP}" && \
-	pipenv run pytest
-
-test-all-components: ## Run unit tests for all pipeline components
-	@set -e && \
-	for component_group in components/*/ ; do \
-		echo "Test components under $$component_group" && \
-		$(MAKE) test-components GROUP=$$(basename $$component_group) ; \
-	done
-
-sync-assets: ## Sync assets folder to GCS. Must specify pipeline=<training|prediction>
-	@if [ -d "./pipelines/src/pipelines/${PIPELINE_TEMPLATE}/$(pipeline)/assets/" ] ; then \
-		echo "Syncing assets to GCS" && \
-		gsutil -m rsync -r -d ./pipelines/src/pipelines/${PIPELINE_TEMPLATE}/$(pipeline)/assets ${PIPELINE_FILES_GCS_PATH}/$(pipeline)/assets ; \
-	else \
-		echo "No assets folder found for pipeline $(pipeline)" ; \
-	fi ;
-
-run: ## Compile pipeline, copy assets to GCS, and run pipeline in sandbox environment. Must specify pipeline=<training|prediction>. Optionally specify enable_pipeline_caching=<true|false> (defaults to default Vertex caching behaviour)
-	@ $(MAKE) compile-pipeline && \
-	$(MAKE) sync-assets && \
-	cd pipelines/src && \
-	pipenv run python -m pipelines.trigger --template_path=./$(pipeline).json --enable_caching=$(enable_pipeline_caching)
-
-sync_assets ?= true
-e2e-tests: ## (Optionally) copy assets to GCS, and perform end-to-end (E2E) pipeline tests. Must specify pipeline=<training|prediction>. Optionally specify enable_pipeline_caching=<true|false> (defaults to default Vertex caching behaviour). Optionally specify sync_assets=<true|false> (defaults to true)
-	@if [ $$sync_assets = true ] ; then \
-        $(MAKE) sync-assets; \
-	else \
-		echo "Skipping syncing assets to GCS"; \
-    fi && \
-	cd pipelines && \
-	pipenv run pytest --log-cli-level=INFO tests/${PIPELINE_TEMPLATE}/$(pipeline) --enable_caching=$(enable_pipeline_caching)
+help: ## Display this help screen.
+	@grep -h -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
+	awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
 env ?= dev
-deploy-infra: ## Deploy the Terraform infrastructure to your project. Requires VERTEX_PROJECT_ID and VERTEX_LOCATION env variables to be set in env.sh. Optionally specify env=<dev|test|prod> (default = dev)
-	@ cd terraform/envs/$(env) && \
+AUTO_APPROVE_FLAG :=
+deploy: ## Deploy infrastructure to your project. Optionally set env=<dev|test|prod> (default=dev).
+	@echo "################################################################################" && \
+	echo "# Deploy $$env environment" && \
+	echo "################################################################################" && \
+	if [ "$(auto-approve)" = "true" ]; then \
+		AUTO_APPROVE_FLAG="-auto-approve"; \
+	fi; \
+	cd terraform/envs/$(env) && \
 	terraform init -backend-config='bucket=${VERTEX_PROJECT_ID}-tfstate' && \
-	terraform apply -var 'project_id=${VERTEX_PROJECT_ID}' -var 'region=${VERTEX_LOCATION}'
+	terraform apply -var 'project_id=${VERTEX_PROJECT_ID}' -var 'region=${VERTEX_LOCATION}' $$AUTO_APPROVE_FLAG
 
-destroy-infra: ## DESTROY the Terraform infrastructure in your project. Requires VERTEX_PROJECT_ID and VERTEX_LOCATION env variables to be set in env.sh. Optionally specify env=<dev|test|prod> (default = dev)
-	@ cd terraform/envs/$(env) && \
+undeploy: ## Destroy the infrastructure in your project. Optionally set env=<dev|test|prod> (default=dev).
+	@echo "################################################################################" && \
+	echo "# Destroy $$env environment" && \
+	echo "################################################################################" && \
+	if [ "$(auto-approve)" = "true" ]; then \
+		AUTO_APPROVE_FLAG="-auto-approve"; \
+	fi; \
+	cd terraform/envs/$(env) && \
 	terraform init -backend-config='bucket=${VERTEX_PROJECT_ID}-tfstate' && \
-	terraform destroy -var 'project_id=${VERTEX_PROJECT_ID}' -var 'region=${VERTEX_LOCATION}'
+	terraform destroy -var 'project_id=${VERTEX_PROJECT_ID}' -var 'region=${VERTEX_LOCATION}' $$AUTO_APPROVE_FLAG
+
+install: ## Set up local Python environment for development.
+	@echo "################################################################################" && \
+	echo "# Install Python dependencies" && \
+	echo "################################################################################" && \
+	cd model && \
+	poetry install --no-root && \
+	cd ../pipelines && \
+	poetry install --with dev && \
+	cd ../components && \
+	poetry install --with dev
+
+compile: ## Compile pipeline. Set pipeline=<training|prediction>.
+	@echo "################################################################################" && \
+	echo "# Compile $$pipeline pipeline" && \
+	echo "################################################################################" && \
+	cd pipelines/src && \
+	poetry run kfp dsl compile --py pipelines/${pipeline}.py --output pipelines/${pipeline}.yaml --function pipeline
+
+images ?= training prediction
+build: ## Build and push container(s). Set images=<training and/or prediction> (default="training prediction").
+	@echo "################################################################################" && \
+	echo "# Build $$images image(s)" && \
+	echo "################################################################################" && \
+	cd model && \
+	for image in $$images ; do \
+		echo "Build $$image image" && \
+		gcloud builds submit . \
+		--region=${VERTEX_LOCATION} \
+		--project=${VERTEX_PROJECT_ID} \
+		--gcs-source-staging-dir=gs://${VERTEX_PROJECT_ID}-staging/source \
+		--substitutions=_DOCKER_TARGET=$$image,_DESTINATION_IMAGE_URI=${CONTAINER_IMAGE_REGISTRY}/$$image:${RESOURCE_SUFFIX} \
+		--suppress-logs ; \
+	done 
+
+compile ?= true
+build ?= true
+cache ?= true
+wait ?= false
+run: ## Run a pipeline. Set pipeline=<training|prediction>. Optionally set compile=<true|false> (default=true), build=<true|false>, cache=<true|false> (default=true). wait=<true|false> (default=false).
+	@if [ $(compile) = "true" ]; then \
+		$(MAKE) compile ; \
+	elif [ $(compile) != "false" ]; then \
+		echo "ValueError: compile must be either true or false" ; \
+		exit ; \
+	fi && \
+	if [ $(build) = "true" ]; then \
+		$(MAKE) build ; \
+	elif [ $(build) != "false" ]; then \
+		echo "ValueError: build must be either true or false" ; \
+		exit ; \
+	fi && \
+	echo "################################################################################" && \
+	echo "# Run $$pipeline pipeline" && \
+	echo "################################################################################" && \
+	cd pipelines/src && \
+	ENABLE_PIPELINE_CACHING=$$cache poetry run python -m pipelines.utils.trigger_pipeline \
+		--template_path=pipelines/${pipeline}.yaml --display_name=${pipeline} --wait=${wait}
+
+training: ## Run training pipeline. Rebuilds training and prediction images. Supports same options as run.
+	@$(MAKE) run pipeline=training
+
+prediction:	## Run prediction pipeline. Doesn't rebuilt images. Supports same options as run.
+	@$(MAKE) run pipeline=prediction build=false
+
+packages ?= pipelines components
+test: ## Run unit tests. Optionally set packages=<pipelines and/or components> (default="pipelines components").
+	@echo "################################################################################" && \
+	echo "# Test $$packages package(s)" && \
+	echo "################################################################################" && \
+	for package in $$packages ; do \
+		echo "Testing $$package package" && \
+		cd $$package && \
+		poetry run pytest && \
+		cd .. ; \
+	done
+
+pre-commit: ## Run pre-commit checks for pipelines.
+	@cd pipelines && \
+	poetry run pre-commit run --all-files

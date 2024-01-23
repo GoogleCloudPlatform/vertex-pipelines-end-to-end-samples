@@ -14,39 +14,53 @@
 ---
 steps:
 
-  # Copy assets files to a new directory in GCS
-  # (via a new local directory)
-  # Directory name = git commit hash
-  - name: gcr.io/cloud-builders/gsutil
-    entrypoint: bash
+  - id: build-training-image
+    name: gcr.io/kaniko-project/executor:latest
     args:
-      - -c
-      - |
-        mkdir -p ${COMMIT_SHA}/training/assets && \
-        mkdir -p ${COMMIT_SHA}/prediction/assets && \
-        cp -r pipelines/src/pipelines/${_PIPELINE_TEMPLATE}/training/assets ${COMMIT_SHA}/training/ && \
-        cp -r pipelines/src/pipelines/${_PIPELINE_TEMPLATE}/prediction/assets ${COMMIT_SHA}/prediction/ && \
-        gsutil cp -r ${COMMIT_SHA} ${_PIPELINE_PUBLISH_GCS_PATH}/${COMMIT_SHA}
+      - --context=dir:///workspace/model
+      - --destination=${_TEST_VERTEX_LOCATION}-docker.pkg.dev/${_TEST_VERTEX_PROJECT_ID}/vertex-images/training:${COMMIT_SHA}
+      - --target=training
+      - --cache=true
+      - --compressed-caching=false
+    waitFor: ['-']
+
+  - id: build-prediction-image
+    name: gcr.io/kaniko-project/executor:latest
+    args:
+      - --context=dir:///workspace/model
+      - --destination=${_TEST_VERTEX_LOCATION}-docker.pkg.dev/${_TEST_VERTEX_PROJECT_ID}/vertex-images/prediction:${COMMIT_SHA}
+      - --target=prediction
+      - --cache=true
+      - --compressed-caching=false
+    waitFor: ['-']
 
   # Install Python deps
   # Run end-to-end (E2E) pipeline tests on both pipelines
-  - name: python:3.7
+  - id: e2e-tests
+    name: python:3.9
     entrypoint: /bin/sh
     args:
       - -c
       - |
-        make setup && \
-        make e2e-tests pipeline=training enable_pipeline_caching=False sync_assets=false && \
-        make e2e-tests pipeline=prediction enable_pipeline_caching=False sync_assets=false
+        curl -sSL https://install.python-poetry.org | python3 - && \
+        export PATH="/builder/home/.local/bin:$$PATH" && \
+        make install && \
+        make run pipeline=training build=false wait=true && \
+        make run pipeline=prediction build=false wait=true
     env:
+      - ENABLE_PIPELINE_CACHING=${_TEST_ENABLE_PIPELINE_CACHING}
       - VERTEX_LOCATION=${_TEST_VERTEX_LOCATION}
       - VERTEX_PROJECT_ID=${_TEST_VERTEX_PROJECT_ID}
+      - BQ_LOCATION=${_TEST_BQ_LOCATION}
       - VERTEX_SA_EMAIL=${_TEST_VERTEX_SA_EMAIL}
       - VERTEX_CMEK_IDENTIFIER=${_TEST_VERTEX_CMEK_IDENTIFIER}
       - VERTEX_NETWORK=${_TEST_VERTEX_NETWORK}
-      - PIPELINE_TEMPLATE=${_PIPELINE_TEMPLATE}
       - VERTEX_PIPELINE_ROOT=${_TEST_VERTEX_PIPELINE_ROOT}
-      - PIPELINE_FILES_GCS_PATH=${_PIPELINE_PUBLISH_GCS_PATH}/${COMMIT_SHA}
+      - RESOURCE_SUFFIX=${COMMIT_SHA}
+      - CONTAINER_IMAGE_REGISTRY=${_TEST_VERTEX_LOCATION}-docker.pkg.dev/${_TEST_VERTEX_PROJECT_ID}/vertex-images
+    waitFor:
+      - build-training-image
+      - build-prediction-image
 
 options:
   logging: CLOUD_LOGGING_ONLY

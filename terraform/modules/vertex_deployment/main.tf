@@ -16,10 +16,11 @@
 
 ## Google Cloud APIs to enable ##
 resource "google_project_service" "gcp_services" {
-  for_each           = toset(var.gcp_service_list)
-  project            = var.project_id
-  service            = each.key
-  disable_on_destroy = var.disable_services_on_destroy
+  for_each                   = toset(var.gcp_service_list)
+  project                    = var.project_id
+  service                    = each.key
+  disable_on_destroy         = var.disable_services_on_destroy
+  disable_dependent_services = var.disable_dependent_services
 }
 
 ## Service Accounts ##
@@ -50,15 +51,6 @@ resource "google_storage_bucket" "pipeline_root_bucket" {
   depends_on                  = [google_project_service.gcp_services]
 }
 
-resource "google_storage_bucket" "pipeline_assets_bucket" {
-  name                        = "${var.project_id}-pl-assets"
-  location                    = var.region
-  project                     = var.project_id
-  uniform_bucket_level_access = true
-  public_access_prevention    = "enforced"
-  depends_on                  = [google_project_service.gcp_services]
-}
-
 ## Cloud Function - used to trigger pipelines ##
 
 locals {
@@ -75,9 +67,9 @@ resource "google_pubsub_topic" "pipeline_trigger_topic" {
   depends_on = [google_project_service.gcp_services]
 }
 
-# Cloud Function staging bucket
-resource "google_storage_bucket" "cf_staging_bucket" {
-  name                        = "${var.project_id}-cf-staging"
+# Cloud Function / Cloud Build staging bucket
+resource "google_storage_bucket" "staging_bucket" {
+  name                        = "${var.project_id}-staging"
   location                    = local.cloudfunction_region
   project                     = var.project_id
   uniform_bucket_level_access = true
@@ -92,8 +84,7 @@ module "cloudfunction" {
   region                        = local.cloudfunction_region
   function_name                 = var.cloudfunction_name
   description                   = var.cloudfunction_description
-  source_dir                    = "../../../pipelines/src/pipelines/trigger"
-  source_code_bucket_name       = google_storage_bucket.cf_staging_bucket.name
+  source_code_bucket_name       = google_storage_bucket.staging_bucket.name
   runtime                       = "python39"
   entry_point                   = "cf_handler"
   cf_service_account            = google_service_account.vertex_cloudfunction_sa.email
@@ -121,4 +112,24 @@ resource "google_vertex_ai_metadata_store" "default_metadata_store" {
   project     = var.project_id
   region      = var.region
   depends_on  = [google_project_service.gcp_services]
+}
+
+## Artifact Registry - container images ##
+resource "google_artifact_registry_repository" "vertex-images" {
+  repository_id = "vertex-images"
+  description   = "Container image repository for training container images"
+  project       = var.project_id
+  location      = var.region
+  format        = "DOCKER"
+  depends_on    = [google_project_service.gcp_services]
+}
+
+## Artifact Registry - KFP pipelines ##
+resource "google_artifact_registry_repository" "vertex-pipelines" {
+  repository_id = "vertex-pipelines"
+  description   = "KFP repository for Vertex Pipelines"
+  project       = var.project_id
+  location      = var.region
+  format        = "KFP"
+  depends_on    = [google_project_service.gcp_services]
 }

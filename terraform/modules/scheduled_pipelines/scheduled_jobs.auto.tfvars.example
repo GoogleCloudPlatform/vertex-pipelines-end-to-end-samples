@@ -16,101 +16,41 @@
 
 cloud_schedulers_config = {
 
-  xgboost_training = {
-    name         = "xgboost-training-pipeline-trigger"
-    description  = "Trigger my XGBoost training pipeline in Vertex"
+  training = {
+    description  = "Trigger training pipeline in Vertex AI"
     schedule     = "0 0 * * 0"
     time_zone    = "UTC"
-    template_path = "gs://my-assets-bucket/<Git tag>/training/training.json"
+    template_path = "https://<GCP region>-kfp.pkg.dev/<Project ID of test project>/vertex-pipelines/xgboost-train-pipeline/<Git tag>"
     enable_caching = null
     pipeline_parameters = {
-      project_id = "my-project-id"
-      project_location = "europe-west2"
-      pipeline_files_gcs_path = "gs://my-assets-bucket/<Git tag>"
-      ingestion_project_id = "my-project-id"
-      model_name = "xgboost_with_preprocessing"
-      model_label = "label_name"
-      tfdv_schema_filename = "tfdv_schema_training.pbtxt"
-      tfdv_train_stats_path = "gs://my-pipeline-root-bucket/train_stats/train.stats"
-      dataset_id = "preprocessing"
-      dataset_location = "europe-west2"
-      ingestion_dataset_id = "chicago_taxi_trips"
+      project = "my-project-id"
+      location = "europe-west2"
+      bq_location = "US"
+      bq_source_uri = "bigquery-public-data.chicago_taxi_trips.taxi_trips"
+      model_name = "xgb_regressor"
+      dataset = "turbo_templates"
       timestamp = "2022-12-01 00:00:00"
-    },
+      test_data_gcs_uri: str = ""
+    }
   },
 
-  xgboost_prediction = {
-    name         = "xgboost-prediction-pipeline-trigger"
-    description  = "Trigger my XGBoost prediction pipeline in Vertex"
+  prediction = {
+    description  = "Trigger prediction pipeline in Vertex AI"
     schedule     = "0 0 * * 0"
     time_zone    = "UTC"
-    template_path = "gs://my-assets-bucket/<Git tag>/prediction/prediction.json"
+    template_path = "https://<GCP region>-kfp.pkg.dev/<Project ID of test project>/vertex-pipelines/xgboost-prediction-pipeline/<Git tag>"
     enable_caching = null
     pipeline_parameters = {
-      project_id = "my-project-id"
-      project_location = "europe-west4"
-      pipeline_files_gcs_path = "gs://my-assets-bucket/<Git tag>"
-      ingestion_project_id = "my-project-id"
-      model_name = "xgboost_with_preprocessing"
-      model_label = "label_name"
-      tfdv_schema_filename = "tfdv_schema_training.pbtxt"
-      tfdv_train_stats_path = "gs://my-pipeline-root-bucket/train_stats/train.stats"
-      dataset_id = "preprocessing"
-      dataset_location = "europe-west2"
-      ingestion_dataset_id = "chicago_taxi_trips"
+      project = "my-project-id"
+      location = "europe-west2"
+      bq_location = "US"
+      bq_source_uri = "bigquery-public-data.chicago_taxi_trips.taxi_trips"
+      model_name = "xgb_regressor"
+      dataset = "turbo_templates"
       timestamp = "2022-12-01 00:00:00"
-      batch_prediction_machine_type = "n1-standard-4"
-      batch_prediction_min_replicas = 3
-      batch_prediction_max_replicas = 5
-    },
-  },
-
-  tensorflow_training = {
-    name         = "tensorflow-training-pipeline-trigger"
-    description  = "Trigger my TensorFlow training pipeline in Vertex"
-    schedule     = "0 0 * * 0"
-    time_zone    = "UTC"
-    template_path = "gs://my-assets-bucket/<Git tag>/training/training.json"
-    enable_caching = null
-    pipeline_parameters = {
-      project_id = "my-project-id"
-      project_location = "europe-west4"
-      pipeline_files_gcs_path = "gs://my-assets-bucket/<Git tag>"
-      ingestion_project_id = "my-project-id"
-      model_name = "tensorflow_with_preprocessing"
-      model_label = "label_name"
-      tfdv_schema_filename = "tfdv_schema_training.pbtxt"
-      tfdv_train_stats_path = "gs://my-pipeline-root-bucket/train_stats/train.stats"
-      dataset_id = "preprocessing"
-      dataset_location = "europe-west2"
-      ingestion_dataset_id = "chicago_taxi_trips"
-      timestamp = "2022-12-01 00:00:00"
-    },
-  },
-
-  tensorflow_prediction = {
-    name         = "tensorflow-prediction-pipeline-trigger"
-    description  = "Trigger my TensorFlow prediction pipeline in Vertex"
-    schedule     = "0 0 * * 0"
-    time_zone    = "UTC"
-    template_path = "gs://my-assets-bucket/<Git tag>/prediction/prediction.json"
-    enable_caching = null
-    pipeline_parameters = {
-      project_id = "my-project-id"
-      project_location = "europe-west4"
-      pipeline_files_gcs_path = "gs://my-assets-bucket/<Git tag>"
-      ingestion_project_id = "my-project-id"
-      model_name = "tensorflow_with_preprocessing"
-      model_label = "label_name"
-      tfdv_schema_filename = "tfdv_schema_training.pbtxt"
-      tfdv_train_stats_path = "gs://my-pipeline-root-bucket/train_stats/train.stats"
-      dataset_id = "preprocessing"
-      dataset_location = "europe-west2"
-      ingestion_dataset_id = "chicago_taxi_trips"
-      timestamp = "2022-12-01 00:00:00"
-      batch_prediction_machine_type = "n1-standard-4"
-      batch_prediction_min_replicas = 3
-      batch_prediction_max_replicas = 5
-    },
-  },
+      machine_type = "n2-standard-4"
+      min_replicas = 3
+      max_replicas = 10
+    }
+  }
 }

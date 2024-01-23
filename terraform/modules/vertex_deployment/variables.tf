@@ -51,7 +51,11 @@ variable "disable_services_on_destroy" {
   type        = bool
   default     = true
 }
-
+variable "disable_dependent_services" {
+  description = "If true, services that are enabled and which depend on this service should also be disabled when this service is destroyed. If false or unset, an error will be generated if any enabled services depend on this service when destroying it."
+  type        = bool
+  default     = true
+}
 variable "cloudfunction_region" {
   description = "Google Cloud region to use for the Cloud Function (and CF staging bucket). Defaults to the same as var.region"
   type        = string

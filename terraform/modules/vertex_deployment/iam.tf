@@ -26,33 +26,27 @@ resource "google_storage_bucket_iam_member" "pipelines_sa_pipeline_root_bucket_i
   role   = each.key
 }
 
-# Give pipelines SA read-only access to objects in "assets" bucket
-resource "google_storage_bucket_iam_member" "pipelines_sa_pipeline_assets_bucket_iam" {
-  for_each = toset([
-    "roles/storage.objectViewer",
-    "roles/storage.legacyBucketReader",
-  ])
-  bucket = google_storage_bucket.pipeline_assets_bucket.name
-  member = google_service_account.pipelines_sa.member
-  role   = each.key
-}
-
-# Give cloud functions SA access to read compiled pipelines from bucket
-resource "google_storage_bucket_iam_member" "cloudfunction_sa_pipeline_assets_bucket_iam" {
-  for_each = toset([
-    "roles/storage.objectViewer",
-    "roles/storage.legacyBucketReader",
-  ])
-  bucket = google_storage_bucket.pipeline_assets_bucket.name
-  member = google_service_account.vertex_cloudfunction_sa.member
-  role   = each.key
-}
-
 # Give cloud functions SA access to use the pipelines SA for triggering pipelines
 resource "google_service_account_iam_member" "cloudfunction_sa_can_use_pipelines_sa" {
   service_account_id = google_service_account.pipelines_sa.name
   role               = "roles/iam.serviceAccountUser"
   member             = google_service_account.vertex_cloudfunction_sa.member
+}
+
+# Give cloud functions SA access to KFP Artifact Registry to access compiled pipelines
+resource "google_artifact_registry_repository_iam_member" "cloudfunction_sa_can_access_ar" {
+  project    = google_artifact_registry_repository.vertex-pipelines.project
+  location   = google_artifact_registry_repository.vertex-pipelines.location
+  repository = google_artifact_registry_repository.vertex-pipelines.name
+  role       = "roles/artifactregistry.reader"
+  member     = google_service_account.vertex_cloudfunction_sa.member
+}
+
+# Give cloud functions SA access to pipeline root bucket to check it exists
+resource "google_storage_bucket_iam_member" "cloudfunction_sa_can_get_pl_root_bucket" {
+  bucket = google_storage_bucket.pipeline_root_bucket.name
+  role   = "roles/storage.legacyBucketReader"
+  member = google_service_account.vertex_cloudfunction_sa.member
 }
 
 ## Project IAM roles ##

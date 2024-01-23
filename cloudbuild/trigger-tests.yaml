@@ -1,4 +1,4 @@
-# Copyright 2022 Google LLC
+# Copyright 2023 Google LLC
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,13 +13,17 @@
 # limitations under the License.
 ---
 steps:
-  - name: 'python:3.7'
+  - name: 'python:3.9'
+    dir: /workspace/terraform/modules/cloudfunction
+    entrypoint: /bin/sh
     args:
       - '-c'
       - |
-        make setup && \
-        make test-trigger
-    entrypoint: /bin/sh
+        pip install -r src/requirements.txt && \
+        pip install -r src/requirements-dev.txt && \
+        pytest
+    env:
+      - PYTHONPATH=.
 
 options:
   logging: CLOUD_LOGGING_ONLY
