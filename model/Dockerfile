@@ -15,23 +15,23 @@ FROM python:3.9.16-slim AS builder
 
 ENV PIP_NO_CACHE_DIR=off \
     PIP_DISABLE_PIP_VERSION_CHECK=on \
-    PIP_DEFAULT_TIMEOUT=100
+    PIP_DEFAULT_TIMEOUT=100 \
+    POETRY_VIRTUALENVS_CREATE=false
 
 ARG POETRY_VERSION=1.5.1
-
-COPY pyproject.toml pyproject.toml
-COPY poetry.lock poetry.lock
-
 RUN pip install poetry==${POETRY_VERSION}
-RUN poetry config virtualenvs.create false && poetry install
+COPY pyproject.toml poetry.lock .
 
 FROM builder AS training
 
+RUN poetry install --no-cache --no-interaction --without prediction
 COPY training training
+
+CMD python -m training
 
 FROM builder AS prediction
 
-RUN poetry install --with prediction
+RUN poetry install --no-cache --no-interaction --with prediction
 COPY prediction prediction
 
 CMD exec uvicorn prediction.main:app --host "0.0.0.0" --port "$AIP_HTTP_PORT"
