@@ -227,8 +227,8 @@ def tensorflow_pipeline(
         project_id=project_id,
         project_location=project_location,
         model_display_name=model_name,
-        train_container_uri="europe-docker.pkg.dev/vertex-ai/training/tf-cpu.2-6:latest",  # noqa: E501
-        serving_container_uri="europe-docker.pkg.dev/vertex-ai/prediction/tf2-cpu.2-6:latest",  # noqa: E501
+        train_container_uri="europe-docker.pkg.dev/vertex-ai/training/tf-cpu.2-12.py310:latest",  # noqa: E501
+        serving_container_uri="europe-docker.pkg.dev/vertex-ai/prediction/tf2-cpu.2-12:latest",  # noqa: E501
         hparams=hparams,
         staging_bucket=staging_bucket,
         parent_model=existing_model,
