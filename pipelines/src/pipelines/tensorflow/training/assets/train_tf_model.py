@@ -266,7 +266,7 @@ if not _is_chief(strategy):
 
 logging.info(f"Save model to: {args.model}")
 args.model.mkdir(parents=True)
-tf_model.save(str(args.model), save_format="tf")
+tf.saved_model.save(tf_model, args.model)
 
 logging.info(f"Save metrics to: {args.metrics}")
 eval_metrics = dict(zip(tf_model.metrics_names, tf_model.evaluate(test_ds)))
