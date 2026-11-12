@@ -109,7 +109,6 @@ def deploy_model(
         )
 
     endpoint = endpoints[0] if endpoints else None
-    created_endpoint = False
 
     if endpoint is None:
         logger.info("No endpoint found, creating: %s", endpoint_name)
@@ -130,7 +129,6 @@ def deploy_model(
                 "request_response_logging_bq_destination_table"
             ] = bq_logging_destination_table
         endpoint = aip.Endpoint.create(**create_kwargs)
-        created_endpoint = True
         logger.info("Created endpoint: %s", endpoint.resource_name)
 
     deployed_models = endpoint.list_models()
@@ -169,21 +167,16 @@ def deploy_model(
     endpoint_id = endpoint.resource_name.split("/")[-1]
     logging_bq_table = _logging_table_uri(endpoint)
     if not logging_bq_table and enable_request_response_logging:
+        # Endpoint.create was given this URI when logging was enabled; use it
+        # when the SDK does not echo the destination back on the resource.
         if bq_logging_destination_table:
             logging_bq_table = bq_logging_destination_table
-        elif created_endpoint:
-            safe_name = re.sub(r"[^a-zA-Z0-9_]", "_", endpoint_name)
-            logging_bq_table = (
-                "bq://"
-                + f"{project}.logging_{safe_name}_{endpoint_id}"
-                + ".request_response_logging"
-            )
         else:
-            logger.warning(
-                "Request-response logging was requested but endpoint %s already "
-                "existed without a logging destination. Recreate the endpoint "
-                "(or delete it and rerun) to enable Model Monitoring v2.",
-                endpoint_name,
+            raise RuntimeError(
+                f"Request-response logging was requested but endpoint "
+                f"'{endpoint_name}' has no logging destination. Logging can "
+                "only be set at endpoint creation time — delete the existing "
+                "endpoint and rerun to enable Model Monitoring v2."
             )
 
     logger.info(

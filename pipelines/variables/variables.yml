@@ -44,10 +44,13 @@ dev:
   notification_channels: []
   # enable + drift/logging apply to endpoint Model Monitoring v2 only.
   # skew_thresholds are used by batch Model Monitoring v1.
+  # Default false: enabling creates a BQ logging dataset, ~1500 smoke requests,
+  # a ModelMonitor, and a monitoring job (opt in explicitly for demos).
   monitoring:
-    enable: true
+    enable: false
     logging_sampling_rate: 0.3
     default_drift_threshold: 0.3
+    target_window: "1h"
     skew_thresholds:
       defaultSkewThreshold:
         value: 0.001
@@ -107,6 +110,7 @@ staging:
     enable: false
     logging_sampling_rate: 0.3
     default_drift_threshold: 0.3
+    target_window: "1h"
     skew_thresholds:
       defaultSkewThreshold:
         value: 0.001
@@ -152,6 +156,7 @@ prod:
     enable: false
     logging_sampling_rate: 0.3
     default_drift_threshold: 0.3
+    target_window: "1h"
     skew_thresholds:
       defaultSkewThreshold:
         value: 0.001

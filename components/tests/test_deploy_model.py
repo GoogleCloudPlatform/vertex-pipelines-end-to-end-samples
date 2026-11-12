@@ -195,11 +195,10 @@ def test_loads_correct_model_resource(tmp_path, sdk_mocks):
 
 def test_creates_endpoint_with_request_response_logging(tmp_path, sdk_mocks):
     mock_model, mock_endpoint = _configure_endpoint(sdk_mocks, existing_endpoint=False)
+    expected_uri = "bq://test-project.logging_my_endpoint.request_response_logging"
     logging_cfg = mock_endpoint.gca_resource.predict_request_response_logging_config
     logging_cfg.enabled = True
-    logging_cfg.bigquery_destination.output_uri = (
-        "bq://test-project.logging_my_endpoint_456.request_response_logging"
-    )
+    logging_cfg.bigquery_destination.output_uri = expected_uri
 
     result = _call_deploy(
         tmp_path,
@@ -211,24 +210,24 @@ def test_creates_endpoint_with_request_response_logging(tmp_path, sdk_mocks):
     assert create_kwargs["enable_request_response_logging"] is True
     assert create_kwargs["request_response_logging_sampling_rate"] == 0.5
     assert create_kwargs["request_response_logging_bq_destination_table"] == (
-        "bq://test-project.logging_my_endpoint.request_response_logging"
+        expected_uri
     )
-    assert result[1] == (
-        "bq://test-project.logging_my_endpoint_456.request_response_logging"
-    )
+    assert result[1] == expected_uri
     mock_model.deploy.assert_called_once()
 
 
-def test_existing_endpoint_does_not_enable_logging(tmp_path, sdk_mocks):
+def test_existing_endpoint_without_logging_raises_when_requested(
+    tmp_path, sdk_mocks
+):
     _configure_endpoint(sdk_mocks, existing_endpoint=True)
 
-    result = _call_deploy(tmp_path, enable_request_response_logging=True)
+    with pytest.raises(RuntimeError, match="no logging destination"):
+        _call_deploy(tmp_path, enable_request_response_logging=True)
 
     sdk_mocks.Endpoint.create.assert_not_called()
-    assert result[1] == ""
 
 
-def test_falls_back_to_constructed_logging_uri(tmp_path, sdk_mocks):
+def test_falls_back_to_requested_logging_uri_when_sdk_omits_it(tmp_path, sdk_mocks):
     _configure_endpoint(sdk_mocks, existing_endpoint=False)
 
     result = _call_deploy(tmp_path, enable_request_response_logging=True)

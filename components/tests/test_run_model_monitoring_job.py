@@ -97,7 +97,7 @@ def _call_run(**overrides):
 def test_submits_fire_and_forget_monitoring_job(
     create_monitoring_job, preview_sdk_mocks
 ):
-    _call_run()
+    result = _call_run()
 
     create_monitoring_job.assert_called_once()
     request = create_monitoring_job.call_args.kwargs["request"]
@@ -116,8 +116,10 @@ def test_submits_fire_and_forget_monitoring_job(
         gcs_uri=TRAINING_GCS_URI, data_format="csv"
     )
     preview_sdk_mocks.MonitoringInput.assert_any_call(
-        endpoints=["projects/test-project/locations/europe-west2/endpoints/456"]
+        endpoints=["projects/test-project/locations/europe-west2/endpoints/456"],
+        window="1h",
     )
+    assert result[0] == mock_created_monitoring_job.name
 
 
 @mock.patch(
@@ -130,14 +132,19 @@ def test_falls_back_to_table_uri_when_endpoint_id_missing(
     _call_run(endpoint_id="")
 
     create_monitoring_job.assert_called_once()
-    preview_sdk_mocks.MonitoringInput.assert_any_call(table_uri=TARGET_BQ_URI)
+    preview_sdk_mocks.MonitoringInput.assert_any_call(
+        table_uri=TARGET_BQ_URI,
+        timestamp_field="logging_time",
+        window="1h",
+    )
 
 
 @mock.patch(
     "google.cloud.aiplatform_v1beta1.services.model_monitoring_service.ModelMonitoringServiceClient.create_model_monitoring_job",  # noqa: E501
 )
-def test_skips_when_training_uri_missing(create_monitoring_job, preview_sdk_mocks):
-    _call_run(training_dataset_gcs_uri="")
+def test_raises_when_training_uri_missing(create_monitoring_job, preview_sdk_mocks):
+    with pytest.raises(ValueError, match="training_dataset_gcs_uri"):
+        _call_run(training_dataset_gcs_uri="")
 
     create_monitoring_job.assert_not_called()
 
@@ -145,8 +152,11 @@ def test_skips_when_training_uri_missing(create_monitoring_job, preview_sdk_mock
 @mock.patch(
     "google.cloud.aiplatform_v1beta1.services.model_monitoring_service.ModelMonitoringServiceClient.create_model_monitoring_job",  # noqa: E501
 )
-def test_skips_when_target_missing(create_monitoring_job, preview_sdk_mocks):
-    _call_run(endpoint_id="", target_bq_table_uri="")
+def test_raises_when_logging_table_missing_even_with_endpoint(
+    create_monitoring_job, preview_sdk_mocks
+):
+    with pytest.raises(ValueError, match="target_bq_table_uri"):
+        _call_run(target_bq_table_uri="")
 
     create_monitoring_job.assert_not_called()
 
@@ -154,7 +164,20 @@ def test_skips_when_target_missing(create_monitoring_job, preview_sdk_mocks):
 @mock.patch(
     "google.cloud.aiplatform_v1beta1.services.model_monitoring_service.ModelMonitoringServiceClient.create_model_monitoring_job",  # noqa: E501
 )
-def test_skips_when_monitored_features_empty(create_monitoring_job, preview_sdk_mocks):
-    _call_run(monitored_features={})
+def test_raises_when_target_missing(create_monitoring_job, preview_sdk_mocks):
+    with pytest.raises(ValueError, match="target_bq_table_uri"):
+        _call_run(endpoint_id="", target_bq_table_uri="")
+
+    create_monitoring_job.assert_not_called()
+
+
+@mock.patch(
+    "google.cloud.aiplatform_v1beta1.services.model_monitoring_service.ModelMonitoringServiceClient.create_model_monitoring_job",  # noqa: E501
+)
+def test_raises_when_monitored_features_empty(
+    create_monitoring_job, preview_sdk_mocks
+):
+    with pytest.raises(ValueError, match="monitored_features"):
+        _call_run(monitored_features={})
 
     create_monitoring_job.assert_not_called()

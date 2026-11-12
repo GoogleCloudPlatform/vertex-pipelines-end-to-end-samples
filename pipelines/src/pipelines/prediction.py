@@ -62,6 +62,7 @@ DEFAULT_DRIFT_THRESHOLD = _monitoring.get("default_drift_threshold", 0.3)
 MONITORED_FEATURES = _monitoring.get("monitored_features", _DEFAULT_MONITORED_FEATURES)
 NOTIFICATION_EMAILS = _monitoring.get("notification_emails") or ALERT_EMAILS
 LOGGING_SAMPLING_RATE = _monitoring.get("logging_sampling_rate", 0.3)
+MONITORING_TARGET_WINDOW = _monitoring.get("target_window", "1h")
 
 
 @dsl.pipeline(name="turbo-prediction-pipeline")
@@ -164,13 +165,17 @@ def pipeline(
 
         undeploy_after = predict_op
         if MONITORING_ENABLED:
-            monitor_op = create_model_monitor(
-                vertex_model=lookup_op.outputs["model"],
-                project=project,
-                location=location,
-                display_name=f"{endpoint_name}-monitor",
-                monitored_features=MONITORED_FEATURES,
-            ).set_display_name("Create model monitor")
+            monitor_op = (
+                create_model_monitor(
+                    vertex_model=lookup_op.outputs["model"],
+                    project=project,
+                    location=location,
+                    display_name=f"{endpoint_name}-monitor",
+                    monitored_features=MONITORED_FEATURES,
+                )
+                .set_caching_options(False)
+                .set_display_name("Create model monitor")
+            )
 
             undeploy_after = (
                 run_model_monitoring_job(
@@ -186,24 +191,24 @@ def pipeline(
                     monitored_features=MONITORED_FEATURES,
                     default_drift_threshold=DEFAULT_DRIFT_THRESHOLD,
                     notification_emails=NOTIFICATION_EMAILS,
+                    target_window=MONITORING_TARGET_WINDOW,
                 )
                 .after(predict_op)
+                .set_caching_options(False)
                 .set_display_name("Run monitoring analysis")
             )
 
-        undeploy_model(
-            project=project,
-            location=location,
-            endpoint_id=deploy_op.outputs["endpoint_id"],
-            delete_endpoint_if_empty=True,
-        ).after(undeploy_after).set_display_name("Undeploy model")
         if UNDEPLOY_ENDPOINT:
+            # Fire-and-forget monitoring jobs resolve endpoint logging config
+            # asynchronously. When monitoring is on, undeploy the model to stop
+            # serving cost but keep the empty endpoint so the job can still
+            # read request/response logs.
             undeploy_model(
                 project=project,
                 location=location,
                 endpoint_id=deploy_op.outputs["endpoint_id"],
-                delete_endpoint_if_empty=True,
-            ).after(predict_op).set_display_name("Undeploy model")
+                delete_endpoint_if_empty=not MONITORING_ENABLED,
+            ).after(undeploy_after).set_display_name("Undeploy model")
 
     else:
         (
@@ -212,8 +217,8 @@ def pipeline(
                 job_display_name="turbo-template-predict-job",
                 location=location,
                 project=project,
-                source_uri="bq://" + f"{project}.{dataset}.{table}",
-                destination_uri="bq://" + f"{project}.{dataset}",
+                source_uri=f"bq://{project}.{dataset}.{table}",
+                destination_uri=f"bq://{project}.{dataset}",
                 source_format="bigquery",
                 destination_format="bigquery",
                 instance_config={
