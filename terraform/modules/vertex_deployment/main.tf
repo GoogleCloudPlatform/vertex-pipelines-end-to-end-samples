@@ -52,15 +52,9 @@ resource "google_storage_bucket" "pipeline_root_bucket" {
   depends_on                  = [google_project_service.gcp_services]
 }
 
-# Cloud Build staging bucket
-resource "google_storage_bucket" "staging_bucket" {
-  name                        = "${var.project_id}-staging"
-  location                    = var.region
-  project                     = var.project_id
-  uniform_bucket_level_access = true
-  public_access_prevention    = "enforced"
-  force_destroy               = true
-  depends_on                  = [google_project_service.gcp_services]
+# Cloud Build staging bucket is created by the landing zone; look it up for IAM/outputs.
+data "google_storage_bucket" "staging_bucket" {
+  name = "${var.project_id}-staging"
 }
 
 ## Vertex Metadata store ##

@@ -65,11 +65,25 @@ _In future, this will be replaced with the Vertex Pipelines Scheduler (once ther
 - Make
 - Cloned repo
 
-**Deploy infrastructure:**
+**Step 0 - Install dependencies:**
+
+```bash
+pyenv install --skip-existing 3.12.8                  # install Python 3.12.8
+poetry config virtualenvs.prefer-active-python true   # configure Poetry
+make install                                          # install Python dependencies
+cd pipelines && poetry run pre-commit install         # install pre-commit hooks
+cp env.sh.example env.sh
+```
+
+Use Python 3.12.x only (not 3.13/3.14). If Poetry recreates a broken `.venv`, point it at 3.12 explicitly, e.g. `cd components && poetry env use 3.12.8 && poetry install --with dev`.
+
+Update the environment variables for your dev environment in `env.sh`.
+
+**Step 1 - Deploy infrastructure:**
 
 You will need four Google Cloud projects dev, test, prod, and admin.
 The Cloud Build pipelines will run in the _admin_ project, and deploy resources into the dev/test/prod projects.
-Before your CI/CD pipelines can deploy the infrastructure, you will need to set up a Terraform state bucket for each environment:
+Before your CI/CD pipelines can deploy the infrastructure, you will need to set up a Terraform state bucket for each environment if it is not already created from the landing-zone:
 
 ```bash
 export DEV_PROJECT_ID=my-dev-gcp-project
@@ -85,6 +99,8 @@ export ADMIN_PROJECT_ID=my-admin-gcp-project
 gcloud services enable cloudresourcemanager.googleapis.com serviceusage.googleapis.com --project=$ADMIN_PROJECT_ID
 ```
 
+Run Terraform to deploy extra resources and enabling service accounts neededs in the project.
+
 ```bash
 make deploy env=dev
 ```
@@ -92,21 +108,10 @@ make deploy env=dev
 More details about infrastructure are explained in [this guide](docs/Infrastructure.md).
 It describes the scheduling of pipelines and how to tear down infrastructure.
 
-**Install dependencies:**
 
-```bash
-pyenv install --skip-existing 3.12.8                  # install Python 3.12.8
-poetry config virtualenvs.prefer-active-python true   # configure Poetry
-make install                                          # install Python dependencies
-cd pipelines && poetry run pre-commit install         # install pre-commit hooks
-cp env.sh.example env.sh
-```
+**Step 2 - Run ML/Vertex Pipelines:**
 
-Use Python 3.12.x only (not 3.13/3.14). If Poetry recreates a broken `.venv`, point it at 3.12 explicitly, e.g. `cd components && poetry env use 3.12.8 && poetry install --with dev`.
-
-Update the environment variables for your dev environment in `env.sh`.
-
-**Authenticate to Google Cloud:**
+***Authenticate to Google Cloud:***
 
 ```bash
 gcloud auth login
@@ -143,6 +148,8 @@ When scheduling is enabled, any previous schedule for that pipeline type is auto
 ## Run
 
 This repository contains example ML training and prediction pipelines which are explained in [this guide](docs/Pipelines.md).
+
+**Note:** On first run of training or prediction pipeline its custom job steps should make Google create the agent. Then run `make deploy`, to grant the service agent permissions to pull training/prediction images when running pipelines.
 
 **Customise the training configuration:** All training configuration lives in two files — you should not need to change anything else to swap model type, hyperparameters, preprocessing, or evaluation metric:
 

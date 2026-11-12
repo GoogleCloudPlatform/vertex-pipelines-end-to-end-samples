@@ -154,6 +154,9 @@ pytest.ini
 *.tfstate.*
 .terraform.lock.hcl
 
+# Local notebook overrides (email / network); keep the .example committed
+**/notebooks.auto.tfvars
+
 # Cloud Function zip
 terraform/**/*.zip
 

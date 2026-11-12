@@ -15,7 +15,7 @@
  */
 
 output "staging_bucket_name" {
-  value = google_storage_bucket.staging_bucket.name
+  value = data.google_storage_bucket.staging_bucket.name
 }
 
 output "pipeline_root_bucket_name" {

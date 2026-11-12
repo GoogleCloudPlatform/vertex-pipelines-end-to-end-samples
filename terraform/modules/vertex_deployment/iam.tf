@@ -38,7 +38,7 @@ resource "google_storage_bucket_iam_member" "cloudbuild_sa_staging_bucket_iam" {
     "roles/storage.objectAdmin",
     "roles/storage.legacyBucketReader",
   ])
-  bucket = google_storage_bucket.staging_bucket.name
+  bucket = data.google_storage_bucket.staging_bucket.name
   member = "serviceAccount:${data.google_project.project.number}-compute@developer.gserviceaccount.com"
   role   = each.key
 }

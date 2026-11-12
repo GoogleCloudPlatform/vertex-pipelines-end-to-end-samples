@@ -44,6 +44,7 @@ SKEW_THRESHOLDS = prediction_config.get("monitoring", {}).get(
 
 PREDICTION_TYPE = prediction_config.get("prediction_type", "batch")
 ENDPOINT_NAME = prediction_config.get("endpoint_name", "turbo-prediction-endpoint")
+UNDEPLOY_ENDPOINT = prediction_config.get("undeploy_endpoint", True)
 
 _DEFAULT_MONITORED_FEATURES = {
     "dayofweek": "float",
@@ -85,11 +86,10 @@ def pipeline(
     """
     Prediction pipeline which:
      1. Looks up the default model version (champion).
-     2. Either runs a batch prediction job with Model Monitoring v1 skew
-        detection (prediction_type=batch), or deploys the model to an endpoint,
-        smoke-tests it, optionally runs Model Monitoring v2 against logged
-        traffic, then undeploys (prediction_type=endpoint). Controlled by
-        prediction_type in variables.yml.
+     2. Either runs a batch prediction job (prediction_type=batch) or deploys
+        the model to an endpoint and smoke-tests it (prediction_type=endpoint).
+        When prediction_type=endpoint, undeploy_endpoint in variables.yml
+        controls whether the model is undeployed afterward (default: true).
 
     Args:
         project (str): project id of the Google Cloud project
@@ -197,6 +197,13 @@ def pipeline(
             endpoint_id=deploy_op.outputs["endpoint_id"],
             delete_endpoint_if_empty=True,
         ).after(undeploy_after).set_display_name("Undeploy model")
+        if UNDEPLOY_ENDPOINT:
+            undeploy_model(
+                project=project,
+                location=location,
+                endpoint_id=deploy_op.outputs["endpoint_id"],
+                delete_endpoint_if_empty=True,
+            ).after(predict_op).set_display_name("Undeploy model")
 
     else:
         (

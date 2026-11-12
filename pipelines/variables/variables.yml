@@ -5,7 +5,9 @@ vertex_project_prod: "my-gcp-project-prod"
 resource_suffix: "default"
 
 dev:
-  prediction_type: "endpoint"  # "batch" for batch prediction, "endpoint" for deploy+smoke-test+undeploy
+  
+  prediction_type: "endpoint"  # "batch" for batch prediction, "endpoint" for deploy+smoke-test
+  undeploy_endpoint: false  # if false, leave the model deployed after smoke-test (endpoint mode only)
   endpoint_name: "turbo-prediction-endpoint"
   model_name: "xgb_regressor"
   vertex_location: "europe-west2"
@@ -61,7 +63,9 @@ dev:
       - "example@example.com"
 
 staging:
-  prediction_type: "batch"  # "batch" for batch prediction, "endpoint" for deploy+smoke-test+undeploy
+
+  prediction_type: "batch"  # "batch" for batch prediction, "endpoint" for deploy+smoke-test
+  undeploy_endpoint: true  # if false, leave the model deployed after smoke-test (endpoint mode only)
   endpoint_name: "turbo-prediction-endpoint"
   vertex_location: "europe-west2"
   bq_location: "europe-west2"
@@ -118,7 +122,9 @@ staging:
       - "example@example.com"
 
 prod:
-  prediction_type: "endpoint"  # "batch" for batch prediction, "endpoint" for deploy+smoke-test+undeploy
+
+  prediction_type: "endpoint"  # "batch" for batch prediction, "endpoint" for deploy+smoke-test
+  undeploy_endpoint: true  # if false, leave the model deployed after smoke-test (endpoint mode only)
   endpoint_name: "turbo-prediction-endpoint"
   vertex_location: "europe-west2"
   bq_location: "europe-west2"
