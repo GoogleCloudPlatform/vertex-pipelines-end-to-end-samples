@@ -21,18 +21,47 @@ terraform {
 
     google = {
       source  = "hashicorp/google"
-      version = "~> 4.56.0"
+      # >= 5.10 required for google_workbench_instance (Notebooks v1 is EOL)
+      version = "~> 5.40"
     }
 
     google-beta = {
       source  = "hashicorp/google-beta"
-      version = "~> 4.56.0"
+      version = "~> 5.40"
     }
 
   }
 
   # Terraform state stored in GCS
   backend "gcs" {}
+}
+
+locals {
+  # Prefer notebook_instances map; fall back to single notebook_name/owner when map is empty.
+  notebook_instances = length(var.notebook_instances) > 0 ? var.notebook_instances : (
+    var.create_notebook ? {
+      (var.notebook_name) = { owner = var.notebook_owner }
+    } : {}
+  )
+
+  notebooks = {
+    for name, nb in local.notebook_instances : name => {
+      machine_type           = var.notebook_machine_type
+      zone                   = var.notebook_zone
+      owner                  = nb.owner
+      boot_disk_type         = var.notebook_boot_disk_type
+      boot_disk_size_gb      = var.notebook_boot_disk_size_gb
+      data_disk_type         = var.notebook_data_disk_type
+      data_disk_size_gb      = var.notebook_data_disk_size_gb
+      no_public_ip           = var.notebook_no_public_ip
+      install_gpu_driver     = var.notebook_install_gpu_driver
+      accelerator_type       = var.notebook_accelerator_type
+      accelerator_core_count = var.notebook_accelerator_core_count
+      network                = var.notebook_network
+      subnet                 = var.notebook_subnet
+      labels                 = {}
+    }
+  }
 }
 
 # Core Vertex Pipelines infrastructure
@@ -50,4 +79,14 @@ module "bigquery" {
   dataset_id  = var.dataset_id
   description = "Dataset for ML pipeline data"
   depends_on  = [module.vertex_deployment]
+}
+
+# Vertex AI Workbench notebooks
+module "notebooks" {
+  source     = "../../modules/notebooks"
+  project_id = var.project_id
+  region     = var.region
+  network    = var.notebook_network
+  notebooks  = local.notebooks
+  depends_on = [module.vertex_deployment]
 }

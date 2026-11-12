@@ -1,0 +1,52 @@
+/**
+ * Copyright 2022 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+# Notebook configuration for make deploy / terraform apply.
+#
+# Usage:
+#   cp terraform/envs/notebooks.auto.tfvars.example terraform/envs/dev/notebooks.auto.tfvars
+#   # edit notebook_instances (one entry per person)
+#   make deploy env=dev
+#
+# Terraform automatically loads *.auto.tfvars from the env directory.
+# Shared defaults (machine type, disk, network, etc.) apply to every instance.
+
+# One Workbench instance per person. Key = instance name, owner = Google email.
+notebook_instances = {
+  "hackathon-alice" = {
+    owner = "alice@example.com"
+  }
+  "hackathon-bob" = {
+    owner = "bob@example.com"
+  }
+}
+
+# --- Optional shared overrides (apply to all instances above) ---
+
+# notebook_machine_type      = "e2-standard-4"
+# notebook_zone              = "europe-west2-a"  # defaults to "<region>-a"
+# notebook_boot_disk_type    = "PD_SSD"
+# notebook_boot_disk_size_gb = 150  # Workbench images require >= 150
+# notebook_data_disk_type    = ""
+# notebook_data_disk_size_gb = 0
+# notebook_no_public_ip      = true
+
+# VPC short name (defaults to "<project_id>-vpc"). Subnet is auto-created as "vertex-notebooks".
+# notebook_network = "dt-checkout-sandbox-dev-vpc"
+
+# notebook_install_gpu_driver     = false
+# notebook_accelerator_type       = "NVIDIA_TESLA_T4"
+# notebook_accelerator_core_count = 1

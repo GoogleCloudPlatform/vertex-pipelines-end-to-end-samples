@@ -21,7 +21,8 @@ import components
 
 predict_on_endpoint = components.predict_on_endpoint.python_func
 
-EXPECTED_INSTANCE = {
+EXPECTED_INSTANCE_COUNT = 10
+EXPECTED_FIRST_INSTANCE = {
     "dayofweek": 4.0,
     "hourofday": 14.0,
     "trip_distance": 3210.5,
@@ -57,8 +58,8 @@ def test_predict_on_endpoint(mock_init, mock_endpoint_cls, tmp_path):
     )
     mock_endpoint.predict.assert_called_once()
     instances_sent = mock_endpoint.predict.call_args[1]["instances"]
-    assert len(instances_sent) == 1
-    assert instances_sent[0] == EXPECTED_INSTANCE
+    assert len(instances_sent) == EXPECTED_INSTANCE_COUNT
+    assert instances_sent[0] == EXPECTED_FIRST_INSTANCE
 
     with open(predictions_artifact.path) as f:
         result = json.load(f)

@@ -29,7 +29,7 @@ deploy: ## Deploy infrastructure to your project. This runs Terraform plan and a
 		AUTO_APPROVE_FLAG="-auto-approve"; \
 	fi; \
 	cd terraform/envs/$(env) && \
-	terraform init -backend-config='bucket=${VERTEX_PROJECT_ID}-tfstate' && \
+	terraform init -upgrade -reconfigure -backend-config='bucket=${VERTEX_PROJECT_ID}-tfstate' && \
 	terraform apply -var 'project_id=${VERTEX_PROJECT_ID}' -var 'region=${VERTEX_LOCATION}' -var 'dataset_id=${BQ_DATASET_ID}' $$AUTO_APPROVE_FLAG
 
 undeploy: ## Destroy the infrastructure in your project. Optionally set env=<dev|test|prod> (default=dev).
@@ -40,7 +40,7 @@ undeploy: ## Destroy the infrastructure in your project. Optionally set env=<dev
 		AUTO_APPROVE_FLAG="-auto-approve"; \
 	fi; \
 	cd terraform/envs/$(env) && \
-	terraform init -backend-config='bucket=${VERTEX_PROJECT_ID}-tfstate' && \
+	terraform init -upgrade -reconfigure -backend-config='bucket=${VERTEX_PROJECT_ID}-tfstate' && \
 	terraform destroy -var 'project_id=${VERTEX_PROJECT_ID}' -var 'region=${VERTEX_LOCATION}' -var 'dataset_id=${BQ_DATASET_ID}' $$AUTO_APPROVE_FLAG
 
 install: ## Set up local Python environment for development.

@@ -21,8 +21,38 @@ The cloud infrastructure is managed using Terraform and is defined in the [`terr
 
 - `vertex_deployment` - deploys Cloud infrastructure required for running Vertex Pipelines, including enabling APIs, creating buckets, Artifact Registry repos, service accounts, and IAM permissions.
 - `bigquery` - deploys BigQuery resources used by the example pipelines.
+- `notebooks` - provisions Vertex AI Workbench instances (`google_workbench_instance`) and a dedicated notebooks service account.
 
 There is a Terraform configuration for each environment (dev/test/prod) under [`terraform/envs`](terraform/envs/).
+
+## Notebooks
+
+By default the **dev** environment creates a `vertex-workbench` notebook (`e2-standard-4`, 150 GB boot disk, no public IP). Test and prod leave notebooks disabled (`create_notebook = false`).
+
+Supply owners (and any non-default settings) in a local tfvars file:
+
+```bash
+cp terraform/envs/notebooks.auto.tfvars.example terraform/envs/dev/notebooks.auto.tfvars
+```
+
+Use `notebook_instances` — one map entry per person (instance name → owner email). Terraform loads `*.auto.tfvars` automatically when you run `make deploy`.
+
+```hcl
+notebook_instances = {
+  "hackathon-alice" = { owner = "alice@example.com" }
+  "hackathon-bob"   = { owner = "bob@example.com" }
+}
+
+# notebook_machine_type = "e2-standard-4"  # shared by all instances
+# notebook_network      = "my-project-vpc" # defaults to "<project_id>-vpc"
+```
+
+Set `notebook_instances = {}` (and `create_notebook = false`) to skip creating notebook VMs.
+
+Networking: there is usually no `default` VPC in landing-zone projects. The module attaches notebooks to `<project_id>-vpc`, creates a `vertex-notebooks` subnet (`10.250.0.0/24`, Private Google Access on), and adds a default internet route (`0.0.0.0/0`) so Workbench can register with the proxy when `no_public_ip` is true.
+
+Set `create_notebook = false` to skip creating the notebook VM (the notebooks service account is still created).
+After deploy, open the instance from the [Vertex AI Workbench console](https://console.cloud.google.com/vertex-ai/workbench/user-managed).
 
 ## Schedule pipelines
 
