@@ -14,26 +14,14 @@
  * limitations under the License.
  */
 
-output "pubsub_topic_id" {
-  value = google_pubsub_topic.pipeline_trigger_topic.id
-}
-
-output "cf_staging_bucket_name" {
-  value = google_storage_bucket.cf_staging_bucket.name
+output "staging_bucket_name" {
+  value = data.google_storage_bucket.staging_bucket.name
 }
 
 output "pipeline_root_bucket_name" {
   value = google_storage_bucket.pipeline_root_bucket.name
 }
 
-output "pipeline_assets_bucket_name" {
-  value = google_storage_bucket.pipeline_assets_bucket.name
-}
-
 output "vertex_pipelines_sa_email" {
   value = google_service_account.pipelines_sa.email
-}
-
-output "cloudfunction_sa_email" {
-  value = google_service_account.vertex_cloudfunction_sa.email
 }

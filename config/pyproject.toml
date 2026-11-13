@@ -1,0 +1,14 @@
+[tool.poetry]
+name = "shared"
+version = "0.1.0"
+description = "Shared configuration models"
+authors = ["Your Name <you@example.com>"]
+packages = [{include = "shared"}]
+
+[tool.poetry.dependencies]
+python = "^3.12"
+pydantic = ">=2.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

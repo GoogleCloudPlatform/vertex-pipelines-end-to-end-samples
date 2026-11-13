@@ -114,11 +114,6 @@ variable "source_code_bucket_name" {
   type        = string
 }
 
-variable "source_dir" {
-  description = "The pathname of the directory which contains the function source code."
-  type        = string
-}
-
 variable "max_instances" {
   description = "The maximum number of parallel executions of the function."
   type        = number

@@ -16,11 +16,13 @@
 
 locals {
 
+  cloudfunction_dir = "${path.module}/src"
+
   # List of all the files in the Cloud Function source dir
-  cloudfunction_files = fileset(var.source_dir, "*")
+  cloudfunction_files = fileset(local.cloudfunction_dir, "*")
 
   # Get the MD5 of each file in the directory
-  file_hashes = [for f in local.cloudfunction_files : filemd5("${var.source_dir}/${f}")]
+  file_hashes = [for f in local.cloudfunction_files : filemd5("${local.cloudfunction_dir}/${f}")]
 
   # Concatenate hashes and then hash them for an overall hash
   # This method ensures that the hash only changes (and therefore the Cloud Function only re-deploys)
@@ -31,12 +33,12 @@ locals {
 
 data "archive_file" "function_archive" {
   type        = "zip"
-  source_dir  = var.source_dir
-  output_path = "${var.function_name}.zip"
+  source_dir  = local.cloudfunction_dir
+  output_path = "${var.function_name}_${local.cloudfunction_hash}.zip"
 }
 
 resource "google_storage_bucket_object" "archive" {
-  name   = "${data.archive_file.function_archive.output_path}_${local.cloudfunction_hash}.zip"
+  name   = data.archive_file.function_archive.output_path
   bucket = var.source_code_bucket_name
   source = data.archive_file.function_archive.output_path
 

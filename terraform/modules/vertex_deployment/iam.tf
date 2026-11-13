@@ -21,54 +21,56 @@ resource "google_storage_bucket_iam_member" "pipelines_sa_pipeline_root_bucket_i
     "roles/storage.objectAdmin",
     "roles/storage.legacyBucketReader",
   ])
-  bucket = google_storage_bucket.pipeline_root_bucket.name
-  member = google_service_account.pipelines_sa.member
-  role   = each.key
+  bucket     = google_storage_bucket.pipeline_root_bucket.name
+  member     = google_service_account.pipelines_sa.member
+  role       = each.key
+  depends_on = [time_sleep.wait_for_pipelines_sa]
 }
 
-# Give pipelines SA read-only access to objects in "assets" bucket
-resource "google_storage_bucket_iam_member" "pipelines_sa_pipeline_assets_bucket_iam" {
+# Give default compute SA access to the staging bucket
+# (used by Cloud Build to upload/download source)
+data "google_project" "project" {
+  project_id = var.project_id
+}
+
+resource "google_storage_bucket_iam_member" "cloudbuild_sa_staging_bucket_iam" {
   for_each = toset([
-    "roles/storage.objectViewer",
+    "roles/storage.objectAdmin",
     "roles/storage.legacyBucketReader",
   ])
-  bucket = google_storage_bucket.pipeline_assets_bucket.name
-  member = google_service_account.pipelines_sa.member
+  bucket = data.google_storage_bucket.staging_bucket.name
+  member = "serviceAccount:${data.google_project.project.number}-compute@developer.gserviceaccount.com"
   role   = each.key
 }
 
-# Give cloud functions SA access to read compiled pipelines from bucket
-resource "google_storage_bucket_iam_member" "cloudfunction_sa_pipeline_assets_bucket_iam" {
+# Give default compute SA project roles needed by Cloud Build
+resource "google_project_iam_member" "cloudbuild_sa_project_roles" {
   for_each = toset([
-    "roles/storage.objectViewer",
-    "roles/storage.legacyBucketReader",
+    "roles/logging.logWriter",
+    "roles/artifactregistry.writer",
   ])
-  bucket = google_storage_bucket.pipeline_assets_bucket.name
-  member = google_service_account.vertex_cloudfunction_sa.member
-  role   = each.key
+  project = var.project_id
+  role    = each.key
+  member  = "serviceAccount:${data.google_project.project.number}-compute@developer.gserviceaccount.com"
 }
 
-# Give cloud functions SA access to use the pipelines SA for triggering pipelines
-resource "google_service_account_iam_member" "cloudfunction_sa_can_use_pipelines_sa" {
-  service_account_id = google_service_account.pipelines_sa.name
-  role               = "roles/iam.serviceAccountUser"
-  member             = google_service_account.vertex_cloudfunction_sa.member
+# Give Vertex AI Service Agent access to the container images Artifact Registry
+# (needed to pull training/prediction images when running pipelines)
+resource "google_artifact_registry_repository_iam_member" "vertex_sa_can_access_images_ar" {
+  project    = google_artifact_registry_repository.vertex-images.project
+  location   = google_artifact_registry_repository.vertex-images.location
+  repository = google_artifact_registry_repository.vertex-images.name
+  role       = "roles/artifactregistry.reader"
+  member     = "serviceAccount:service-${data.google_project.project.number}@gcp-sa-aiplatform-cc.iam.gserviceaccount.com"
 }
 
 ## Project IAM roles ##
 
 # Vertex Pipelines SA project roles
 resource "google_project_iam_member" "pipelines_sa_project_roles" {
-  for_each = toset(var.pipelines_sa_project_roles)
-  project  = var.project_id
-  role     = each.key
-  member   = google_service_account.pipelines_sa.member
-}
-
-# Cloud Function SA project roles
-resource "google_project_iam_member" "cloudfunction_sa_project_roles" {
-  for_each = toset(var.cloudfunction_sa_project_roles)
-  project  = var.project_id
-  role     = each.key
-  member   = google_service_account.vertex_cloudfunction_sa.member
+  for_each   = toset(var.pipelines_sa_project_roles)
+  project    = var.project_id
+  role       = each.key
+  member     = google_service_account.pipelines_sa.member
+  depends_on = [time_sleep.wait_for_pipelines_sa]
 }
