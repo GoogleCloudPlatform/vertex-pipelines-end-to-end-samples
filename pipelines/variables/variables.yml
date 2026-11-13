@@ -1,3 +1,4 @@
+---
 vertex_project_dev: "my-gcp-project-dev"
 vertex_project_staging: "my-gcp-project-staging"
 vertex_project_prod: "my-gcp-project-prod"
@@ -14,7 +15,6 @@ dev:
   bq_dataset_id: "chicago_taxi_trips"
   bq_table_id: "taxi_trips"
 
-
   training:
     label: "total_fare"
     n_estimators: 200
@@ -42,16 +42,26 @@ dev:
   alert_emails:
     - "example@example.com"
   notification_channels: []
+  # enable + drift/logging apply to endpoint Model Monitoring v2 only.
+  # skew_thresholds are used by batch Model Monitoring v1.
+  # Default false: enabling creates a BQ logging dataset, ~1500 smoke requests,
+  # a ModelMonitor, and a monitoring job (opt in explicitly for demos).
   monitoring:
     enable: false
-    monitor_interval_hours_cron_job: "0 0 * * *"
-    monitor_window_hours: 24
+    logging_sampling_rate: 0.3
     default_drift_threshold: 0.3
-    monitored_feature_names:
-      - mileage
-      - photos_damage_count
-    monitored_prediction_field_names:
-      - prediction_value
+    target_window: "1h"
+    skew_thresholds:
+      defaultSkewThreshold:
+        value: 0.001
+    monitored_features:
+      dayofweek: "float"
+      hourofday: "float"
+      trip_distance: "float"
+      trip_miles: "float"
+      trip_seconds: "float"
+      payment_type: "categorical"
+      company: "categorical"
     notification_emails:
       - "example@example.com"
 
@@ -65,7 +75,6 @@ staging:
   bq_dataset_id: "chicago_taxi_trips"
   bq_table_id: "taxi_trips"
 
-
   training:
     label: "total_fare"
     n_estimators: 200
@@ -79,9 +88,6 @@ staging:
     train_valid_split_size: 0.25
     train_test_random_state: 1
     train_valid_random_state: 1
-    
-  alert_emails: []
-  notification_channels: []
 
   scheduler:
     enable_training_scheduler: false
@@ -98,16 +104,24 @@ staging:
     - "example@example.com"
   notification_channels: []
 
+  # enable + drift/logging apply to endpoint Model Monitoring v2 only.
+  # skew_thresholds are used by batch Model Monitoring v1.
   monitoring:
     enable: false
-    monitor_interval_hours_cron_job: "0 0 * * *"
-    monitor_window_hours: 24
+    logging_sampling_rate: 0.3
     default_drift_threshold: 0.3
-    monitored_feature_names:
-      - mileage
-      - photos_damage_count
-    monitored_prediction_field_names:
-      - prediction_value
+    target_window: "1h"
+    skew_thresholds:
+      defaultSkewThreshold:
+        value: 0.001
+    monitored_features:
+      dayofweek: "float"
+      hourofday: "float"
+      trip_distance: "float"
+      trip_miles: "float"
+      trip_seconds: "float"
+      payment_type: "categorical"
+      company: "categorical"
     notification_emails:
       - "example@example.com"
 
@@ -135,16 +149,24 @@ prod:
   alert_emails:
     - "example@example.com"
   notification_channels: []
-  
+
+  # enable + drift/logging apply to endpoint Model Monitoring v2 only.
+  # skew_thresholds are used by batch Model Monitoring v1.
   monitoring:
     enable: false
-    monitor_interval_hours_cron_job: "0 0 * * *"
-    monitor_window_hours: 24
+    logging_sampling_rate: 0.3
     default_drift_threshold: 0.3
-    monitored_feature_names:
-      - mileage
-      - photos_damage_count
-    monitored_prediction_field_names:
-      - prediction_value
+    target_window: "1h"
+    skew_thresholds:
+      defaultSkewThreshold:
+        value: 0.001
+    monitored_features:
+      dayofweek: "float"
+      hourofday: "float"
+      trip_distance: "float"
+      trip_miles: "float"
+      trip_seconds: "float"
+      payment_type: "categorical"
+      company: "categorical"
     notification_emails:
       - "example@example.com"

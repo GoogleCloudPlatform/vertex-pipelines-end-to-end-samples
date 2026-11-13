@@ -20,10 +20,12 @@ from kfp import dsl
 from pipelines.utils.load_config import load_variables
 from pipelines.utils.query import generate_query
 from components import (
+    create_model_monitor,
     deploy_model,
     lookup_model,
     model_batch_predict,
     predict_on_endpoint,
+    run_model_monitoring_job,
     undeploy_model,
 )
 
@@ -36,12 +38,31 @@ RESOURCE_SUFFIX = env.get("RESOURCE_SUFFIX") or prediction_config.get(
 
 ALERT_EMAILS = prediction_config.get("alert_emails", [])
 NOTIFICATION_CHANNELS = prediction_config.get("notification_channels", [])
-
-SKEW_THRESHOLDS = prediction_config.get("monitoring", {}).get("skew_thresholds", {"defaultSkewThreshold": {"value": 0.001}})
+SKEW_THRESHOLDS = prediction_config.get("monitoring", {}).get(
+    "skew_thresholds", {"defaultSkewThreshold": {"value": 0.001}}
+)
 
 PREDICTION_TYPE = prediction_config.get("prediction_type", "batch")
 ENDPOINT_NAME = prediction_config.get("endpoint_name", "turbo-prediction-endpoint")
 UNDEPLOY_ENDPOINT = prediction_config.get("undeploy_endpoint", True)
+
+_DEFAULT_MONITORED_FEATURES = {
+    "dayofweek": "float",
+    "hourofday": "float",
+    "trip_distance": "float",
+    "trip_miles": "float",
+    "trip_seconds": "float",
+    "payment_type": "categorical",
+    "company": "categorical",
+}
+_monitoring = prediction_config.get("monitoring", {})
+# Endpoint (online) Model Monitoring v2 only. Batch uses v1 skew below.
+MONITORING_ENABLED = _monitoring.get("enable", False)
+DEFAULT_DRIFT_THRESHOLD = _monitoring.get("default_drift_threshold", 0.3)
+MONITORED_FEATURES = _monitoring.get("monitored_features", _DEFAULT_MONITORED_FEATURES)
+NOTIFICATION_EMAILS = _monitoring.get("notification_emails") or ALERT_EMAILS
+LOGGING_SAMPLING_RATE = _monitoring.get("logging_sampling_rate", 0.3)
+MONITORING_TARGET_WINDOW = _monitoring.get("target_window", "1h")
 
 
 @dsl.pipeline(name="turbo-prediction-pipeline")
@@ -49,7 +70,11 @@ def pipeline(
     project: str = env.get("VERTEX_PROJECT_ID"),
     location: str = prediction_config.get("vertex_location", "europe-west2"),
     bq_location: str = prediction_config.get("bq_location", "europe-west2"),
-    bq_source_uri: str = f"{env.get('VERTEX_PROJECT_ID')}.{prediction_config.get('bq_dataset_id', 'ml_dataset')}.{prediction_config.get('bq_table_id', 'taxi_trips')}",
+    bq_source_uri: str = (
+        f"{env.get('VERTEX_PROJECT_ID')}."
+        f"{prediction_config.get('bq_dataset_id', 'ml_dataset')}."
+        f"{prediction_config.get('bq_table_id', 'taxi_trips')}"
+    ),
     model_name: str = prediction_config.get("model_name", "xgb_regressor"),
     dataset: str = prediction_config.get("bq_dataset_id", "turbo_templates"),
     timestamp: str = "2013-08-01 00:00:00",
@@ -125,6 +150,8 @@ def pipeline(
                 machine_type=machine_type,
                 min_replica_count=min_replicas,
                 max_replica_count=max_replicas,
+                enable_request_response_logging=MONITORING_ENABLED,
+                logging_sampling_rate=LOGGING_SAMPLING_RATE,
             )
             .after(prep_op)
             .set_display_name("Deploy model to endpoint")
@@ -136,13 +163,52 @@ def pipeline(
             location=location,
         ).set_display_name("Smoke-test predictions")
 
+        undeploy_after = predict_op
+        if MONITORING_ENABLED:
+            monitor_op = (
+                create_model_monitor(
+                    vertex_model=lookup_op.outputs["model"],
+                    project=project,
+                    location=location,
+                    display_name=f"{endpoint_name}-monitor",
+                    monitored_features=MONITORED_FEATURES,
+                )
+                .set_caching_options(False)
+                .set_display_name("Create model monitor")
+            )
+
+            undeploy_after = (
+                run_model_monitoring_job(
+                    project=project,
+                    location=location,
+                    model_monitor_name=monitor_op.outputs["model_monitor_name"],
+                    training_dataset_gcs_uri=lookup_op.outputs[
+                        "training_dataset_gcs_uri"
+                    ],
+                    target_bq_table_uri=deploy_op.outputs["logging_bq_table"],
+                    endpoint_id=deploy_op.outputs["endpoint_id"],
+                    job_display_name=f"{endpoint_name}-monitoring",
+                    monitored_features=MONITORED_FEATURES,
+                    default_drift_threshold=DEFAULT_DRIFT_THRESHOLD,
+                    notification_emails=NOTIFICATION_EMAILS,
+                    target_window=MONITORING_TARGET_WINDOW,
+                )
+                .after(predict_op)
+                .set_caching_options(False)
+                .set_display_name("Run monitoring analysis")
+            )
+
         if UNDEPLOY_ENDPOINT:
+            # Fire-and-forget monitoring jobs resolve endpoint logging config
+            # asynchronously. When monitoring is on, undeploy the model to stop
+            # serving cost but keep the empty endpoint so the job can still
+            # read request/response logs.
             undeploy_model(
                 project=project,
                 location=location,
                 endpoint_id=deploy_op.outputs["endpoint_id"],
-                delete_endpoint_if_empty=True,
-            ).after(predict_op).set_display_name("Undeploy model")
+                delete_endpoint_if_empty=not MONITORING_ENABLED,
+            ).after(undeploy_after).set_display_name("Undeploy model")
 
     else:
         (

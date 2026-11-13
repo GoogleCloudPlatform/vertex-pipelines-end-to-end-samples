@@ -54,6 +54,13 @@ def save_monitoring_info(train_path: str, label: str, output_path: str):
     For the expected schema see:
         https://cloud.google.com/python/docs/reference/aiplatform/latest/google.cloud.aiplatform_v1beta1.types.ModelMonitoringObjectiveConfig.TrainingDataset  # noqa: E501
     """
+    # KFP Output[Dataset] paths on Vertex Pipelines are given as the local
+    # Cloud Storage FUSE mount path (e.g. "/gcs/bucket/object"). Model
+    # Monitoring (v1 and v2) requires a "gs://" URI, so convert it here
+    # rather than persisting an unusable path.
+    if train_path.startswith("/gcs/"):
+        train_path = "gs://" + train_path[len("/gcs/") :]
+
     training_dataset_for_monitoring = {
         "gcsSource": {"uris": [train_path]},
         "dataFormat": "csv",

@@ -13,7 +13,6 @@
 # limitations under the License.
 
 
-import sys
 from types import SimpleNamespace
 from unittest import mock
 
@@ -47,16 +46,16 @@ def _make_deployed_model(model_id: str, create_time: str):
 
 @pytest.fixture
 def sdk_mocks():
-    """Mock Vertex SDKs imported inside deploy_model."""
-    mock_aip = mock.MagicMock()
-
-    modules = {
-        "google.cloud.aiplatform": mock_aip,
-    }
-
-    with mock.patch.dict(sys.modules, modules):
+    """Patch Vertex SDK symbols used inside deploy_model."""
+    with mock.patch("google.cloud.aiplatform.init") as mock_init, mock.patch(
+        "google.cloud.aiplatform.Model"
+    ) as mock_model_cls, mock.patch(
+        "google.cloud.aiplatform.Endpoint"
+    ) as mock_endpoint_cls:
         yield SimpleNamespace(
-            aip=mock_aip,
+            init=mock_init,
+            Model=mock_model_cls,
+            Endpoint=mock_endpoint_cls,
         )
 
 
@@ -67,19 +66,22 @@ def _configure_endpoint(
     deployed_models=None,
 ):
     mock_model = mock.MagicMock()
-    sdk_mocks.aip.Model.return_value = mock_model
+    sdk_mocks.Model.return_value = mock_model
 
     mock_endpoint = mock.MagicMock()
     mock_endpoint.resource_name = (
         f"projects/{PROJECT}/locations/{LOCATION}/endpoints/{ENDPOINT_ID}"
     )
     mock_endpoint.list_models.return_value = list(deployed_models or [])
+    logging_cfg = mock_endpoint.gca_resource.predict_request_response_logging_config
+    logging_cfg.enabled = False
+    logging_cfg.bigquery_destination.output_uri = ""
 
     if existing_endpoint:
-        sdk_mocks.aip.Endpoint.list.return_value = [mock_endpoint]
+        sdk_mocks.Endpoint.list.return_value = [mock_endpoint]
     else:
-        sdk_mocks.aip.Endpoint.list.return_value = []
-        sdk_mocks.aip.Endpoint.create.return_value = mock_endpoint
+        sdk_mocks.Endpoint.list.return_value = []
+        sdk_mocks.Endpoint.create.return_value = mock_endpoint
 
     return mock_model, mock_endpoint
 
@@ -106,13 +108,14 @@ def test_creates_endpoint_when_none_exists(tmp_path, sdk_mocks):
 
     result = _call_deploy(tmp_path)
 
-    sdk_mocks.aip.Endpoint.create.assert_called_once()
-    create_kwargs = sdk_mocks.aip.Endpoint.create.call_args[1]
+    sdk_mocks.Endpoint.create.assert_called_once()
+    create_kwargs = sdk_mocks.Endpoint.create.call_args[1]
     assert create_kwargs["display_name"] == ENDPOINT_NAME
     assert create_kwargs["project"] == PROJECT
     assert create_kwargs["location"] == LOCATION
     mock_model.deploy.assert_called_once()
     assert result[0] == ENDPOINT_ID
+    assert result[1] == ""
 
 
 def test_uses_existing_endpoint(tmp_path, sdk_mocks):
@@ -120,9 +123,10 @@ def test_uses_existing_endpoint(tmp_path, sdk_mocks):
 
     result = _call_deploy(tmp_path)
 
-    sdk_mocks.aip.Endpoint.create.assert_not_called()
+    sdk_mocks.Endpoint.create.assert_not_called()
     mock_model.deploy.assert_called_once()
     assert result[0] == ENDPOINT_ID
+    assert result[1] == ""
 
 
 def test_direct_deploy_when_no_models_on_endpoint(tmp_path, sdk_mocks):
@@ -174,7 +178,7 @@ def test_undeploys_models_older_than_two_most_recent(tmp_path, sdk_mocks):
 
 
 def test_raises_on_multiple_endpoints(tmp_path, sdk_mocks):
-    sdk_mocks.aip.Endpoint.list.return_value = [mock.MagicMock(), mock.MagicMock()]
+    sdk_mocks.Endpoint.list.return_value = [mock.MagicMock(), mock.MagicMock()]
 
     with pytest.raises(RuntimeError, match="Multiple endpoints"):
         _call_deploy(tmp_path)
@@ -185,5 +189,53 @@ def test_loads_correct_model_resource(tmp_path, sdk_mocks):
 
     _call_deploy(tmp_path)
 
-    sdk_mocks.aip.Model.assert_called_once_with(MODEL_RESOURCE)
-    sdk_mocks.aip.init.assert_called_once_with(project=PROJECT, location=LOCATION)
+    sdk_mocks.Model.assert_called_once_with(MODEL_RESOURCE)
+    sdk_mocks.init.assert_called_once_with(project=PROJECT, location=LOCATION)
+
+
+def test_creates_endpoint_with_request_response_logging(tmp_path, sdk_mocks):
+    mock_model, mock_endpoint = _configure_endpoint(sdk_mocks, existing_endpoint=False)
+    expected_uri = "bq://test-project.logging_my_endpoint.request_response_logging"
+    logging_cfg = mock_endpoint.gca_resource.predict_request_response_logging_config
+    logging_cfg.enabled = True
+    logging_cfg.bigquery_destination.output_uri = expected_uri
+
+    result = _call_deploy(
+        tmp_path,
+        enable_request_response_logging=True,
+        logging_sampling_rate=0.5,
+    )
+
+    create_kwargs = sdk_mocks.Endpoint.create.call_args[1]
+    assert create_kwargs["enable_request_response_logging"] is True
+    assert create_kwargs["request_response_logging_sampling_rate"] == 0.5
+    assert create_kwargs["request_response_logging_bq_destination_table"] == (
+        expected_uri
+    )
+    assert result[1] == expected_uri
+    mock_model.deploy.assert_called_once()
+
+
+def test_existing_endpoint_without_logging_raises_when_requested(
+    tmp_path, sdk_mocks
+):
+    _configure_endpoint(sdk_mocks, existing_endpoint=True)
+
+    with pytest.raises(RuntimeError, match="no logging destination"):
+        _call_deploy(tmp_path, enable_request_response_logging=True)
+
+    sdk_mocks.Endpoint.create.assert_not_called()
+
+
+def test_falls_back_to_requested_logging_uri_when_sdk_omits_it(tmp_path, sdk_mocks):
+    _configure_endpoint(sdk_mocks, existing_endpoint=False)
+
+    result = _call_deploy(tmp_path, enable_request_response_logging=True)
+
+    create_kwargs = sdk_mocks.Endpoint.create.call_args[1]
+    assert create_kwargs["request_response_logging_bq_destination_table"] == (
+        "bq://test-project.logging_my_endpoint.request_response_logging"
+    )
+    assert result[1] == (
+        "bq://test-project.logging_my_endpoint.request_response_logging"
+    )

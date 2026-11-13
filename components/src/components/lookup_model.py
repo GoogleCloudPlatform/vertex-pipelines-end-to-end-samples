@@ -26,7 +26,14 @@ def lookup_model(
     project: str,
     model: Output[Model],
     fail_on_model_not_found: bool = False,
-) -> NamedTuple("Outputs", [("model_resource_name", str), ("training_dataset", dict)]):
+) -> NamedTuple(
+    "Outputs",
+    [
+        ("model_resource_name", str),
+        ("training_dataset", dict),
+        ("training_dataset_gcs_uri", str),
+    ],
+):
     """
     Fetch a model given a model name (display name) and export to GCS.
 
@@ -39,7 +46,13 @@ def lookup_model(
             model is not found
 
     Returns:
-        str: Resource name of the found model. Empty string if model not found.
+        model_resource_name (str): Resource name of the found model. Empty string
+            if model not found.
+        training_dataset (dict): Training dataset metadata for Model Monitoring v1
+            (batch prediction skew). Empty dict if unavailable.
+        training_dataset_gcs_uri (str): GCS URI (CSV) of the training data used as
+            a Model Monitoring v2 baseline for online/endpoint monitoring.
+            Empty string if unavailable.
     """
 
     import json
@@ -59,6 +72,7 @@ def lookup_model(
     logging.info(f"found {len(models)} model(s)")
 
     training_dataset = {}
+    training_dataset_gcs_uri = ""
     model_resource_name = ""
     if len(models) == 0:
         logging.error(
@@ -70,11 +84,20 @@ def lookup_model(
     elif len(models) == 1:
         target_model = models[0]
         model_resource_name = target_model.resource_name
+        # Model.list() returns the default version, but resource_name is often
+        # unversioned. Stamp @version_id so deploy and Model Monitoring v2
+        # target the same champion version (Vertex allows one monitor per
+        # version; an unversioned name would be treated as version 1).
+        version_id = getattr(target_model, "version_id", None)
+        if isinstance(version_id, str) and version_id:
+            if "@" not in model_resource_name:
+                model_resource_name = f"{model_resource_name}@{version_id}"
+            model.metadata["versionId"] = version_id
         logging.info(f"model display name: {target_model.display_name}")
-        logging.info(f"model resource name: {target_model.resource_name}")
+        logging.info(f"model resource name: {model_resource_name}")
         logging.info(f"model uri: {target_model.uri}")
         model.uri = target_model.uri
-        model.metadata["resourceName"] = target_model.resource_name
+        model.metadata["resourceName"] = model_resource_name
 
         path = Path(model.path) / TRAINING_DATASET_INFO
         logging.info(f"Reading training dataset metadata: {path}")
@@ -82,9 +105,22 @@ def lookup_model(
         if os.path.exists(path):
             with open(path, "r") as fp:
                 training_dataset = json.load(fp)
+            uris = training_dataset.get("gcsSource", {}).get("uris", [])
+            if uris:
+                training_dataset_gcs_uri = uris[0]
+                # Older training runs stored the local Cloud Storage FUSE mount
+                # path (e.g. "/gcs/bucket/object") instead of a "gs://" URI.
+                # Model Monitoring v1 and v2 both require a proper "gs://" URI.
+                if training_dataset_gcs_uri.startswith("/gcs/"):
+                    training_dataset_gcs_uri = (
+                        "gs://" + training_dataset_gcs_uri[len("/gcs/") :]
+                    )
+                    training_dataset.setdefault("gcsSource", {})["uris"] = [
+                        training_dataset_gcs_uri
+                    ]
         else:
             logging.warning("Training dataset metadata doesn't exist!")
     else:
         raise RuntimeError(f"Multiple models with name {model_name} were found.")
 
-    return model_resource_name, training_dataset
+    return model_resource_name, training_dataset, training_dataset_gcs_uri

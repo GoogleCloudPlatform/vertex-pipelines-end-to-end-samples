@@ -12,22 +12,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from .create_model_monitor import create_model_monitor
 from .deploy_model import deploy_model
 from .extract_table import extract_table
 from .lookup_model import lookup_model
 from .model_batch_predict import model_batch_predict
 from .predict_on_endpoint import predict_on_endpoint
+from .run_model_monitoring_job import run_model_monitoring_job
 from .undeploy_model import undeploy_model
 from .upload_model import upload_model
 
 
 __version__ = "0.0.1"
 __all__ = [
+    "create_model_monitor",
     "deploy_model",
     "extract_table",
     "lookup_model",
     "model_batch_predict",
     "predict_on_endpoint",
+    "run_model_monitoring_job",
     "undeploy_model",
     "upload_model",
 ]
